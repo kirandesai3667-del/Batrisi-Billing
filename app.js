@@ -16,9 +16,11 @@ const firebaseConfig = {
 const app = initializeApp(firebaseConfig);
 const db = getFirestore(app);
 
+// --- ORGANIZATION DETAILS ---
 const orgName = "Shree Batrisi Jain Co-Op Education Society Ltd";
 const orgAddress = "Sheth Shri Hiralal Hargovandas Batrishi Hall, Near R.T.O Circle, Subhashbridge, Collector Kacheri, Ahmedabad - 380027";
-const orgDetails = "GSTIN: 24AAATS6070J1ZE | Reg No: GH/230 (10/10/1944) | Mob: 9586423232 | Email: 32cedusociety@gmail.com";
+const orgDetailsLine1 = "GSTIN: 24AAATS6070J1ZE | Reg No: GH/230 | Reg Date: 10/10/1944";
+const orgDetailsLine2 = "Mob: 9586423232 | Landline: 079-27557668 | Email: 32cedusociety@gmail.com";
 
 // --- HELPER: FORMAT DATE TO DD/MM/YYYY ---
 window.formatDateIndian = (dateStr) => {
@@ -123,16 +125,10 @@ window.exportData = async () => {
     qs.forEach((docSnap) => {
         let data = docSnap.data();
         delete data.timestamp;
-        
         if(data.date) data.date = window.formatDateIndian(data.date);
         if(data.payDate) data.payDate = window.formatDateIndian(data.payDate);
         if(data.funcDate) data.funcDate = window.formatDateIndian(data.funcDate);
-
-        if(headers.length === 0) {
-            headers = Object.keys(data);
-            rows.push(headers.join(","));
-        }
-        
+        if(headers.length === 0) { headers = Object.keys(data); rows.push(headers.join(",")); }
         let row = headers.map(h => `"${(data[h] || '').toString().replace(/"/g, '""')}"`);
         rows.push(row.join(","));
     });
@@ -166,21 +162,17 @@ window.handleFormSubmit = async (e, type) => {
             data = { ...data, slipNo: document.getElementById('inv-slip').value, date: document.getElementById('inv-date').value, name: document.getElementById('inv-name').value, address: document.getElementById('inv-address').value, gst: document.getElementById('inv-gst').value, desc: document.getElementById('inv-desc').value, basic: document.getElementById('inv-basic').value, cgst: document.getElementById('inv-cgst').value, sgst: document.getElementById('inv-sgst').value, round: document.getElementById('inv-round').value, total: document.getElementById('inv-total').value, words: document.getElementById('inv-words').value, payType: document.getElementById('inv-pay-type').value, payDate: document.getElementById('inv-pay-date').value, ref: document.getElementById('inv-ref').value, bank: document.getElementById('inv-bank').value };
         }
 
-        if(editId) {
-            await updateDoc(doc(db, type, editId), data);
-            document.getElementById(`${prefix}-edit-id`).value = "";
-        } else {
-            await addDoc(collection(db, type), data);
-        }
+        if(editId) { await updateDoc(doc(db, type, editId), data); document.getElementById(`${prefix}-edit-id`).value = ""; }
+        else { await addDoc(collection(db, type), data); }
         
-        alert("Data Saved Successfully in Cloud!");
+        alert("Data Saved Successfully!");
         document.getElementById(`form-${type}`).reset();
         setToday();
         updateDashboardCounts();
         await generateSlipNo(type, `${prefix}-slip`);
         printRecord(data, type);
 
-    } catch (error) { alert("Error saving to Firebase. Check your Internet!"); }
+    } catch (error) { alert("Error saving to Firebase!"); }
     finally { if(btn) { btn.innerHTML = `<i class="ri-printer-line"></i> Save & Print`; btn.disabled = false; } }
 };
 
@@ -188,41 +180,23 @@ window.handleFormSubmit = async (e, type) => {
 window.loadRecords = async () => {
     const type = document.getElementById('record-filter').value;
     const tbody = document.getElementById('records-body');
-    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Fetching from Cloud...</td></tr>";
-    
+    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Fetching...</td></tr>";
     const q = query(collection(db, type), orderBy("timestamp", "desc"));
     const qs = await getDocs(q);
     tbody.innerHTML = "";
-    
-    if(qs.empty) { tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No Data Saved Yet</td></tr>"; return; }
-
+    if(qs.empty) { tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No Data</td></tr>"; return; }
     qs.forEach((docSnap) => {
         let d = docSnap.data(); d.id = docSnap.id;
         let tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td><strong>${d.slipNo}</strong></td><td>${window.formatDateIndian(d.date)}</td><td>${d.name}</td>
-            <td style="color:#10B981; font-weight:600;">₹${d.amount || d.total}</td>
-            <td>
-                <button class="btn-action btn-edit" onclick='editRec(${JSON.stringify(d)}, "${type}")'><i class="ri-edit-line"></i></button>
-                <button class="btn-action btn-print" onclick='rePrint(${JSON.stringify(d)}, "${type}")'><i class="ri-printer-line"></i></button>
-                <button class="btn-action btn-del" onclick='deleteRec("${d.id}", "${type}")'><i class="ri-delete-bin-line"></i></button>
-            </td>`;
+        tr.innerHTML = `<td><strong>${d.slipNo}</strong></td><td>${window.formatDateIndian(d.date)}</td><td>${d.name}</td><td style="color:#10B981; font-weight:600;">₹${d.amount || d.total}</td><td><button class="btn-action btn-edit" onclick='editRec(${JSON.stringify(d)}, "${type}")'><i class="ri-edit-line"></i></button><button class="btn-action btn-print" onclick='rePrint(${JSON.stringify(d)}, "${type}")'><i class="ri-printer-line"></i></button><button class="btn-action btn-del" onclick='deleteRec("${d.id}", "${type}")'><i class="ri-delete-bin-line"></i></button></td>`;
         tbody.appendChild(tr);
     });
 };
 
-window.deleteRec = async (id, type) => {
-    if(confirm("Confirm Delete from Cloud?")) {
-        await deleteDoc(doc(db, type, id));
-        loadRecords();
-        updateDashboardCounts();
-    }
-};
+window.deleteRec = async (id, type) => { if(confirm("Confirm Delete?")) { await deleteDoc(doc(db, type, id)); loadRecords(); updateDashboardCounts(); } };
 
 const updateDashboardCounts = async () => {
-    const deps = await getDocs(collection(db, 'deposit'));
-    const dons = await getDocs(collection(db, 'donation'));
-    const invs = await getDocs(collection(db, 'invoice'));
+    const deps = await getDocs(collection(db, 'deposit')); const dons = await getDocs(collection(db, 'donation')); const invs = await getDocs(collection(db, 'invoice'));
     if(document.getElementById('stat-dep')) document.getElementById('stat-dep').innerText = deps.size;
     if(document.getElementById('stat-don')) document.getElementById('stat-don').innerText = dons.size;
     if(document.getElementById('stat-inv')) document.getElementById('stat-inv').innerText = invs.size;
@@ -232,75 +206,34 @@ const updateDashboardCounts = async () => {
 window.rePrint = (data, type) => { printRecord(data, type); };
 const printRecord = (data, type) => {
     const container = document.getElementById('print-container');
-    
-    // Corrected Title Logic: "TAX INVOICE" or "DEPOSIT SLIP" / "DONATION SLIP"
     let title = type === 'invoice' ? 'TAX INVOICE' : type.toUpperCase() + ' SLIP';
-    
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
     copiesArray.forEach((copy, index) => {
         let detailsHtml = "";
-
         if(type === 'invoice') {
-            detailsHtml = `
-                <div class="print-grid" style="margin-bottom: 5px;">
-                    <div class="print-row"><span class="print-label">Invoice No:</span> ${data.slipNo}</div>
-                    <div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div>
-                    <div class="print-row"><span class="print-label">Name:</span> ${data.name}</div>
-                    <div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div>
-                    <div class="print-row"><span class="print-label">GSTIN:</span> ${data.gst || '-'}</div>
-                    <div class="print-row"><span class="print-label">Description:</span> ${data.desc || '-'}</div>
-                    
-                    <div style="grid-column: span 2; margin-top: 5px; border-top: 1px dotted #ccc; padding-top: 5px;"></div>
-                    
-                    <div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${data.basic}</div>
-                    <div class="print-row"><span class="print-label">CGST (9%):</span> ₹ ${data.cgst}</div>
-                    <div class="print-row"><span class="print-label">SGST (9%):</span> ₹ ${data.sgst}</div>
-                    <div class="print-row"><span class="print-label">Round Off:</span> ₹ ${data.round || '0.00'}</div>
-                    <div class="print-row" style="font-size: 1.1em;"><span class="print-label">Total Amount:</span> <strong>₹ ${data.total}</strong></div>
-                </div>
-            `;
+            detailsHtml = `<div class="print-grid" style="margin-bottom: 5px;"><div class="print-row"><span class="print-label">Invoice No:</span> ${data.slipNo}</div><div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div><div class="print-row"><span class="print-label">Name:</span> ${data.name}</div><div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div><div class="print-row"><span class="print-label">GSTIN:</span> ${data.gst || '-'}</div><div class="print-row"><span class="print-label">Description:</span> ${data.desc || '-'}</div><div style="grid-column: span 2; margin-top: 5px; border-top: 1px dotted #ccc; padding-top: 5px;"></div><div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${data.basic}</div><div class="print-row"><span class="print-label">CGST (9%):</span> ₹ ${data.cgst}</div><div class="print-row"><span class="print-label">SGST (9%):</span> ₹ ${data.sgst}</div><div class="print-row"><span class="print-label">Round Off:</span> ₹ ${data.round || '0.00'}</div><div class="print-row" style="font-size: 1.1em;"><span class="print-label">Total Amount:</span> <strong>₹ ${data.total}</strong></div></div>`;
         } else {
-            detailsHtml = `
-                <div class="print-grid" style="margin-bottom: 8px;">
-                    <div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div>
-                    <div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div>
-                    <div class="print-row"><span class="print-label">Name:</span> ${data.name}</div>
-                    <div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div>
-                    <div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div>
-                    <div class="print-row"><span class="print-label">Native:</span> ${data.native || '-'}</div>
-                    <div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType}</div>
-                    <div class="print-row"><span class="print-label">Amount:</span> <strong>₹ ${data.amount}</strong></div>
-                </div>
-            `;
+            detailsHtml = `<div class="print-grid" style="margin-bottom: 8px;"><div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div><div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div><div class="print-row"><span class="print-label">Name:</span> ${data.name}</div><div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div><div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div><div class="print-row"><span class="print-label">Native:</span> ${data.native || '-'}</div><div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType}</div><div class="print-row"><span class="print-label">Amount:</span> <strong>₹ ${data.amount}</strong></div></div>`;
         }
 
         let customInstructionsHtml = '';
         if(type === 'deposit') {
-            customInstructionsHtml = `
-                <div style="margin-top:10px; width:100%;">
-                    <table style="width:100%; border-collapse: collapse; font-size: 10.5px; font-family: Arial, sans-serif; text-align: left;">
-                        <tbody>
-                            <tr><td colspan="2" style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: bold; font-size: 12px; text-transform: uppercase;">Instructions</td></tr>
-                            <tr><td style="border: 1px solid #000; padding: 3px 5px; width: 20px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 3px 5px;">All Parking Responsibilities Shall Be Kindly Managed By The Party Booking The Hall.</td></tr>
-                            <tr><td style="border: 1px solid #000; padding: 3px 5px; text-align: center; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 3px 5px;">After Completion Of The Function, At The Time Of Final Settlement, You Are Requested To Please Bring And Submit This Deposit Slip.</td></tr>
-                            <tr><td style="border: 1px solid #000; padding: 3px 5px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 3px 5px;">For Any Function, Wherever Invitations Are Issued, You Are Kindly Requested To Mention The Name Of The Sanstha As “Sheth Shri Hiralal Hargovandas Batrisi Hall.” In Case Of Non-Compliance, The Sanstha May Levy A Penalty As Per Its Rules.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            `;
+            customInstructionsHtml = `<div style="margin-top:10px; width:100%;"><table style="width:100%; border-collapse: collapse; font-size: 10.5px; font-family: Arial, sans-serif; text-align: left;"><tbody><tr><td colspan="2" style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: bold; font-size: 12px; text-transform: uppercase;">Instructions</td></tr><tr><td style="border: 1px solid #000; padding: 3px 5px; width: 20px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 3px 5px;">All Parking Responsibilities Shall Be Kindly Managed By The Party Booking The Hall.</td></tr><tr><td style="border: 1px solid #000; padding: 3px 5px; text-align: center; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 3px 5px;">After Completion Of The Function, At The Time Of Final Settlement, You Are Requested To Please Bring And Submit This Deposit Slip.</td></tr><tr><td style="border: 1px solid #000; padding: 3px 5px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 3px 5px;">For Any Function, Wherever Invitations Are Issued, You Are Kindly Requested To Mention The Name Of The Sanstha As “Sheth Shri Hiralal Hargovandas Batrisi Hall.” In Case Of Non-Compliance, The Sanstha May Levy A Penalty As Per Its Rules.</td></tr></tbody></table></div>`;
         }
 
         contentHtml += `
             <div class="print-copy" style="box-sizing: border-box; width: 100%; margin: 0; border:2px solid #000; padding:15px; position:relative;">
-                <div style="position:absolute; top:10px; right:10px; border:1px solid #000; padding:2px 5px; font-weight: bold;">${copy}</div>
+                <div style="position:absolute; top:10px; right:10px; border:1px solid #000; padding:2px 5px; font-weight: bold; font-size:10px;">${copy}</div>
                 
                 <div style="position:relative; margin-bottom:10px;">
                     <img src="logo.png" style="width:60px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:10px;">
                     <div style="padding-left: 70px; text-align:center; border-bottom:1px solid #000; padding-bottom:5px;">
                         <h2 style="margin:0; font-size:17px;">${orgName}</h2>
-                        <p style="margin:3px 0 0 0; font-size:9.5px;">${orgAddress}</p>
+                        <p style="margin:2px 0; font-size:9.5px; font-weight: bold;">${orgAddress}</p>
+                        <p style="margin:2px 0; font-size:8.5px;">${orgDetailsLine1}</p>
+                        <p style="margin:2px 0; font-size:8.5px;">${orgDetailsLine2}</p>
                     </div>
                 </div>
 
@@ -316,13 +249,7 @@ const printRecord = (data, type) => {
             </div>`;
 
         if (index === 0) {
-            contentHtml += `
-                <div style="border-top: 2px dashed #666; margin: 25px 0; position: relative; text-align: center;">
-                    <span style="background: #fff; padding: 0 15px; position: relative; top: -9px; font-size: 12px; color: #555; font-weight: bold; letter-spacing: 2px;">
-                        ✂ - - - - Cut Here - - - - ✂
-                    </span>
-                </div>
-            `;
+            contentHtml += `<div style="border-top: 2px dashed #666; margin: 25px 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 15px; position: relative; top: -9px; font-size: 12px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - - Cut Here - - - - ✂</span></div>`;
         }
     });
     
@@ -330,11 +257,7 @@ const printRecord = (data, type) => {
     setTimeout(() => { window.print(); }, 500);
 };
 
-// Start App
 window.addEventListener('load', async () => {
-    setToday();
-    updateDashboardCounts();
-    await generateSlipNo('deposit', 'dep-slip');
-    await generateSlipNo('donation', 'don-slip');
-    await generateSlipNo('invoice', 'inv-slip');
+    setToday(); updateDashboardCounts();
+    await generateSlipNo('deposit', 'dep-slip'); await generateSlipNo('donation', 'don-slip'); await generateSlipNo('invoice', 'inv-slip');
 });
