@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shree Batrisi Jain Co-Op Education Society Ltd</title>
+    <link rel="stylesheet" href="style.css">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+
+    <!-- 🛑 LOGIN SCREEN OVERLAY -->
+    <div id="login-overlay" class="login-overlay">
+        <div class="login-box card">
+            <img src="logo.png" alt="Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3031/3031293.png'" class="login-logo">
+            <h2>Admin Login</h2>
+            <div class="input-group">
+                <input type="text" id="login-user" placeholder="Enter Admin ID">
+            </div>
+            <div class="input-group" style="margin-top: 15px;">
+                <input type="password" id="login-pass" placeholder="Enter Password">
+            </div>
+            <button onclick="checkLogin()" class="btn-submit" style="margin-top: 20px; width: 100%; justify-content: center;">Login Securely</button>
+        </div>
+    </div>
+
+    <!-- Sidebar -->
+    <nav class="sidebar no-print">
+        <div class="logo-area">
+            <img src="logo.png" alt="Batrisi Logo" class="custom-brand-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3031/3031293.png'">
+            <h3>Batrisi Jain Society</h3>
+        </div>
+        <ul class="nav-links">
+            <li onclick="switchTab('dashboard')" class="active" id="tab-dashboard"><i class="ri-dashboard-line"></i> Dashboard</li>
+            <li onclick="switchTab('deposit')" id="tab-deposit"><i class="ri-wallet-3-line"></i> Deposit Slip</li>
+            <li onclick="switchTab('donation')" id="tab-donation"><i class="ri-hand-heart-line"></i> Donation Slip</li>
+            <li onclick="switchTab('invoice')" id="tab-invoice"><i class="ri-file-list-3-line"></i> Tax Invoice</li>
+            <li onclick="switchTab('records')" id="tab-records"><i class="ri-database-2-line"></i> Records</li>
+            <li onclick="switchTab('admin')" id="tab-admin"><i class="ri-settings-4-line"></i> Admin Panel</li>
+        </ul>
+        <button onclick="logout()" class="btn-logout"><i class="ri-logout-box-r-line"></i> Logout</button>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content no-print">
+        <header>
+            <div class="header-left">
+                <div class="menu-toggle" onclick="toggleMenu()"><i class="ri-menu-2-line"></i></div>
+                <h2>Billing & Management</h2>
+            </div>
+            <div class="header-right">
+                <div class="user-profile"><i class="ri-user-star-line"></i> <span>Super Admin</span></div>
+            </div>
+        </header>
+
+        <div class="content-wrapper">
+            
+            <!-- Dashboard -->
+            <section id="sec-dashboard" class="page-section active">
+                <div class="card header-card">
+                    <div class="header-card-bg"></div>
+                    <h2>Shree Batrisi Jain Co-Op Education Society Ltd</h2>
+                    <p>Sheth Shri Hiralal Hargovandas Batrishi Hall, Near R.T.O Circle, Subhashbridge, Collector Kacheri, Ahmedabad - 380027</p>
+                </div>
+                <div class="dashboard-stats">
+                    <div class="stat-card blue-gradient">
+                        <div class="stat-icon"><i class="ri-wallet-3-fill"></i></div>
+                        <div class="stat-info"><h3>Total Deposits</h3><p id="stat-dep">0</p></div>
+                    </div>
+                    <div class="stat-card green-gradient">
+                        <div class="stat-icon"><i class="ri-hand-heart-fill"></i></div>
+                        <div class="stat-info"><h3>Total Donations</h3><p id="stat-don">0</p></div>
+                    </div>
+                    <div class="stat-card modern-white">
+                        <div class="stat-icon" style="color: #4F46E5;"><i class="ri-file-list-3-fill"></i></div>
+                        <div class="stat-info"><h3 style="color: #6B7280;">Total Invoices</h3><p id="stat-inv" style="color: #111827;">0</p></div>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Admin / CSV Panel -->
+            <section id="sec-admin" class="page-section">
+                <div class="card form-card">
+                    <div class="card-header">
+                        <div class="icon-box" style="background:#0F172A;"><i class="ri-file-excel-2-line"></i></div>
+                        <h3>Upload Members Data (CSV)</h3>
+                    </div>
+                    <div style="background: #F8FAFC; padding: 20px; border-radius: 8px; border: 1px dashed #CBD5E1; text-align: center;">
+                        <i class="ri-upload-cloud-2-line" style="font-size: 40px; color: #4F46E5;"></i>
+                        <p style="margin: 10px 0; color: #475569; font-size: 14px;">Select your CSV file containing Member Details.</p>
+                        <p style="font-size: 12px; color: #94A3B8; margin-bottom: 20px;">Columns format required: Member Number, Name, Address, Native Name, Mobile</p>
+                        <input type="file" id="csv-upload" accept=".csv" style="display: block; margin: 0 auto; background: white; padding: 10px; border-radius: 5px;">
+                        <button onclick="uploadCSV()" class="btn-submit" style="margin: 20px auto 0; width: auto;"><i class="ri-upload-line"></i> Upload & Sync Database</button>
+                        <p id="csv-status" style="margin-top: 15px; font-weight: 600; color: #10B981;"></p>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Deposit Form -->
+            <section id="sec-deposit" class="page-section">
+                <div class="card form-card">
+                    <div class="card-header"><div class="icon-box blue"><i class="ri-wallet-3-line"></i></div><h3>Generate Deposit Slip</h3></div>
+                    <form id="form-deposit">
+                        <!-- Hidden Edit ID -->
+                        <input type="hidden" id="dep-edit-id">
+                        <div class="grid-2">
+                            <div class="input-group"><label>Slip Number (Auto)</label><input type="text" id="dep-slip" readonly></div>
+                            <div class="input-group"><label>Date</label><input type="date" id="dep-date" required></div>
+                            <div class="input-group">
+                                <label>Member Number (Type & click outside to auto-fill) <i class="ri-magic-line" style="color:var(--primary)"></i></label>
+                                <input type="text" id="dep-member" placeholder="e.g. 2" onblur="fetchMember('dep-member', 'dep-name', 'dep-address', 'dep-native')">
+                            </div>
+                            <div class="input-group"><label>Name</label><input type="text" id="dep-name" required placeholder="Enter payer name"></div>
+                            <div class="input-group"><label>Address</label><input type="text" id="dep-address" placeholder="Enter address"></div>
+                            <div class="input-group"><label>Native Name</label><input type="text" id="dep-native" placeholder="Native place"></div>
+                            <div class="input-group"><label>Function Name</label><input type="text" id="dep-func-name" placeholder="Function detail"></div>
+                            <div class="input-group"><label>Function Date</label><input type="date" id="dep-func-date"></div>
+                            <div class="input-group"><label>Payment Type</label>
+                                <select id="dep-pay-type" required><option value="Cheque">Cheque</option><option value="Online">Online</option></select>
+                            </div>
+                            <div class="input-group"><label>Payment Date</label><input type="date" id="dep-pay-date"></div>
+                            <div class="input-group"><label>Reference Number</label><input type="text" id="dep-ref" placeholder="Cheque / UPI Ref No."></div>
+                            <div class="input-group"><label>Bank Name</label><input type="text" id="dep-bank" placeholder="Bank name"></div>
+                            <div class="input-group"><label>Amount (₹)</label><input type="number" id="dep-amount" required oninput="numToWords(this.value, 'dep-words')" placeholder="0.00"></div>
+                            <div class="input-group"><label>Amount in Words</label><input type="text" id="dep-words" readonly class="highlight-input"></div>
+                        </div>
+                        <div class="form-actions"><button type="submit" class="btn-submit" id="btn-submit-dep"><i class="ri-printer-line"></i> Save & Print</button></div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Donation Form -->
+            <section id="sec-donation" class="page-section">
+                <div class="card form-card">
+                    <div class="card-header"><div class="icon-box green"><i class="ri-hand-heart-line"></i></div><h3>Generate Donation Slip</h3></div>
+                    <form id="form-donation">
+                        <input type="hidden" id="don-edit-id">
+                        <div class="grid-2">
+                            <div class="input-group"><label>Slip Number (Auto)</label><input type="text" id="don-slip" readonly></div>
+                            <div class="input-group"><label>Date</label><input type="date" id="don-date" required></div>
+                            <div class="input-group">
+                                <label>Member Number (Type & click outside to auto-fill) <i class="ri-magic-line" style="color:var(--primary)"></i></label>
+                                <input type="text" id="don-member" onblur="fetchMember('don-member', 'don-name', 'don-address', 'don-native')">
+                            </div>
+                            <div class="input-group"><label>Name</label><input type="text" id="don-name" required placeholder="Enter donor name"></div>
+                            <div class="input-group"><label>Address</label><input type="text" id="don-address" placeholder="Enter address"></div>
+                            <div class="input-group"><label>Native Name</label><input type="text" id="don-native"></div>
+                            <div class="input-group"><label>PAN Number</label><input type="text" id="don-pan" placeholder="ABCDE1234F"></div>
+                            <div class="input-group"><label>Description</label>
+                                <select id="don-desc" onchange="checkCustomDonation()" required>
+                                    <option value="Dattak Yojna">Dattak Yojna</option>
+                                    <option value="General Sahay">General Sahay</option>
+                                    <option value="Education Sahay">Education Sahay</option>
+                                    <option value="Inaam Vitran">Inaam Vitran</option>
+                                    <option value="Custom">Custom (Type below)</option>
+                                </select>
+                                <input type="text" id="don-custom-desc" placeholder="Enter custom description" style="display:none; margin-top:8px;">
+                            </div>
+                            <div class="input-group"><label>Payment Type</label>
+                                <select id="don-pay-type" required><option value="Cheque">Cheque</option><option value="Online">Online</option></select>
+                            </div>
+                            <div class="input-group"><label>Payment Date</label><input type="date" id="don-pay-date"></div>
+                            <div class="input-group"><label>Reference Number</label><input type="text" id="don-ref"></div>
+                            <div class="input-group"><label>Bank Name</label><input type="text" id="don-bank"></div>
+                            <div class="input-group"><label>Amount (₹)</label><input type="number" id="don-amount" required oninput="numToWords(this.value, 'don-words')" placeholder="0.00"></div>
+                            <div class="input-group"><label>Amount in Words</label><input type="text" id="don-words" readonly class="highlight-input"></div>
+                        </div>
+                        <div class="form-actions"><button type="submit" class="btn-submit" id="btn-submit-don"><i class="ri-printer-line"></i> Save & Print</button></div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Tax Invoice Form -->
+            <section id="sec-invoice" class="page-section">
+                <div class="card form-card">
+                    <div class="card-header"><div class="icon-box purple"><i class="ri-file-list-3-line"></i></div><h3>Generate Tax Invoice</h3></div>
+                    <form id="form-invoice">
+                        <input type="hidden" id="inv-edit-id">
+                        <div class="grid-2">
+                            <div class="input-group"><label>Invoice Number (Auto)</label><input type="text" id="inv-slip" readonly></div>
+                            <div class="input-group"><label>Date</label><input type="date" id="inv-date" required></div>
+                            <div class="input-group"><label>Name</label><input type="text" id="inv-name" required placeholder="Enter client name"></div>
+                            <div class="input-group"><label>Address</label><input type="text" id="inv-address" placeholder="Enter address"></div>
+                            <div class="input-group"><label>GST Number</label><input type="text" id="inv-gst" placeholder="24XXXXX0000X1ZX"></div>
+                            <div class="input-group"><label>Description</label><input type="text" id="inv-desc" value="Maintenance" required></div>
+                            <div class="input-group"><label>Basic Amount (₹)</label><input type="number" id="inv-basic" required oninput="calcInvoice()" placeholder="0.00"></div>
+                            <div class="input-group"><label>CGST (9%)</label><input type="number" id="inv-cgst" readonly class="tax-input"></div>
+                            <div class="input-group"><label>SGST (9%)</label><input type="number" id="inv-sgst" readonly class="tax-input"></div>
+                            <div class="input-group"><label>Round Off</label><input type="number" step="0.01" id="inv-round" readonly></div>
+                            <div class="input-group"><label>Total Amount (₹)</label><input type="number" id="inv-total" readonly class="highlight-input total-input"></div>
+                            <div class="input-group"><label>Amount in Words</label><input type="text" id="inv-words" readonly></div>
+                            <div class="input-group"><label>Payment Type</label>
+                                <select id="inv-pay-type" required><option value="Cheque">Cheque</option><option value="Online">Online</option></select>
+                            </div>
+                            <div class="input-group"><label>Payment Date</label><input type="date" id="inv-pay-date"></div>
+                            <div class="input-group"><label>Reference Number</label><input type="text" id="inv-ref"></div>
+                            <div class="input-group"><label>Bank Name</label><input type="text" id="inv-bank"></div>
+                        </div>
+                        <div class="form-actions"><button type="submit" class="btn-submit" id="btn-submit-inv"><i class="ri-printer-line"></i> Save & Print</button></div>
+                    </form>
+                </div>
+            </section>
+
+            <!-- Records Table -->
+            <section id="sec-records" class="page-section">
+                <div class="card">
+                    <div class="records-header">
+                        <h3><i class="ri-database-2-line"></i> Saved Records</h3>
+                        <div class="records-filters">
+                            <select id="record-filter" onchange="loadRecords()" class="modern-select">
+                                <option value="deposit">Deposit Slips</option>
+                                <option value="donation">Donation Slips</option>
+                                <option value="invoice">Tax Invoices</option>
+                            </select>
+                            <div class="search-box">
+                                <i class="ri-search-line"></i>
+                                <input type="text" id="search-bar" placeholder="Search by name..." onkeyup="searchTable()">
+                            </div>
+                        </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="records-table" class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Slip No.</th>
+                                    <th>Date</th>
+                                    <th>Name</th>
+                                    <th>Amount</th>
+                                    <th>Actions (Edit / Print / Del)</th>
+                                </tr>
+                            </thead>
+                            <tbody id="records-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Print Template -->
+    <div id="print-container" class="print-only"></div>
+
+    <!-- UI Logic -->
+    <script>
+        // Check Login Session
+        window.addEventListener('load', () => {
+            if(sessionStorage.getItem('isAdmin') === 'true') {
+                document.getElementById('login-overlay').style.display = 'none';
+            }
+        });
+
+        function checkLogin() {
+            const u = document.getElementById('login-user').value;
+            const p = document.getElementById('login-pass').value;
+            if(u === 'Batrisi' && p === 'Bat@3232') {
+                document.getElementById('login-overlay').style.display = 'none';
+                sessionStorage.setItem('isAdmin', 'true');
+            } else {
+                alert('Invalid Admin ID or Password!');
+            }
+        }
+
+        function logout() {
+            sessionStorage.removeItem('isAdmin');
+            location.reload();
+        }
+
+        function toggleMenu() { document.querySelector('.sidebar').classList.toggle('active'); }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.nav-links li').forEach(li => li.classList.remove('active'));
+            document.getElementById(`sec-${tabId}`).classList.add('active');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            if(window.innerWidth <= 900) toggleMenu();
+            if(tabId === 'records' && typeof window.loadRecords === 'function') window.loadRecords();
+        }
+
+        function checkCustomDonation() {
+            const val = document.getElementById('don-desc').value;
+            document.getElementById('don-custom-desc').style.display = val === 'Custom' ? 'block' : 'none';
+        }
+
+        function numToWords(num, targetId) {
+            if(!num || num == 0) { document.getElementById(targetId).value = ""; return; }
+            let a =['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+            let b =['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
+            let n = Math.floor(num);
+            if(n.toString().length > 9) return document.getElementById(targetId).value = "Limit Exceeded";
+            let str = ('000000000' + n).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+            if (!str) return;
+            let words = '';
+            words += (str[1] != 0) ? (a[Number(str[1])] || b[str[1][0]] + ' ' + a[str[1][1]]) + 'Crore ' : '';
+            words += (str[2] != 0) ? (a[Number(str[2])] || b[str[2][0]] + ' ' + a[str[2][1]]) + 'Lakh ' : '';
+            words += (str[3] != 0) ? (a[Number(str[3])] || b[str[3][0]] + ' ' + a[str[3][1]]) + 'Thousand ' : '';
+            words += (str[4] != 0) ? (a[Number(str[4])] || b[str[4][0]] + ' ' + a[str[4][1]]) + 'Hundred ' : '';
+            words += (str[5] != 0) ? ((words != '') ? 'and ' : '') + (a[Number(str[5])] || b[str[5][0]] + ' ' + a[str[5][1]]) : '';
+            document.getElementById(targetId).value = words.trim() + " Rupees Only";
+        }
+
+        function calcInvoice() {
+            let basic = parseFloat(document.getElementById('inv-basic').value) || 0;
+            let cgst = basic * 0.09;
+            let sgst = basic * 0.09;
+            let exactTotal = basic + cgst + sgst;
+            let roundedTotal = Math.round(exactTotal);
+            let roundOff = roundedTotal - exactTotal;
+            document.getElementById('inv-cgst').value = cgst.toFixed(2);
+            document.getElementById('inv-sgst').value = sgst.toFixed(2);
+            document.getElementById('inv-total').value = roundedTotal;
+            document.getElementById('inv-round').value = roundOff.toFixed(2);
+            numToWords(roundedTotal, 'inv-words');
+        }
+    </script>
+    <script type="module" src="app.js"></script>
+</body>
+</html>
