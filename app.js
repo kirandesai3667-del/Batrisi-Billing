@@ -240,7 +240,7 @@ const printRecord = (data, type) => {
     
     copiesArray.forEach((copy, index) => {
         let details = `
-            <div class="print-grid">
+            <div class="print-grid" style="margin-bottom: 8px;">
                 <div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div>
                 <div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div>
                 <div class="print-row"><span class="print-label">Name:</span> ${data.name}</div>
@@ -250,29 +250,29 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType}</div>
                 <div class="print-row"><span class="print-label">Amount:</span> <strong>₹ ${data.amount || data.total}</strong></div>
             </div>
-            <div style="margin-top:10px; font-style:italic;">Words: ${data.words}</div>
+            <div style="font-style:italic; font-size: 11px;">Words: ${data.words}</div>
         `;
         
         let customInstructionsHtml = '';
         if(type === 'deposit') {
             customInstructionsHtml = `
-                <div style="margin-top:15px; width:100%;">
-                    <table style="width:100%; border-collapse: collapse; font-size: 11px; font-family: Arial, sans-serif; text-align: left;">
+                <div style="margin-top:10px; width:100%;">
+                    <table style="width:100%; border-collapse: collapse; font-size: 10.5px; font-family: Arial, sans-serif; text-align: left;">
                         <tbody>
                             <tr>
-                                <td colspan="2" style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 13px; text-transform: uppercase;">Instructions</td>
+                                <td colspan="2" style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: bold; font-size: 12px; text-transform: uppercase;">Instructions</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #000; padding: 4px 6px; width: 25px; text-align: center; font-weight: bold;">1.</td>
-                                <td style="border: 1px solid #000; padding: 4px 6px;">All Parking Responsibilities Shall Be Kindly Managed By The Party Booking The Hall.</td>
+                                <td style="border: 1px solid #000; padding: 3px 5px; width: 20px; text-align: center; font-weight: bold;">1.</td>
+                                <td style="border: 1px solid #000; padding: 3px 5px;">All Parking Responsibilities Shall Be Kindly Managed By The Party Booking The Hall.</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #000; padding: 4px 6px; text-align: center; font-weight: bold;">2.</td>
-                                <td style="border: 1px solid #000; padding: 4px 6px;">After Completion Of The Function, At The Time Of Final Settlement, You Are Requested To Please Bring And Submit This Deposit Slip.</td>
+                                <td style="border: 1px solid #000; padding: 3px 5px; text-align: center; font-weight: bold;">2.</td>
+                                <td style="border: 1px solid #000; padding: 3px 5px;">After Completion Of The Function, At The Time Of Final Settlement, You Are Requested To Please Bring And Submit This Deposit Slip.</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #000; padding: 4px 6px; text-align: center; font-weight: bold;">3.</td>
-                                <td style="border: 1px solid #000; padding: 4px 6px;">For Any Function, Wherever Invitations Are Issued, You Are Kindly Requested To Mention The Name Of The Sanstha As “Sheth Shri Hiralal Hargovandas Batrisi Hall.” In Case Of Non-Compliance, The Sanstha May Levy A Penalty As Per Its Rules.</td>
+                                <td style="border: 1px solid #000; padding: 3px 5px; text-align: center; font-weight: bold;">3.</td>
+                                <td style="border: 1px solid #000; padding: 3px 5px;">For Any Function, Wherever Invitations Are Issued, You Are Kindly Requested To Mention The Name Of The Sanstha As “Sheth Shri Hiralal Hargovandas Batrisi Hall.” In Case Of Non-Compliance, The Sanstha May Levy A Penalty As Per Its Rules.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -280,35 +280,35 @@ const printRecord = (data, type) => {
             `;
         }
 
-        // SLIP HTML
+        // REDUCED PADDING AND MARGINS SO IT FITS IN ONE PAGE
         contentHtml += `
-            <div class="print-copy" style="box-sizing: border-box; width: 100%; margin: 0; border:2px solid #000; padding:15px; position:relative;">
+            <div class="print-copy" style="box-sizing: border-box; width: 100%; margin: 0; border:2px solid #000; padding:10px 15px; position:relative;">
                 <div style="position:absolute; top:10px; right:10px; border:1px solid #000; padding:2px 5px; font-weight: bold;">${copy}</div>
                 
-                <div style="position:relative; margin-bottom:15px;">
-                    <img src="logo.png" style="width:70px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:10px;">
-                    <div style="padding-left: 80px; text-align:center; border-bottom:1px solid #000; padding-bottom:8px;">
-                        <h2 style="margin:0; font-size:18px;">${orgName}</h2>
-                        <p style="margin:4px 0 0 0; font-size:10px;">${orgAddress}</p>
+                <div style="position:relative; margin-bottom:10px;">
+                    <img src="logo.png" style="width:60px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:10px;">
+                    <div style="padding-left: 70px; text-align:center; border-bottom:1px solid #000; padding-bottom:5px;">
+                        <h2 style="margin:0; font-size:17px;">${orgName}</h2>
+                        <p style="margin:3px 0 0 0; font-size:9.5px;">${orgAddress}</p>
                     </div>
                 </div>
 
-                <h3 style="text-align:center; text-decoration:underline; margin-bottom:10px;">${title}</h3>
+                <h3 style="text-align:center; text-decoration:underline; margin: 5px 0 10px 0; font-size: 15px;">${title}</h3>
                 ${details}
                 ${customInstructionsHtml}
                 
-                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '80px' : '100px'};">
-                    <div style="border-top:1px solid #000; width:180px; text-align:center; padding-top: 5px; font-weight: 500;">Payer Signature</div>
-                    <div style="border-top:1px solid #000; width:180px; text-align:center; padding-top: 5px; font-weight: 500;">Receiver Signature</div>
+                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '35px' : '55px'};">
+                    <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 4px; font-weight: 500; font-size: 12px;">Payer Signature</div>
+                    <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 4px; font-weight: 500; font-size: 12px;">Receiver Signature</div>
                 </div>
             </div>`;
 
-        // SCISSOR CUT LINE (Only added after the FIRST slip)
+        // REDUCED CUTLINE MARGIN
         if (index === 0) {
             contentHtml += `
-                <div style="border-top: 2px dashed #666; margin: 30px 0; position: relative; text-align: center;">
-                    <span style="background: #fff; padding: 0 15px; position: relative; top: -10px; font-size: 14px; color: #555; font-weight: bold; letter-spacing: 2px;">
-                        ✂ - - - - - Cut Here - - - - - ✂
+                <div style="border-top: 2px dashed #666; margin: 15px 0; position: relative; text-align: center;">
+                    <span style="background: #fff; padding: 0 10px; position: relative; top: -9px; font-size: 12px; color: #555; font-weight: bold; letter-spacing: 2px;">
+                        ✂ - - - - Cut Here - - - - ✂
                     </span>
                 </div>
             `;
