@@ -215,3 +215,91 @@
                                 <input type="text" id="search-bar" placeholder="Search by name..." onkeyup="searchTable()">
                             </div>
                         </div>
+                    </div>
+                    <div class="table-responsive">
+                        <table id="records-table" class="modern-table">
+                            <thead>
+                                <tr>
+                                    <th>Slip No.</th>
+                                    <th>Date</th>
+                                    <th>Name</th>
+                                    <th>Amount</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody id="records-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </section>
+
+        </div>
+    </main>
+
+    <!-- Print Template -->
+    <div id="print-container" class="print-only"></div>
+
+    <!-- UI Logic (Offline / Browser Tab Switching & Calculations) -->
+    <script>
+        function toggleMenu() { document.querySelector('.sidebar').classList.toggle('active'); }
+
+        function switchTab(tabId) {
+            document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
+            document.querySelectorAll('.nav-links li').forEach(li => li.classList.remove('active'));
+            
+            document.getElementById(`sec-${tabId}`).classList.add('active');
+            document.getElementById(`tab-${tabId}`).classList.add('active');
+            
+            if(window.innerWidth <= 900) toggleMenu();
+            
+            // Call Firebase function ONLY if it exists (online/hosted mode)
+            if(tabId === 'records' && typeof window.loadRecords === 'function') {
+                window.loadRecords();
+            }
+        }
+
+        function checkCustomDonation() {
+            const val = document.getElementById('don-desc').value;
+            document.getElementById('don-custom-desc').style.display = val === 'Custom' ? 'block' : 'none';
+        }
+
+        function numToWords(num, targetId) {
+            if(!num || num == 0) { document.getElementById(targetId).value = ""; return; }
+            let a =['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+            let b =['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
+            
+            let n = Math.floor(num);
+            if(n.toString().length > 9) return document.getElementById(targetId).value = "Limit Exceeded";
+            
+            let str = ('000000000' + n).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+            if (!str) return;
+            let words = '';
+            words += (str[1] != 0) ? (a[Number(str[1])] || b[str[1][0]] + ' ' + a[str[1][1]]) + 'Crore ' : '';
+            words += (str[2] != 0) ? (a[Number(str[2])] || b[str[2][0]] + ' ' + a[str[2][1]]) + 'Lakh ' : '';
+            words += (str[3] != 0) ? (a[Number(str[3])] || b[str[3][0]] + ' ' + a[str[3][1]]) + 'Thousand ' : '';
+            words += (str[4] != 0) ? (a[Number(str[4])] || b[str[4][0]] + ' ' + a[str[4][1]]) + 'Hundred ' : '';
+            words += (str[5] != 0) ? ((words != '') ? 'and ' : '') + (a[Number(str[5])] || b[str[5][0]] + ' ' + a[str[5][1]]) : '';
+            
+            document.getElementById(targetId).value = words.trim() + " Rupees Only";
+        }
+
+        function calcInvoice() {
+            let basic = parseFloat(document.getElementById('inv-basic').value) || 0;
+            let cgst = basic * 0.09;
+            let sgst = basic * 0.09;
+            let exactTotal = basic + cgst + sgst;
+            let roundedTotal = Math.round(exactTotal);
+            let roundOff = roundedTotal - exactTotal;
+
+            document.getElementById('inv-cgst').value = cgst.toFixed(2);
+            document.getElementById('inv-sgst').value = sgst.toFixed(2);
+            document.getElementById('inv-total').value = roundedTotal;
+            document.getElementById('inv-round').value = roundOff.toFixed(2);
+            numToWords(roundedTotal, 'inv-words');
+        }
+    </script>
+
+    <!-- Firebase Database Logic (Cloud Data Saving) -->
+    <script type="module" src="app.js"></script>
+</body>
+</html>
