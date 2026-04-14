@@ -214,9 +214,16 @@ const printRecord = (data, type) => {
             detailsHtml = `<div class="print-grid" style="margin-bottom: 5px;"><div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div><div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div><div class="print-row"><span class="print-label">Name:</span> ${data.name}</div><div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div><div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div><div class="print-row"><span class="print-label">Native:</span> ${data.native || '-'}</div><div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType}</div><div class="print-row"><span class="print-label">Amount:</span> <strong>₹ ${data.amount}</strong></div></div>`;
         }
 
-        let customInstructionsHtml = '';
+        // --- CUSTOM FOOTER LOGIC ---
+        let footerNoteHtml = '';
         if(type === 'deposit') {
-            customInstructionsHtml = `<div style="margin-top:5px; width:100%;"><table style="width:100%; border-collapse: collapse; font-size: 9.5px; font-family: Arial, sans-serif; text-align: left;"><tbody><tr><td colspan="2" style="border: 1px solid #000; padding: 3px; text-align: center; font-weight: bold; font-size: 11px; text-transform: uppercase;">Instructions</td></tr><tr><td style="border: 1px solid #000; padding: 2px 5px; width: 18px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 2px 5px;">All Parking Responsibilities Shall Be Kindly Managed By The Party Booking The Hall.</td></tr><tr><td style="border: 1px solid #000; padding: 2px 5px; text-align: center; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 2px 5px;">After Completion Of The Function, At The Time Of Final Settlement, You Are Requested To Please Bring And Submit This Deposit Slip.</td></tr><tr><td style="border: 1px solid #000; padding: 2px 5px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 2px 5px;">For Any Function, Wherever Invitations Are Issued, You Are Kindly Requested To Mention The Name Of The Sanstha As “Sheth Shri Hiralal Hargovandas Batrisi Hall.” In Case Of Non-Compliance, The Sanstha May Levy A Penalty As Per Its Rules.</td></tr></tbody></table></div>`;
+            footerNoteHtml = `<div style="margin-top:5px; width:100%;"><table style="width:100%; border-collapse: collapse; font-size: 9px; font-family: Arial, sans-serif; text-align: left;"><tbody><tr><td colspan="2" style="border: 1px solid #000; padding: 2px; text-align: center; font-weight: bold; font-size: 10px; text-transform: uppercase;">Instructions</td></tr><tr><td style="border: 1px solid #000; padding: 1px 4px; width: 15px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 1px 4px;">All Parking Responsibilities Shall Be Kindly Managed By The Party Booking The Hall.</td></tr><tr><td style="border: 1px solid #000; padding: 1px 4px; text-align: center; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 1px 4px;">After Completion Of The Function, At The Time Of Final Settlement, You Are Requested To Please Bring And Submit This Deposit Slip.</td></tr><tr><td style="border: 1px solid #000; padding: 1px 4px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 1px 4px;">For Any Function, Wherever Invitations Are Issued, You Are Kindly Requested To Mention The Name Of The Sanstha As “Sheth Shri Hiralal Hargovandas Batrisi Hall.” In Case Of Non-Compliance, The Sanstha May Levy A Penalty As Per Its Rules.</td></tr></tbody></table></div>`;
+        } else if (type === 'donation') {
+            footerNoteHtml = `
+                <div style="margin-top: 10px; border: 1px solid #000; padding: 6px; font-family: Arial, sans-serif; text-align: center; font-size: 9.5px; line-height: 1.4;">
+                    <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
+                    DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOME TAX ACT 1961 (RENEWAL)
+                </div>`;
         }
 
         contentHtml += `
@@ -236,15 +243,12 @@ const printRecord = (data, type) => {
                 <h3 style="text-align:center; text-decoration:underline; margin: 3px 0 6px 0; font-size: 13px;">${title}</h3>
                 ${detailsHtml}
                 <div style="font-style:italic; font-size: 10px; margin-top: 3px;">Words: ${data.words}</div>
-                ${customInstructionsHtml}
                 
-                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '40px' : (type === 'invoice' ? '30px' : '60px')};">
+                ${footerNoteHtml}
+                
+                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '30px' : (type === 'donation' ? '40px' : '60px')};">
                     <div style="border-top:1px solid #000; width:150px; text-align:center; padding-top: 3px; font-weight: 500; font-size: 11px;">Payer Signature</div>
                     <div style="border-top:1px solid #000; width:150px; text-align:center; padding-top: 3px; font-weight: 500; font-size: 11px;">Receiver Signature</div>
-                </div>
-                
-                <div style="text-align: center; font-size: 8px; margin-top: 8px; color: #444;">
-                    This is a computer-generated document and does not require a stamp.
                 </div>
             </div>`;
 
