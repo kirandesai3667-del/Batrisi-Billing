@@ -125,7 +125,6 @@ window.exportData = async () => {
         let data = docSnap.data();
         delete data.timestamp;
         
-        // Convert dates to Indian Format for export
         if(data.date) data.date = window.formatDateIndian(data.date);
         if(data.payDate) data.payDate = window.formatDateIndian(data.payDate);
         if(data.funcDate) data.funcDate = window.formatDateIndian(data.funcDate);
@@ -254,7 +253,6 @@ const printRecord = (data, type) => {
         
         let customInstructionsHtml = '';
         if(type === 'deposit') {
-            // New Numbered Table Format
             customInstructionsHtml = `
                 <div style="margin-top:15px; width:100%;">
                     <table style="width:100%; border-collapse: collapse; font-size: 11px; font-family: Arial, sans-serif; text-align: left;">
@@ -280,9 +278,9 @@ const printRecord = (data, type) => {
             `;
         }
 
-        // OUTER BORDER CHANGED TO '2px solid #000' FOR CLEAR PROPER PRINT BORDER IN ALL SLIPS
+        // FIX: box-sizing: border-box, width: 96%, margin: 0 auto joda gaya he taki Right side se cut na ho.
         contentHtml += `
-            <div class="print-copy" style="border:2px solid #000; padding:15px; margin-bottom:20px; position:relative;">
+            <div class="print-copy" style="box-sizing: border-box; width: 96%; margin: 0 auto 20px auto; border:2px solid #000; padding:15px; position:relative;">
                 <div style="position:absolute; top:10px; right:10px; border:1px solid #000; padding:2px 5px; font-weight: bold;">${copy}</div>
                 
                 <div style="position:relative; margin-bottom:15px;">
