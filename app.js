@@ -236,7 +236,9 @@ const printRecord = (data, type) => {
     let title = type.toUpperCase() + (type === 'invoice' ? ' INVOICE' : ' SLIP');
     let contentHtml = '';
     
-    ['ORIGINAL', 'DUPLICATE'].forEach(copy => {
+    let copiesArray = ['ORIGINAL', 'DUPLICATE'];
+    
+    copiesArray.forEach((copy, index) => {
         let details = `
             <div class="print-grid">
                 <div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div>
@@ -278,9 +280,9 @@ const printRecord = (data, type) => {
             `;
         }
 
-        // FIX: box-sizing: border-box, width: 96%, margin: 0 auto joda gaya he taki Right side se cut na ho.
+        // SLIP HTML
         contentHtml += `
-            <div class="print-copy" style="box-sizing: border-box; width: 96%; margin: 0 auto 20px auto; border:2px solid #000; padding:15px; position:relative;">
+            <div class="print-copy" style="box-sizing: border-box; width: 100%; margin: 0; border:2px solid #000; padding:15px; position:relative;">
                 <div style="position:absolute; top:10px; right:10px; border:1px solid #000; padding:2px 5px; font-weight: bold;">${copy}</div>
                 
                 <div style="position:relative; margin-bottom:15px;">
@@ -295,12 +297,24 @@ const printRecord = (data, type) => {
                 ${details}
                 ${customInstructionsHtml}
                 
-                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '30px' : '60px'};">
-                    <div style="border-top:1px solid #000; width:150px; text-align:center; padding-top: 5px;">Payer Signature</div>
-                    <div style="border-top:1px solid #000; width:150px; text-align:center; padding-top: 5px;">Receiver Signature</div>
+                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '80px' : '100px'};">
+                    <div style="border-top:1px solid #000; width:180px; text-align:center; padding-top: 5px; font-weight: 500;">Payer Signature</div>
+                    <div style="border-top:1px solid #000; width:180px; text-align:center; padding-top: 5px; font-weight: 500;">Receiver Signature</div>
                 </div>
             </div>`;
+
+        // SCISSOR CUT LINE (Only added after the FIRST slip)
+        if (index === 0) {
+            contentHtml += `
+                <div style="border-top: 2px dashed #666; margin: 30px 0; position: relative; text-align: center;">
+                    <span style="background: #fff; padding: 0 15px; position: relative; top: -10px; font-size: 14px; color: #555; font-weight: bold; letter-spacing: 2px;">
+                        ✂ - - - - - Cut Here - - - - - ✂
+                    </span>
+                </div>
+            `;
+        }
     });
+    
     container.innerHTML = contentHtml;
     setTimeout(() => { window.print(); }, 500);
 };
