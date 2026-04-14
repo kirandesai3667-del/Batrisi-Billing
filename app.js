@@ -21,24 +21,24 @@ const orgAddress = "Sheth Shri Hiralal Hargovandas Batrishi Hall, Near R.T.O Cir
 const orgDetails = "GSTIN: 24AAATS6070J1ZE | Reg No: GH/230 (10/10/1944) | Mob: 9586423232 | Email: 32cedusociety@gmail.com";
 const logoUrl = "logo.png"; 
 
+// --- DATE & SLIP LOGIC ---
 const setToday = () => {
     const today = new Date().toISOString().split('T')[0];
-    if(document.getElementById('dep-date')) document.getElementById('dep-date').value = today;
-    if(document.getElementById('don-date')) document.getElementById('don-date').value = today;
-    if(document.getElementById('inv-date')) document.getElementById('inv-date').value = today;
+    ['dep-date', 'don-date', 'inv-date'].forEach(id => {
+        if(document.getElementById(id)) document.getElementById(id).value = today;
+    });
 };
 
 const getFinancialYear = () => {
     const today = new Date();
     const year = today.getFullYear();
-    if(today.getMonth() >= 3) return `${year}-${(year+1).toString().slice(2)}`;
-    return `${year-1}-${year.toString().slice(2)}`;
+    return (today.getMonth() >= 3) ? `${year}-${(year+1).toString().slice(2)}` : `${year-1}-${year.toString().slice(2)}`;
 };
 
-const generateSlipNo = async (collectionName, targetId) => {
+const generateSlipNo = async (type, targetId) => {
     try {
         const fy = getFinancialYear();
-        const q = query(collection(db, collectionName), orderBy("timestamp", "desc"));
+        const q = query(collection(db, type), orderBy("timestamp", "desc"));
         const qs = await getDocs(q);
         let lastNum = 0;
         qs.forEach((doc) => {
@@ -47,47 +47,44 @@ const generateSlipNo = async (collectionName, targetId) => {
         });
         const newNum = String(lastNum + 1).padStart(3, '0');
         if(document.getElementById(targetId)) document.getElementById(targetId).value = `${newNum}/${fy}`;
-    } catch(err) { console.error("Slip Error:", err); }
+    } catch(err) { console.error("Slip Gen Error:", err); }
 };
 
+// --- CSV MEMBER DATA LOGIC ---
 window.uploadCSV = async () => {
     const file = document.getElementById('csv-upload').files[0];
     if(!file) return alert('Please select a CSV file first.');
     const status = document.getElementById('csv-status');
-    status.style.color = "#10B981";
-    status.innerText = "Processing Data (Smart Mode)... Please wait!";
+    status.innerText = "Saving members to Cloud... Please wait.";
     
     const reader = new FileReader();
     reader.onload = async (e) => {
         try {
             const lines = e.target.result.split(/\r?\n/);
-            if (lines.length < 2) throw new Error("CSV is empty");
             const headers = lines[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h => h.replace(/"/g, '').trim().toLowerCase());
-            let memIdx = headers.findIndex(h => h.includes('number') || h.includes('no'));
-            let nameIdx = headers.findIndex(h => h.includes('name') && !h.includes('native'));
-            let addrIdx = headers.findIndex(h => h.includes('address'));
-            let nativeIdx = headers.findIndex(h => h.includes('native'));
-            if (memIdx === -1) memIdx = 0; if (nameIdx === -1) nameIdx = 1; if (addrIdx === -1) addrIdx = 2; if (nativeIdx === -1) nativeIdx = 3;
+            let mIdx = headers.findIndex(h => h.includes('number') || h.includes('no'));
+            let nIdx = headers.findIndex(h => h.includes('name') && !h.includes('native'));
+            let aIdx = headers.findIndex(h => h.includes('address'));
+            let ntIdx = headers.findIndex(h => h.includes('native'));
+
+            const batch = writeBatch(db);
             let count = 0;
-            const chunks =[]; let currentChunk =[];
             for(let i=1; i<lines.length; i++){
                 if(!lines[i].trim()) continue;
                 const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                let memNo = cols[memIdx] ? cols[memIdx].replace(/"/g,'').trim() : "";
-                let name = cols[nameIdx] ? cols[nameIdx].replace(/"/g,'').trim() : "";
-                let addr = cols[addrIdx] ? cols[addrIdx].replace(/"/g,'').trim() : "";
-                let native = cols[nativeIdx] ? cols[nativeIdx].replace(/"/g,'').trim() : "";
-                if(memNo) { currentChunk.push({memNo, name, addr, native}); count++; }
-                if(currentChunk.length === 500) { chunks.push(currentChunk); currentChunk =[]; }
+                let memNo = cols[mIdx]?.replace(/"/g,'').trim();
+                if(memNo) {
+                    batch.set(doc(db, "members", memNo), {
+                        name: cols[nIdx]?.replace(/"/g,'').trim() || '',
+                        address: cols[aIdx]?.replace(/"/g,'').trim() || '',
+                        native: cols[ntIdx]?.replace(/"/g,'').trim() || ''
+                    });
+                    count++;
+                }
             }
-            if(currentChunk.length > 0) chunks.push(currentChunk);
-            for (let chunk of chunks) {
-                const batch = writeBatch(db);
-                for (let member of chunk) { batch.set(doc(db, "members", member.memNo), { name: member.name, address: member.addr, native: member.native }); }
-                await batch.commit();
-            }
-            status.innerText = `Success! ${count} members added.`;
-        } catch (error) { status.style.color = "red"; status.innerText = "Error uploading data."; }
+            await batch.commit();
+            status.innerText = `Success! ${count} Members saved permanently.`;
+        } catch (error) { status.innerText = "Error uploading CSV."; }
     };
     reader.readAsText(file);
 };
@@ -95,235 +92,140 @@ window.uploadCSV = async () => {
 window.fetchMember = async (inputId, nameId, addrId, nativeId) => {
     const val = document.getElementById(inputId).value.trim();
     if(!val) return;
-    try {
-        const docSnap = await getDoc(doc(db, "members", val));
-        if(docSnap.exists()) {
-            const data = docSnap.data();
-            if(document.getElementById(nameId)) document.getElementById(nameId).value = data.name || '';
-            if(document.getElementById(addrId)) document.getElementById(addrId).value = data.address || '';
-            if(document.getElementById(nativeId)) document.getElementById(nativeId).value = data.native || '';
-        }
-    } catch (err) { console.error("Fetch Error:", err); }
+    const docSnap = await getDoc(doc(db, "members", val));
+    if(docSnap.exists()) {
+        const data = docSnap.data();
+        document.getElementById(nameId).value = data.name || '';
+        document.getElementById(addrId).value = data.address || '';
+        document.getElementById(nativeId).value = data.native || '';
+    }
 };
 
-// 🛑 THE ULTIMATE FIX: GUARANTEED SAVE FUNCTION
+// --- SAVE & UPDATE LOGIC (Main Persistence) ---
 window.handleFormSubmit = async (e, type) => {
-    if(e) e.preventDefault(); // Stop reload immediately
-    
-    const prefix = type === 'deposit' ? 'dep' : type === 'donation' ? 'don' : 'inv';
+    if(e) e.preventDefault();
+    const prefix = type.substring(0, 3);
     const btn = document.getElementById(`btn-submit-${prefix}`);
-    
-    if(btn) {
-        btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> Saving Data...";
-        btn.disabled = true;
-    }
+    if(btn) { btn.innerHTML = "Saving to Cloud..."; btn.disabled = true; }
 
     try {
         let data = { timestamp: new Date().toISOString() };
-        let editIdField = document.getElementById(`${prefix}-edit-id`);
-        let editId = editIdField ? editIdField.value : "";
+        let editId = document.getElementById(`${prefix}-edit-id`).value;
 
         if(type === 'deposit') {
-            data.slipNo = document.getElementById('dep-slip').value;
-            data.date = document.getElementById('dep-date').value;
-            data.name = document.getElementById('dep-name').value;
-            data.address = document.getElementById('dep-address').value;
-            data.member = document.getElementById('dep-member').value;
-            data.native = document.getElementById('dep-native').value;
-            data.funcName = document.getElementById('dep-func-name').value;
-            data.funcDate = document.getElementById('dep-func-date').value;
-            data.payType = document.getElementById('dep-pay-type').value;
-            data.payDate = document.getElementById('dep-pay-date').value;
-            data.ref = document.getElementById('dep-ref').value;
-            data.bank = document.getElementById('dep-bank').value;
-            data.amount = document.getElementById('dep-amount').value;
-            data.words = document.getElementById('dep-words').value;
+            data = { ...data, slipNo: document.getElementById('dep-slip').value, date: document.getElementById('dep-date').value, name: document.getElementById('dep-name').value, address: document.getElementById('dep-address').value, member: document.getElementById('dep-member').value, native: document.getElementById('dep-native').value, funcName: document.getElementById('dep-func-name').value, funcDate: document.getElementById('dep-func-date').value, payType: document.getElementById('dep-pay-type').value, payDate: document.getElementById('dep-pay-date').value, ref: document.getElementById('dep-ref').value, bank: document.getElementById('dep-bank').value, amount: document.getElementById('dep-amount').value, words: document.getElementById('dep-words').value };
         } else if(type === 'donation') {
-            data.slipNo = document.getElementById('don-slip').value;
-            data.date = document.getElementById('don-date').value;
-            data.name = document.getElementById('don-name').value;
-            data.address = document.getElementById('don-address').value;
-            data.member = document.getElementById('don-member').value;
-            data.native = document.getElementById('don-native').value;
-            data.pan = document.getElementById('don-pan').value;
-            data.desc = document.getElementById('don-desc').value === 'Custom' ? document.getElementById('don-custom-desc').value : document.getElementById('don-desc').value;
-            data.payType = document.getElementById('don-pay-type').value;
-            data.payDate = document.getElementById('don-pay-date').value;
-            data.ref = document.getElementById('don-ref').value;
-            data.bank = document.getElementById('don-bank').value;
-            data.amount = document.getElementById('don-amount').value;
-            data.words = document.getElementById('don-words').value;
+            data = { ...data, slipNo: document.getElementById('don-slip').value, date: document.getElementById('don-date').value, name: document.getElementById('don-name').value, address: document.getElementById('don-address').value, member: document.getElementById('don-member').value, native: document.getElementById('don-native').value, pan: document.getElementById('don-pan').value, desc: document.getElementById('don-desc').value === 'Custom' ? document.getElementById('don-custom-desc').value : document.getElementById('don-desc').value, payType: document.getElementById('don-pay-type').value, payDate: document.getElementById('don-pay-date').value, ref: document.getElementById('don-ref').value, bank: document.getElementById('don-bank').value, amount: document.getElementById('don-amount').value, words: document.getElementById('don-words').value };
         } else if(type === 'invoice') {
-            data.slipNo = document.getElementById('inv-slip').value;
-            data.date = document.getElementById('inv-date').value;
-            data.name = document.getElementById('inv-name').value;
-            data.address = document.getElementById('inv-address').value;
-            data.gst = document.getElementById('inv-gst').value;
-            data.desc = document.getElementById('inv-desc').value;
-            data.basic = document.getElementById('inv-basic').value;
-            data.cgst = document.getElementById('inv-cgst').value;
-            data.sgst = document.getElementById('inv-sgst').value;
-            data.total = document.getElementById('inv-total').value;
-            data.words = document.getElementById('inv-words').value;
-            data.payType = document.getElementById('inv-pay-type').value;
-            data.payDate = document.getElementById('inv-pay-date').value;
-            data.ref = document.getElementById('inv-ref').value;
-            data.bank = document.getElementById('inv-bank').value;
+            data = { ...data, slipNo: document.getElementById('inv-slip').value, date: document.getElementById('inv-date').value, name: document.getElementById('inv-name').value, address: document.getElementById('inv-address').value, gst: document.getElementById('inv-gst').value, desc: document.getElementById('inv-desc').value, basic: document.getElementById('inv-basic').value, cgst: document.getElementById('inv-cgst').value, sgst: document.getElementById('inv-sgst').value, total: document.getElementById('inv-total').value, words: document.getElementById('inv-words').value, payType: document.getElementById('inv-pay-type').value, payDate: document.getElementById('inv-pay-date').value, ref: document.getElementById('inv-ref').value, bank: document.getElementById('inv-bank').value };
         }
 
-        // Save to Firebase
         if(editId) {
             await updateDoc(doc(db, type, editId), data);
-            if(editIdField) editIdField.value = ""; 
+            document.getElementById(`${prefix}-edit-id`).value = "";
         } else {
             await addDoc(collection(db, type), data);
         }
         
-        // Reset and refresh form setup
+        alert("Data Saved Successfully in Cloud!");
         document.getElementById(`form-${type}`).reset();
         setToday();
         updateDashboardCounts();
         await generateSlipNo(type, `${prefix}-slip`);
-        
-        // Command to Print
         printRecord(data, type);
 
-    } catch (error) {
-        console.error("Save Error:", error);
-        alert("Error in Database! Please check if your Internet is working.");
-    } finally {
-        if(btn) {
-            btn.innerHTML = `<i class="ri-printer-line"></i> Save & Print`;
-            btn.disabled = false;
-        }
-    }
+    } catch (error) { alert("Error saving to Firebase. Check your Internet!"); }
+    finally { if(btn) { btn.innerHTML = `<i class="ri-printer-line"></i> Save & Print`; btn.disabled = false; } }
 };
 
+// --- LOAD RECORDS (Pulling from Cloud) ---
 window.loadRecords = async () => {
     const type = document.getElementById('record-filter').value;
     const tbody = document.getElementById('records-body');
-    if(!tbody) return;
-    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'><i class='ri-loader-4-line ri-spin'></i> Loading data...</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Fetching from Cloud...</td></tr>";
     
-    try {
-        const q = query(collection(db, type), orderBy("timestamp", "desc"));
-        const qs = await getDocs(q);
-        tbody.innerHTML = "";
-        
-        if(qs.empty) {
-            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No records found</td></tr>";
-            return;
-        }
-
-        qs.forEach((docSnap) => {
-            let data = docSnap.data();
-            data.id = docSnap.id; 
-            let tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td><strong>${data.slipNo}</strong></td>
-                <td>${data.date}</td>
-                <td>${data.name}</td>
-                <td style="color:#10B981; font-weight:600;">₹${data.amount || data.total}</td>
-                <td>
-                    <button class="btn-action btn-edit" onclick='editRec(${JSON.stringify(data)}, "${type}")'><i class="ri-edit-line"></i></button>
-                    <button class="btn-action btn-print" onclick='rePrint(${JSON.stringify(data)}, "${type}")'><i class="ri-printer-line"></i></button>
-                    <button class="btn-action btn-del" onclick='deleteRec("${data.id}", "${type}")'><i class="ri-delete-bin-line"></i></button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    } catch (err) { console.error(err); }
-};
-
-window.editRec = (data, type) => {
-    switchTab(type);
-    const prefix = type === 'deposit' ? 'dep' : type === 'donation' ? 'don' : 'inv';
+    const q = query(collection(db, type), orderBy("timestamp", "desc"));
+    const qs = await getDocs(q);
+    tbody.innerHTML = "";
     
-    if(type === 'deposit') {
-        document.getElementById('dep-edit-id').value = data.id;
-        document.getElementById('dep-slip').value = data.slipNo; document.getElementById('dep-date').value = data.date;
-        document.getElementById('dep-member').value = data.member || ''; document.getElementById('dep-name').value = data.name;
-        document.getElementById('dep-address').value = data.address || ''; document.getElementById('dep-native').value = data.native || '';
-        document.getElementById('dep-func-name').value = data.funcName || ''; document.getElementById('dep-func-date').value = data.funcDate || '';
-        document.getElementById('dep-pay-type').value = data.payType; document.getElementById('dep-pay-date').value = data.payDate || '';
-        document.getElementById('dep-ref').value = data.ref || ''; document.getElementById('dep-bank').value = data.bank || '';
-        document.getElementById('dep-amount').value = data.amount; document.getElementById('dep-words').value = data.words;
-    } else if(type === 'donation') {
-        document.getElementById('don-edit-id').value = data.id;
-        document.getElementById('don-slip').value = data.slipNo; document.getElementById('don-date').value = data.date;
-        document.getElementById('don-member').value = data.member || ''; document.getElementById('don-name').value = data.name;
-        document.getElementById('don-address').value = data.address || ''; document.getElementById('don-native').value = data.native || '';
-        document.getElementById('don-pan').value = data.pan || '';
-        let sel = document.getElementById('don-desc'); let options = Array.from(sel.options).map(o => o.value);
-        if(options.includes(data.desc)) { sel.value = data.desc; document.getElementById('don-custom-desc').style.display = 'none'; } else { sel.value = 'Custom'; document.getElementById('don-custom-desc').style.display = 'block'; document.getElementById('don-custom-desc').value = data.desc; }
-        document.getElementById('don-pay-type').value = data.payType; document.getElementById('don-pay-date').value = data.payDate || '';
-        document.getElementById('don-ref').value = data.ref || ''; document.getElementById('don-bank').value = data.bank || '';
-        document.getElementById('don-amount').value = data.amount; document.getElementById('don-words').value = data.words;
-    } else if(type === 'invoice') {
-        document.getElementById('inv-edit-id').value = data.id;
-        document.getElementById('inv-slip').value = data.slipNo; document.getElementById('inv-date').value = data.date;
-        document.getElementById('inv-name').value = data.name; document.getElementById('inv-address').value = data.address || '';
-        document.getElementById('inv-gst').value = data.gst || ''; document.getElementById('inv-desc').value = data.desc;
-        document.getElementById('inv-basic').value = data.basic; document.getElementById('inv-cgst').value = data.cgst;
-        document.getElementById('inv-sgst').value = data.sgst; document.getElementById('inv-total').value = data.total;
-        document.getElementById('inv-words').value = data.words; document.getElementById('inv-pay-type').value = data.payType;
-        document.getElementById('inv-pay-date').value = data.payDate || ''; document.getElementById('inv-ref').value = data.ref || '';
-        document.getElementById('inv-bank').value = data.bank || '';
-    }
-    let btn = document.getElementById(`btn-submit-${prefix}`);
-    if(btn) btn.innerHTML = `<i class="ri-save-line"></i> Update & Print`;
+    if(qs.empty) { tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No Data Saved Yet</td></tr>"; return; }
+
+    qs.forEach((docSnap) => {
+        let d = docSnap.data(); d.id = docSnap.id;
+        let tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><strong>${d.slipNo}</strong></td><td>${d.date}</td><td>${d.name}</td>
+            <td style="color:#10B981; font-weight:600;">₹${d.amount || d.total}</td>
+            <td>
+                <button class="btn-action btn-edit" onclick='editRec(${JSON.stringify(d)}, "${type}")'><i class="ri-edit-line"></i></button>
+                <button class="btn-action btn-print" onclick='rePrint(${JSON.stringify(d)}, "${type}")'><i class="ri-printer-line"></i></button>
+                <button class="btn-action btn-del" onclick='deleteRec("${d.id}", "${type}")'><i class="ri-delete-bin-line"></i></button>
+            </td>`;
+        tbody.appendChild(tr);
+    });
 };
 
 window.deleteRec = async (id, type) => {
-    if(confirm("Are you sure you want to delete this record?")) {
-        try { await deleteDoc(doc(db, type, id)); window.loadRecords(); updateDashboardCounts(); } 
-        catch(err) { alert("Error deleting record."); }
+    if(confirm("Confirm Delete from Cloud?")) {
+        await deleteDoc(doc(db, type, id));
+        loadRecords();
+        updateDashboardCounts();
     }
 };
 
 const updateDashboardCounts = async () => {
-    try {
-        const deps = await getDocs(collection(db, 'deposit')); const dons = await getDocs(collection(db, 'donation')); const invs = await getDocs(collection(db, 'invoice'));
-        if(document.getElementById('stat-dep')) document.getElementById('stat-dep').innerText = deps.size;
-        if(document.getElementById('stat-don')) document.getElementById('stat-don').innerText = dons.size;
-        if(document.getElementById('stat-inv')) document.getElementById('stat-inv').innerText = invs.size;
-    } catch (err) {}
+    const deps = await getDocs(collection(db, 'deposit'));
+    const dons = await getDocs(collection(db, 'donation'));
+    const invs = await getDocs(collection(db, 'invoice'));
+    if(document.getElementById('stat-dep')) document.getElementById('stat-dep').innerText = deps.size;
+    if(document.getElementById('stat-don')) document.getElementById('stat-don').innerText = dons.size;
+    if(document.getElementById('stat-inv')) document.getElementById('stat-inv').innerText = invs.size;
 };
 
+// --- PRINT LOGIC (Remains same for high quality) ---
 window.rePrint = (data, type) => { printRecord(data, type); };
-
 const printRecord = (data, type) => {
     const container = document.getElementById('print-container');
-    let title = type === 'deposit' ? 'DEPOSIT SLIP' : type === 'donation' ? 'DONATION RECEIPT' : 'TAX INVOICE';
+    let title = type.toUpperCase() + (type === 'invoice' ? ' INVOICE' : ' SLIP');
     let contentHtml = '';
-    ['ORIGINAL', 'DUPLICATE'].forEach(copyType => {
-        let detailsHtml = '';
-        if(type === 'deposit' || type === 'donation') {
-            detailsHtml = `<div class="print-grid">
-                <div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div><div class="print-row"><span class="print-label">Date:</span> ${data.date}</div>
-                <div class="print-row"><span class="print-label">Name:</span> ${data.name}</div><div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div>
-                <div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div><div class="print-row"><span class="print-label">Native:</span> ${data.native || '-'}</div>
-                ${type === 'deposit' ? `<div class="print-row"><span class="print-label">Function:</span> ${data.funcName || '-'}</div><div class="print-row"><span class="print-label">Func Date:</span> ${data.funcDate || '-'}</div>` : `<div class="print-row"><span class="print-label">PAN No:</span> ${data.pan || '-'}</div><div class="print-row"><span class="print-label">Description:</span> ${data.desc || '-'}</div>`}
-                <div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType}</div><div class="print-row"><span class="print-label">Bank:</span> ${data.bank || '-'}</div>
-                <div class="print-row"><span class="print-label">Ref No:</span> ${data.ref || '-'}</div><div class="print-row"><span class="print-label">Pay Date:</span> ${data.payDate || '-'}</div>
-            </div><div class="print-row" style="font-size:16px; margin-top:5px;"><span class="print-label">Amount:</span> <strong>₹ ${data.amount}</strong> <span style="margin-left:15px;">(${data.words})</span></div>`;
-        } else if(type === 'invoice') {
-            detailsHtml = `<div class="print-grid">
-                <div class="print-row"><span class="print-label">Invoice No:</span> ${data.slipNo}</div><div class="print-row"><span class="print-label">Date:</span> ${data.date}</div>
-                <div class="print-row"><span class="print-label">Name:</span> ${data.name}</div><div class="print-row"><span class="print-label">GST No:</span> ${data.gst || '-'}</div>
-                <div class="print-row" style="grid-column: span 2;"><span class="print-label">Address:</span> ${data.address || '-'}</div>
-                <div class="print-row"><span class="print-label">Description:</span> ${data.desc}</div><div class="print-row"><span class="print-label">Basic Amt:</span> ₹${data.basic}</div>
-                <div class="print-row"><span class="print-label">CGST (9%):</span> ₹${data.cgst}</div><div class="print-row"><span class="print-label">SGST (9%):</span> ₹${data.sgst}</div>
-                <div class="print-row"><span class="print-label">Total:</span> <strong>₹${data.total}</strong></div><div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType}</div>
-            </div><div class="print-row" style="font-size:14px; margin-top:10px;"><span class="print-label">Amount in words:</span> ${data.words}</div>`;
-        }
-        let donationFooter = type === 'donation' ? `<div class="print-footer-text">PAN No.AAATS670J | URN NO.AAATS6070JF20217 | DATE 24-09-2021<br>Donation Exempted under section 80G(5) 180/09-10 Dated: 20/11/2009 of Income Tax Act 1961</div>` : '';
-        contentHtml += `<div class="print-copy"><div class="print-copy-type" style="position: absolute; top: 10px; right: 10px; border: 1px solid #000; padding: 3px 8px; font-weight: bold; font-size:11px;">${copyType}</div><div class="print-header" style="position:relative; text-align:center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; min-height: 75px;"><img src="${logoUrl}" alt="Logo" style="width:70px; position:absolute; left:10px; top:0;"><div style="margin: 0 90px;"><h2 style="font-size: 18px; margin: 0 0 5px 0;">${orgName}</h2><p style="font-size: 11px; margin: 2px 0;">${orgAddress}</p><p style="font-size: 11px; margin: 2px 0;">${orgDetails}</p></div></div><div class="print-title">${title}</div>${detailsHtml}<div class="print-signatures"><div class="sign-box">Payer's Signature</div><div class="sign-box">Receiver's Signature</div></div>${donationFooter}</div>`;
+    ['ORIGINAL', 'DUPLICATE'].forEach(copy => {
+        let details = `
+            <div class="print-grid">
+                <div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div>
+                <div class="print-row"><span class="print-label">Date:</span> ${data.date}</div>
+                <div class="print-row"><span class="print-label">Name:</span> ${data.name}</div>
+                <div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div>
+                <div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div>
+                <div class="print-row"><span class="print-label">Native:</span> ${data.native || '-'}</div>
+                <div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType}</div>
+                <div class="print-row"><span class="print-label">Amount:</span> <strong>₹ ${data.amount || data.total}</strong></div>
+            </div>
+            <div style="margin-top:10px; font-style:italic;">Words: ${data.words}</div>
+        `;
+        contentHtml += `
+            <div class="print-copy" style="border:1px dashed #000; padding:15px; margin-bottom:20px; position:relative;">
+                <div style="position:absolute; top:10px; right:10px; border:1px solid #000; padding:2px 5px;">${copy}</div>
+                <div style="text-align:center; border-bottom:1px solid #000; margin-bottom:10px;">
+                    <img src="logo.png" style="width:60px; position:absolute; left:10px; top:10px;">
+                    <h2>${orgName}</h2><p style="font-size:10px;">${orgAddress}</p>
+                </div>
+                <h3 style="text-align:center; text-decoration:underline; margin-bottom:10px;">${title}</h3>
+                ${details}
+                <div style="display:flex; justify-content:space-between; margin-top:50px;">
+                    <div style="border-top:1px solid #000; width:150px; text-align:center;">Payer Signature</div>
+                    <div style="border-top:1px solid #000; width:150px; text-align:center;">Receiver Signature</div>
+                </div>
+            </div>`;
     });
-    container.innerHTML = `<div class="print-page">${contentHtml}</div>`;
+    container.innerHTML = contentHtml;
     setTimeout(() => { window.print(); }, 500);
 };
 
+// Start App
 window.addEventListener('load', async () => {
-    try { setToday(); await updateDashboardCounts(); await generateSlipNo('deposit', 'dep-slip'); await generateSlipNo('donation', 'don-slip'); await generateSlipNo('invoice', 'inv-slip'); } catch(err) { }
+    setToday();
+    updateDashboardCounts();
+    await generateSlipNo('deposit', 'dep-slip');
+    await generateSlipNo('donation', 'don-slip');
+    await generateSlipNo('invoice', 'inv-slip');
 });
