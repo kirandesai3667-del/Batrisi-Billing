@@ -1,6 +1,7 @@
 // --- FIREBASE INITIALIZATION ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, setDoc, getDoc, query, orderBy } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+// Naya function: writeBatch import kiya gaya hai fast upload ke liye
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, setDoc, getDoc, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
   apiKey: "AIzaSyDbZ4T8264CDQ5LSoH_4L0luB5VKQbiqkU",
@@ -20,7 +21,7 @@ const db = getFirestore(app);
 const orgName = "Shree Batrisi Jain Co-Op Education Society Ltd";
 const orgAddress = "Sheth Shri Hiralal Hargovandas Batrishi Hall, Near R.T.O Circle, Subhashbridge, Collector Kacheri, Ahmedabad - 380027";
 const orgDetails = "GSTIN: 24AAATS6070J1ZE | Reg No: GH/230 (10/10/1944) | Mob: 9586423232 | Email: 32cedusociety@gmail.com";
-const logoUrl = "logo.png"; // Direct Local PNG
+const logoUrl = "logo.png"; 
 
 // --- AUTO INCREMENT SLIP LOGIC ---
 const setToday = () => {
@@ -52,34 +53,62 @@ const generateSlipNo = async (collectionName, targetId) => {
     } catch(err) { console.error("Slip Error:", err); }
 };
 
-
-// --- MEMBER DATA (CSV UPLOAD & FETCH) ---
+// --- MEMBER DATA (SUPER FAST BATCHED CSV UPLOAD) ---
 window.uploadCSV = async () => {
     const file = document.getElementById('csv-upload').files[0];
     if(!file) return alert('Please select a CSV file first.');
     const status = document.getElementById('csv-status');
-    status.innerText = "Uploading to Database... Please wait!";
+    status.style.color = "#10B981";
+    status.innerText = "Processing Data (Super Fast Mode)... Please wait!";
     
     const reader = new FileReader();
     reader.onload = async (e) => {
-        const lines = e.target.result.split('\n');
-        let count = 0;
-        for(let i=1; i<lines.length; i++){
-            if(!lines[i].trim()) continue;
-            // Split by comma, ignoring commas inside double quotes
-            const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+        try {
+            const lines = e.target.result.split('\n');
+            let count = 0;
             
-            let memNo = cols[0]?.replace(/"/g,'').trim();
-            let name = cols[1]?.replace(/"/g,'').trim();
-            let addr = cols[2]?.replace(/"/g,'').trim();
-            let native = cols[3]?.replace(/"/g,'').trim();
+            // 500 records ke chunks banayenge (Firebase ek baar me max 500 commit karta hai)
+            const chunks = [];
+            let currentChunk =[];
+            
+            for(let i=1; i<lines.length; i++){
+                if(!lines[i].trim()) continue;
+                const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
+                
+                let memNo = cols[0]?.replace(/"/g,'').trim();
+                let name = cols[1]?.replace(/"/g,'').trim();
+                let addr = cols[2]?.replace(/"/g,'').trim();
+                let native = cols[3]?.replace(/"/g,'').trim();
 
-            if(memNo) {
-                await setDoc(doc(db, "members", memNo), { name: name, address: addr, native: native });
-                count++;
+                if(memNo) {
+                    currentChunk.push({memNo, name, addr, native});
+                    count++;
+                }
+
+                // Jaise hi 500 record hon, naya chunk bana do
+                if(currentChunk.length === 500) {
+                    chunks.push(currentChunk);
+                    currentChunk =[];
+                }
             }
+            if(currentChunk.length > 0) chunks.push(currentChunk); // Baaki bache huye records
+
+            // Ek sath Database me save karenge (Batched Writes - Seconds me ho jayega!)
+            for (let chunk of chunks) {
+                const batch = writeBatch(db);
+                for (let member of chunk) {
+                    const docRef = doc(db, "members", member.memNo);
+                    batch.set(docRef, { name: member.name, address: member.addr, native: member.native });
+                }
+                await batch.commit();
+            }
+
+            status.innerText = `Success! ${count} members added instantly.`;
+        } catch (error) {
+            console.error("CSV Upload Error:", error);
+            status.style.color = "red";
+            status.innerText = "Error uploading data. Check console.";
         }
-        status.innerText = `Success! ${count} members added to Database.`;
     };
     reader.readAsText(file);
 };
@@ -88,7 +117,6 @@ window.uploadCSV = async () => {
 window.fetchMember = async (inputId, nameId, addrId, nativeId) => {
     const val = document.getElementById(inputId).value.trim();
     if(!val) return;
-    
     try {
         const docSnap = await getDoc(doc(db, "members", val));
         if(docSnap.exists()) {
@@ -99,7 +127,6 @@ window.fetchMember = async (inputId, nameId, addrId, nativeId) => {
         }
     } catch (err) { console.error("Fetch Member Error:", err); }
 };
-
 
 // --- CRUD OPERATIONS (SAVE, EDIT, DELETE) ---
 const handleFormSubmit = async (e, type) => {
@@ -162,11 +189,9 @@ const handleFormSubmit = async (e, type) => {
         }
 
         if(editId) {
-            // Update Existing Document
             await updateDoc(doc(db, type, editId), data);
-            document.getElementById(`${type === 'deposit' ? 'dep' : type === 'donation' ? 'don' : 'inv'}-edit-id`).value = ""; // clear
+            document.getElementById(`${type === 'deposit' ? 'dep' : type === 'donation' ? 'don' : 'inv'}-edit-id`).value = ""; 
         } else {
-            // Add New Document
             await addDoc(collection(db, type), data);
         }
         
@@ -211,7 +236,7 @@ window.loadRecords = async () => {
 
         qs.forEach((docSnap) => {
             let data = docSnap.data();
-            data.id = docSnap.id; // Store Doc ID for Editing
+            data.id = docSnap.id; 
             let tr = document.createElement('tr');
             tr.innerHTML = `
                 <td><strong>${data.slipNo}</strong></td>
@@ -231,10 +256,7 @@ window.loadRecords = async () => {
 
 // EDIT RECORD LOGIC
 window.editRec = (data, type) => {
-    // 1. Switch to correct tab
     switchTab(type);
-
-    // 2. Load data into form & set hidden edit-id
     if(type === 'deposit') {
         document.getElementById('dep-edit-id').value = data.id;
         document.getElementById('dep-slip').value = data.slipNo;
@@ -262,7 +284,6 @@ window.editRec = (data, type) => {
         document.getElementById('don-address').value = data.address || '';
         document.getElementById('don-native').value = data.native || '';
         document.getElementById('don-pan').value = data.pan || '';
-        
         let sel = document.getElementById('don-desc');
         let options = Array.from(sel.options).map(o => o.value);
         if(options.includes(data.desc)) {
@@ -273,7 +294,6 @@ window.editRec = (data, type) => {
             document.getElementById('don-custom-desc').style.display = 'block';
             document.getElementById('don-custom-desc').value = data.desc;
         }
-
         document.getElementById('don-pay-type').value = data.payType;
         document.getElementById('don-pay-date').value = data.payDate || '';
         document.getElementById('don-ref').value = data.ref || '';
@@ -321,13 +341,15 @@ const updateDashboardCounts = async () => {
     } catch (err) {}
 };
 
-// --- PRINTING LOGIC ---
+// --- PRINTING LOGIC (ADDRESS ALIGNMENT FIXED HERE) ---
 window.rePrint = (data, type) => { printRecord(data, type); };
 
 const printRecord = (data, type) => {
     const container = document.getElementById('print-container');
     let title = type === 'deposit' ? 'DEPOSIT SLIP' : type === 'donation' ? 'DONATION RECEIPT' : 'TAX INVOICE';
-    let contentHtml = '';['ORIGINAL', 'DUPLICATE'].forEach(copyType => {
+    let contentHtml = '';
+    
+    ['ORIGINAL', 'DUPLICATE'].forEach(copyType => {
         let detailsHtml = '';
         if(type === 'deposit' || type === 'donation') {
             detailsHtml = `
@@ -344,7 +366,7 @@ const printRecord = (data, type) => {
                     <div class="print-row"><span class="print-label">Ref No:</span> ${data.ref || '-'}</div>
                     <div class="print-row"><span class="print-label">Pay Date:</span> ${data.payDate || '-'}</div>
                 </div>
-                <div class="print-row" style="font-size:16px;"><span class="print-label">Amount:</span> <strong>₹ ${data.amount}</strong> <span style="margin-left:15px;">(${data.words})</span></div>`;
+                <div class="print-row" style="font-size:16px; margin-top:5px;"><span class="print-label">Amount:</span> <strong>₹ ${data.amount}</strong> <span style="margin-left:15px;">(${data.words})</span></div>`;
         } else if(type === 'invoice') {
             detailsHtml = `
                 <div class="print-grid">
@@ -362,8 +384,32 @@ const printRecord = (data, type) => {
                 </div>
                 <div class="print-row" style="font-size:14px; margin-top:10px;"><span class="print-label">Amount in words:</span> ${data.words}</div>`;
         }
+        
         let donationFooter = type === 'donation' ? `<div class="print-footer-text">PAN No.AAATS670J | URN NO.AAATS6070JF20217 | DATE 24-09-2021<br>Donation Exempted under section 80G(5) 180/09-10 Dated: 20/11/2009 of Income Tax Act 1961</div>` : '';
-        contentHtml += `<div class="print-copy"><div class="print-copy-type">${copyType}</div><div class="print-header"><img src="${logoUrl}" alt="Logo" style="width:60px; position:absolute; left:15px; top:15px;"><h2>${orgName}</h2><p>${orgAddress}</p><p>${orgDetails}</p></div><div class="print-title">${title}</div>${detailsHtml}<div class="print-signatures"><div class="sign-box">Payer's Signature</div><div class="sign-box">Receiver's Signature</div></div>${donationFooter}</div>`;
+        
+        // Print Header - Isme Margin Fix kar diya gaya hai.
+        contentHtml += `
+            <div class="print-copy">
+                <div class="print-copy-type" style="position: absolute; top: 10px; right: 10px; border: 1px solid #000; padding: 3px 8px; font-weight: bold; font-size:11px;">${copyType}</div>
+                
+                <div class="print-header" style="position:relative; text-align:center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; min-height: 75px;">
+                    <img src="${logoUrl}" alt="Logo" style="width:70px; position:absolute; left:10px; top:0;">
+                    <div style="margin: 0 90px;">
+                        <h2 style="font-size: 18px; margin: 0 0 5px 0;">${orgName}</h2>
+                        <p style="font-size: 11px; margin: 2px 0;">${orgAddress}</p>
+                        <p style="font-size: 11px; margin: 2px 0;">${orgDetails}</p>
+                    </div>
+                </div>
+
+                <div class="print-title">${title}</div>
+                ${detailsHtml}
+                <div class="print-signatures">
+                    <div class="sign-box">Payer's Signature</div>
+                    <div class="sign-box">Receiver's Signature</div>
+                </div>
+                ${donationFooter}
+            </div>
+        `;
     });
 
     container.innerHTML = `<div class="print-page">${contentHtml}</div>`;
