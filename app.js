@@ -232,16 +232,17 @@ const updateDashboardCounts = async () => {
 window.rePrint = (data, type) => { printRecord(data, type); };
 const printRecord = (data, type) => {
     const container = document.getElementById('print-container');
-    let title = type.toUpperCase() + (type === 'invoice' ? ' INVOICE' : ' SLIP');
-    let contentHtml = '';
     
+    // Corrected Title Logic: "TAX INVOICE" or "DEPOSIT SLIP" / "DONATION SLIP"
+    let title = type === 'invoice' ? 'TAX INVOICE' : type.toUpperCase() + ' SLIP';
+    
+    let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
     copiesArray.forEach((copy, index) => {
         let detailsHtml = "";
 
         if(type === 'invoice') {
-            // INVOICE SPECIFIC TAX BREAKDOWN
             detailsHtml = `
                 <div class="print-grid" style="margin-bottom: 5px;">
                     <div class="print-row"><span class="print-label">Invoice No:</span> ${data.slipNo}</div>
@@ -261,7 +262,6 @@ const printRecord = (data, type) => {
                 </div>
             `;
         } else {
-            // DEPOSIT & DONATION STANDARD GRID
             detailsHtml = `
                 <div class="print-grid" style="margin-bottom: 8px;">
                     <div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div>
