@@ -1,0 +1,124 @@
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap');
+
+:root {
+    --primary-blue: #1A5F7A;
+    --primary-green: #22C55E;
+    --bg-color: #f4f7f6;
+    --text-dark: #333;
+    --white: #ffffff;
+}
+
+* { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Poppins', sans-serif; }
+body { background-color: var(--bg-color); display: flex; height: 100vh; overflow: hidden; }
+
+/* Sidebar */
+.sidebar { width: 250px; background: var(--white); box-shadow: 2px 0 5px rgba(0,0,0,0.05); display: flex; flex-direction: column; z-index: 100; transition: 0.3s; }
+.logo-area { padding: 20px; text-align: center; border-bottom: 1px solid #eee; }
+.nav-logo { width: 80px; height: auto; margin-bottom: 10px; }
+.logo-area h3 { color: var(--primary-blue); font-size: 16px; }
+.nav-links { list-style: none; padding: 20px 0; }
+.nav-links li { padding: 15px 25px; cursor: pointer; color: var(--text-dark); transition: 0.3s; display: flex; align-items: center; gap: 10px; }
+.nav-links li:hover, .nav-links li.active { background: var(--primary-blue); color: var(--white); }
+
+/* Main Content */
+.main-content { flex: 1; display: flex; flex-direction: column; overflow-y: auto; }
+header { background: var(--primary-blue); color: var(--white); padding: 15px 20px; display: flex; align-items: center; gap: 15px; }
+.menu-toggle { display: none; cursor: pointer; font-size: 20px; }
+.content-wrapper { padding: 20px; }
+
+/* Cards & Forms */
+.page-section { display: none; animation: fadeIn 0.3s ease-in-out; }
+.page-section.active { display: block; }
+@keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+.card { background: var(--white); border-radius: 8px; padding: 20px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); margin-bottom: 20px; }
+.header-card { text-align: center; border-top: 5px solid var(--primary-blue); }
+.org-details { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; margin-top: 10px; font-size: 13px; color: #555; }
+
+.dashboard-stats { display: flex; gap: 20px; flex-wrap: wrap; }
+.stat-card { flex: 1; min-width: 200px; padding: 20px; border-radius: 8px; color: var(--white); text-align: center; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+.stat-card.blue { background: var(--primary-blue); }
+.stat-card.green { background: var(--primary-green); }
+.stat-card.white { background: var(--white); color: var(--primary-blue); border: 1px solid var(--primary-blue); }
+.stat-card h3 { font-size: 16px; font-weight: 400; margin-bottom: 10px; }
+.stat-card p { font-size: 24px; font-weight: 600; }
+
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+.input-group { display: flex; flex-direction: column; margin-bottom: 10px; }
+.input-group label { font-size: 13px; font-weight: 600; color: var(--text-dark); margin-bottom: 5px; }
+.input-group input, .input-group select { padding: 10px; border: 1px solid #ccc; border-radius: 5px; font-size: 14px; outline: none; }
+.input-group input:focus, .input-group select:focus { border-color: var(--primary-blue); }
+.input-group input[readonly] { background: #e9ecef; cursor: not-allowed; }
+
+.btn-submit { background: var(--primary-green); color: white; border: none; padding: 12px 20px; border-radius: 5px; font-size: 16px; cursor: pointer; width: 100%; margin-top: 15px; transition: 0.3s; }
+.btn-submit:hover { background: #1da850; }
+
+/* Table */
+table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+th, td { padding: 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+th { background: var(--primary-blue); color: var(--white); }
+.btn-action { padding: 5px 10px; border: none; border-radius: 3px; cursor: pointer; font-size: 12px; margin-right: 5px; color: white;}
+.btn-print { background: var(--primary-blue); }
+.btn-del { background: #e74c3c; }
+
+/* Responsive */
+@media (max-width: 768px) {
+    .sidebar { position: fixed; left: -250px; height: 100%; }
+    .sidebar.active { left: 0; }
+    .menu-toggle { display: block; }
+    .grid-2 { grid-template-columns: 1fr; }
+}
+
+/* =========================================
+   PRINT STYLES
+   ========================================= */
+.print-only { display: none; }
+
+@media print {
+    @page { size: A4 portrait; margin: 5mm; }
+    body * { visibility: hidden; }
+    .no-print { display: none !important; }
+    .print-only, .print-only * { visibility: visible; }
+    
+    .print-only { 
+        display: block; 
+        position: absolute; 
+        left: 0; top: 0; width: 100%; 
+    }
+
+    .print-page { 
+        width: 100%; 
+        height: 100%;
+        display: flex; 
+        flex-direction: column; 
+        gap: 20px;
+    }
+
+    .print-copy {
+        border: 1px dashed #000;
+        padding: 15px;
+        border-radius: 5px;
+        position: relative;
+        font-family: Arial, sans-serif;
+        font-size: 12px;
+        color: #000;
+    }
+
+    .print-copy-type { position: absolute; top: 10px; right: 10px; border: 1px solid #000; padding: 3px 8px; font-weight: bold; border-radius: 3px;}
+
+    .print-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
+    .print-header img { width: 60px; position: absolute; left: 15px; top: 15px; }
+    .print-header h2 { font-size: 18px; margin-bottom: 5px; }
+    .print-header p { font-size: 11px; margin: 2px 0; }
+    
+    .print-title { text-align: center; font-size: 16px; font-weight: bold; margin: 10px 0; text-decoration: underline; }
+
+    .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+    .print-row { display: flex; align-items: baseline; gap: 5px; border-bottom: 1px dotted #ccc; padding-bottom: 3px; }
+    .print-label { font-weight: bold; min-width: 120px; }
+    
+    .print-footer-text { font-size: 10px; text-align: center; margin-top: 10px; border-top: 1px solid #000; padding-top: 5px; }
+    
+    .print-signatures { display: flex; justify-content: space-between; margin-top: 40px; padding: 0 20px; }
+    .sign-box { text-align: center; border-top: 1px solid #000; width: 150px; padding-top: 5px; }
+}
