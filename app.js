@@ -20,101 +20,44 @@ const db = getFirestore(app);
 const orgName = "Shree Batrisi Jain Co-Op Education Society Ltd";
 const orgAddress = "Sheth Shri Hiralal Hargovandas Batrishi Hall, Near R.T.O Circle, Subhashbridge, Collector Kacheri, Ahmedabad - 380027";
 const orgDetails = "GSTIN: 24AAATS6070J1ZE | Reg No: GH/230 (10/10/1944) | Mob: 9586423232 | Email: 32cedusociety@gmail.com";
-const logoUrl = "LOGO_URL_HERE"; // Apne logo ka RAW url yaha daale
-
-// --- UI UTILS & EVENT LISTENERS ---
-window.toggleMenu = () => { document.querySelector('.sidebar').classList.toggle('active'); };
-
-window.switchTab = (tabId) => {
-    // Hide all sections & remove active class from all tabs
-    document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
-    document.querySelectorAll('.nav-links li').forEach(li => li.classList.remove('active'));
-    
-    // Show selected section & add active class to selected tab
-    document.getElementById(`sec-${tabId}`).classList.add('active');
-    document.getElementById(`tab-${tabId}`).classList.add('active');
-    
-    // Close sidebar on mobile after click
-    if(window.innerWidth <= 900) toggleMenu();
-    
-    // Load records if records tab is opened
-    if(tabId === 'records') loadRecords();
-};
-
-window.checkCustomDonation = () => {
-    const val = document.getElementById('don-desc').value;
-    document.getElementById('don-custom-desc').style.display = val === 'Custom' ? 'block' : 'none';
-};
+const logoUrl = "LOGO_URL_HERE"; 
 
 // Set Today's Date
 const setToday = () => {
     const today = new Date().toISOString().split('T')[0];
-    document.getElementById('dep-date').value = today;
-    document.getElementById('don-date').value = today;
-    document.getElementById('inv-date').value = today;
-};
-
-// --- NUMBER TO WORDS (INDIAN) ---
-window.numToWords = (num, targetId) => {
-    if(!num || num == 0) { document.getElementById(targetId).value = ""; return; }
-    let a =['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
-    let b =['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
-    
-    let n = Math.floor(num);
-    if(n.toString().length > 9) return document.getElementById(targetId).value = "Limit Exceeded";
-    
-    let str = ('000000000' + n).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
-    if (!str) return;
-    let words = '';
-    words += (str[1] != 0) ? (a[Number(str[1])] || b[str[1][0]] + ' ' + a[str[1][1]]) + 'Crore ' : '';
-    words += (str[2] != 0) ? (a[Number(str[2])] || b[str[2][0]] + ' ' + a[str[2][1]]) + 'Lakh ' : '';
-    words += (str[3] != 0) ? (a[Number(str[3])] || b[str[3][0]] + ' ' + a[str[3][1]]) + 'Thousand ' : '';
-    words += (str[4] != 0) ? (a[Number(str[4])] || b[str[4][0]] + ' ' + a[str[4][1]]) + 'Hundred ' : '';
-    words += (str[5] != 0) ? ((words != '') ? 'and ' : '') + (a[Number(str[5])] || b[str[5][0]] + ' ' + a[str[5][1]]) : '';
-    
-    document.getElementById(targetId).value = words.trim() + " Rupees Only";
-};
-
-// --- TAX INVOICE CALCULATOR ---
-window.calcInvoice = () => {
-    let basic = parseFloat(document.getElementById('inv-basic').value) || 0;
-    let cgst = basic * 0.09;
-    let sgst = basic * 0.09;
-    let exactTotal = basic + cgst + sgst;
-    let roundedTotal = Math.round(exactTotal);
-    let roundOff = roundedTotal - exactTotal;
-
-    document.getElementById('inv-cgst').value = cgst.toFixed(2);
-    document.getElementById('inv-sgst').value = sgst.toFixed(2);
-    document.getElementById('inv-total').value = roundedTotal;
-    document.getElementById('inv-round').value = roundOff.toFixed(2);
-    numToWords(roundedTotal, 'inv-words');
+    if(document.getElementById('dep-date')) document.getElementById('dep-date').value = today;
+    if(document.getElementById('don-date')) document.getElementById('don-date').value = today;
+    if(document.getElementById('inv-date')) document.getElementById('inv-date').value = today;
 };
 
 // --- AUTO INCREMENT SLIP LOGIC ---
 const getFinancialYear = () => {
     const today = new Date();
     const year = today.getFullYear();
-    const month = today.getMonth(); // 0 = Jan, 3 = Apr
+    const month = today.getMonth(); 
     if(month >= 3) return `${year}-${(year+1).toString().slice(2)}`;
     return `${year-1}-${year.toString().slice(2)}`;
 };
 
 const generateSlipNo = async (collectionName, targetId) => {
-    const fy = getFinancialYear();
-    const q = query(collection(db, collectionName), orderBy("timestamp", "desc"));
-    const querySnapshot = await getDocs(q);
-    
-    let lastNum = 0;
-    querySnapshot.forEach((doc) => {
-        let slipParts = doc.data().slipNo.split('/');
-        if(slipParts[1] === fy && parseInt(slipParts[0]) > lastNum){
-            lastNum = parseInt(slipParts[0]);
-        }
-    });
-    
-    const newNum = String(lastNum + 1).padStart(3, '0');
-    document.getElementById(targetId).value = `${newNum}/${fy}`;
+    try {
+        const fy = getFinancialYear();
+        const q = query(collection(db, collectionName), orderBy("timestamp", "desc"));
+        const querySnapshot = await getDocs(q);
+        
+        let lastNum = 0;
+        querySnapshot.forEach((doc) => {
+            let slipParts = doc.data().slipNo.split('/');
+            if(slipParts[1] === fy && parseInt(slipParts[0]) > lastNum){
+                lastNum = parseInt(slipParts[0]);
+            }
+        });
+        
+        const newNum = String(lastNum + 1).padStart(3, '0');
+        if(document.getElementById(targetId)) document.getElementById(targetId).value = `${newNum}/${fy}`;
+    } catch(err) {
+        console.error("Auto Increment Error:", err);
+    }
 };
 
 // --- CRUD OPERATIONS ---
@@ -195,17 +138,18 @@ const handleFormSubmit = async (e, type) => {
     }
 };
 
-// Attach Form Submit Listeners safely
 document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('form-deposit')?.addEventListener('submit', (e) => handleFormSubmit(e, 'deposit'));
     document.getElementById('form-donation')?.addEventListener('submit', (e) => handleFormSubmit(e, 'donation'));
     document.getElementById('form-invoice')?.addEventListener('submit', (e) => handleFormSubmit(e, 'invoice'));
 });
 
-// Load Records
+// Load Records (Exposed globally for HTML to use)
 window.loadRecords = async () => {
     const type = document.getElementById('record-filter').value;
     const tbody = document.getElementById('records-body');
+    if(!tbody) return;
+    
     tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'><i class='ri-loader-4-line ri-spin'></i> Loading data...</td></tr>";
     
     try {
@@ -239,25 +183,11 @@ window.loadRecords = async () => {
     }
 };
 
-// Search Table
-window.searchTable = () => {
-    let filter = document.getElementById('search-bar').value.toUpperCase();
-    let trs = document.getElementById('records-table').getElementsByTagName("tr");
-    for (let i = 1; i < trs.length; i++) {
-        let td = trs[i].getElementsByTagName("td")[2]; 
-        if (td) {
-            let txtValue = td.textContent || td.innerText;
-            trs[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
-        }
-    }
-};
-
-// Delete Record
 window.deleteRec = async (id, type) => {
     if(confirm("Are you sure you want to delete this record?")) {
         try {
             await deleteDoc(doc(db, type, id));
-            loadRecords();
+            window.loadRecords();
             updateDashboardCounts();
         } catch(err) {
             alert("Error deleting record.");
@@ -266,21 +196,19 @@ window.deleteRec = async (id, type) => {
     }
 };
 
-// Update Dashboard Counts
 const updateDashboardCounts = async () => {
     try {
         const deps = await getDocs(collection(db, 'deposit'));
         const dons = await getDocs(collection(db, 'donation'));
         const invs = await getDocs(collection(db, 'invoice'));
-        document.getElementById('stat-dep').innerText = deps.size;
-        document.getElementById('stat-don').innerText = dons.size;
-        document.getElementById('stat-inv').innerText = invs.size;
+        if(document.getElementById('stat-dep')) document.getElementById('stat-dep').innerText = deps.size;
+        if(document.getElementById('stat-don')) document.getElementById('stat-don').innerText = dons.size;
+        if(document.getElementById('stat-inv')) document.getElementById('stat-inv').innerText = invs.size;
     } catch (err) {
         console.error("Error fetching counts", err);
     }
 };
 
-// --- PRINTING LOGIC ---
 window.rePrint = (data, type) => { printRecord(data, type); };
 
 const printRecord = (data, type) => {
@@ -347,7 +275,6 @@ const printRecord = (data, type) => {
             </div>
         ` : '';
 
-        // If no Logo URL, hide image tag entirely to avoid broken image icon
         let logoHtml = logoUrl !== "LOGO_URL_HERE" ? `<img src="${logoUrl}" alt="Logo">` : ``;
 
         contentHtml += `
@@ -371,10 +298,7 @@ const printRecord = (data, type) => {
     });
 
     container.innerHTML = `<div class="print-page">${contentHtml}</div>`;
-    
-    setTimeout(() => {
-        window.print();
-    }, 500);
+    setTimeout(() => { window.print(); }, 500);
 };
 
 // --- INIT CALLS ---
@@ -385,7 +309,6 @@ window.onload = async () => {
         await generateSlipNo('deposit', 'dep-slip');
         await generateSlipNo('donation', 'don-slip');
         await generateSlipNo('invoice', 'inv-slip');
-        console.log("App loaded successfully!");
     } catch(err) {
         console.error("Initialization error: ", err);
     }
