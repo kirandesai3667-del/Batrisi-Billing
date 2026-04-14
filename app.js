@@ -115,13 +115,10 @@ window.exportData = async () => {
     const type = document.getElementById('record-filter').value;
     const q = query(collection(db, type), orderBy("timestamp", "desc"));
     const qs = await getDocs(q);
-    
     if(qs.empty) { alert("No data available to download!"); return; }
-
     let csvContent = "data:text/csv;charset=utf-8,";
     let headers = [];
     let rows = [];
-
     qs.forEach((docSnap) => {
         let data = docSnap.data();
         delete data.timestamp;
@@ -132,7 +129,6 @@ window.exportData = async () => {
         let row = headers.map(h => `"${(data[h] || '').toString().replace(/"/g, '""')}"`);
         rows.push(row.join(","));
     });
-
     csvContent += rows.join("\r\n");
     const encodedUri = encodeURI(csvContent);
     const link = document.createElement("a");
@@ -213,48 +209,47 @@ const printRecord = (data, type) => {
     copiesArray.forEach((copy, index) => {
         let detailsHtml = "";
         if(type === 'invoice') {
-            detailsHtml = `<div class="print-grid" style="margin-bottom: 5px;"><div class="print-row"><span class="print-label">Invoice No:</span> ${data.slipNo}</div><div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div><div class="print-row"><span class="print-label">Name:</span> ${data.name}</div><div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div><div class="print-row"><span class="print-label">GSTIN:</span> ${data.gst || '-'}</div><div class="print-row"><span class="print-label">Description:</span> ${data.desc || '-'}</div><div style="grid-column: span 2; margin-top: 5px; border-top: 1px dotted #ccc; padding-top: 5px;"></div><div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${data.basic}</div><div class="print-row"><span class="print-label">CGST (9%):</span> ₹ ${data.cgst}</div><div class="print-row"><span class="print-label">SGST (9%):</span> ₹ ${data.sgst}</div><div class="print-row"><span class="print-label">Round Off:</span> ₹ ${data.round || '0.00'}</div><div class="print-row" style="font-size: 1.1em;"><span class="print-label">Total Amount:</span> <strong>₹ ${data.total}</strong></div></div>`;
+            detailsHtml = `<div class="print-grid" style="margin-bottom: 3px;"><div class="print-row"><span class="print-label">Invoice No:</span> ${data.slipNo}</div><div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div><div class="print-row"><span class="print-label">Name:</span> ${data.name}</div><div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div><div class="print-row"><span class="print-label">GSTIN:</span> ${data.gst || '-'}</div><div class="print-row"><span class="print-label">Description:</span> ${data.desc || '-'}</div><div style="grid-column: span 2; margin-top: 2px; border-top: 1px dotted #ccc; padding-top: 2px;"></div><div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${data.basic}</div><div class="print-row"><span class="print-label">CGST (9%):</span> ₹ ${data.cgst}</div><div class="print-row"><span class="print-label">SGST (9%):</span> ₹ ${data.sgst}</div><div class="print-row"><span class="print-label">Round Off:</span> ₹ ${data.round || '0.00'}</div><div class="print-row" style="font-size: 1.1em;"><span class="print-label">Total Amount:</span> <strong>₹ ${data.total}</strong></div></div>`;
         } else {
-            detailsHtml = `<div class="print-grid" style="margin-bottom: 8px;"><div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div><div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div><div class="print-row"><span class="print-label">Name:</span> ${data.name}</div><div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div><div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div><div class="print-row"><span class="print-label">Native:</span> ${data.native || '-'}</div><div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType}</div><div class="print-row"><span class="print-label">Amount:</span> <strong>₹ ${data.amount}</strong></div></div>`;
+            detailsHtml = `<div class="print-grid" style="margin-bottom: 5px;"><div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div><div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div><div class="print-row"><span class="print-label">Name:</span> ${data.name}</div><div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div><div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div><div class="print-row"><span class="print-label">Native:</span> ${data.native || '-'}</div><div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType}</div><div class="print-row"><span class="print-label">Amount:</span> <strong>₹ ${data.amount}</strong></div></div>`;
         }
 
         let customInstructionsHtml = '';
         if(type === 'deposit') {
-            customInstructionsHtml = `<div style="margin-top:10px; width:100%;"><table style="width:100%; border-collapse: collapse; font-size: 10.5px; font-family: Arial, sans-serif; text-align: left;"><tbody><tr><td colspan="2" style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: bold; font-size: 12px; text-transform: uppercase;">Instructions</td></tr><tr><td style="border: 1px solid #000; padding: 3px 5px; width: 20px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 3px 5px;">All Parking Responsibilities Shall Be Kindly Managed By The Party Booking The Hall.</td></tr><tr><td style="border: 1px solid #000; padding: 3px 5px; text-align: center; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 3px 5px;">After Completion Of The Function, At The Time Of Final Settlement, You Are Requested To Please Bring And Submit This Deposit Slip.</td></tr><tr><td style="border: 1px solid #000; padding: 3px 5px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 3px 5px;">For Any Function, Wherever Invitations Are Issued, You Are Kindly Requested To Mention The Name Of The Sanstha As “Sheth Shri Hiralal Hargovandas Batrisi Hall.” In Case Of Non-Compliance, The Sanstha May Levy A Penalty As Per Its Rules.</td></tr></tbody></table></div>`;
+            customInstructionsHtml = `<div style="margin-top:5px; width:100%;"><table style="width:100%; border-collapse: collapse; font-size: 9.5px; font-family: Arial, sans-serif; text-align: left;"><tbody><tr><td colspan="2" style="border: 1px solid #000; padding: 3px; text-align: center; font-weight: bold; font-size: 11px; text-transform: uppercase;">Instructions</td></tr><tr><td style="border: 1px solid #000; padding: 2px 5px; width: 18px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 2px 5px;">All Parking Responsibilities Shall Be Kindly Managed By The Party Booking The Hall.</td></tr><tr><td style="border: 1px solid #000; padding: 2px 5px; text-align: center; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 2px 5px;">After Completion Of The Function, At The Time Of Final Settlement, You Are Requested To Please Bring And Submit This Deposit Slip.</td></tr><tr><td style="border: 1px solid #000; padding: 2px 5px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 2px 5px;">For Any Function, Wherever Invitations Are Issued, You Are Kindly Requested To Mention The Name Of The Sanstha As “Sheth Shri Hiralal Hargovandas Batrisi Hall.” In Case Of Non-Compliance, The Sanstha May Levy A Penalty As Per Its Rules.</td></tr></tbody></table></div>`;
         }
 
         contentHtml += `
-            <div class="print-copy" style="box-sizing: border-box; width: 100%; margin: 0; border:2px solid #000; padding:15px; position:relative;">
-                <div style="position:absolute; top:10px; right:10px; border:1px solid #000; padding:2px 5px; font-weight: bold; font-size:10px;">${copy}</div>
+            <div class="print-copy" style="box-sizing: border-box; width: 100%; border:2px solid #000; padding:8px 15px; position:relative; overflow: hidden;">
+                <div style="position:absolute; top:6px; right:10px; border:1px solid #000; padding:1px 4px; font-weight: bold; font-size:9px;">${copy}</div>
                 
-                <div style="position:relative; margin-bottom:10px;">
-                    <img src="logo.png" style="width:60px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:10px;">
-                    <div style="padding-left: 70px; text-align:center; border-bottom:1px solid #000; padding-bottom:5px;">
-                        <h2 style="margin:0; font-size:17px;">${orgName}</h2>
-                        <p style="margin:2px 0; font-size:9.5px; font-weight: bold;">${orgAddress}</p>
-                        <p style="margin:2px 0; font-size:8.5px;">${orgDetailsLine1}</p>
-                        <p style="margin:2px 0; font-size:8.5px;">${orgDetailsLine2}</p>
+                <div style="position:relative; margin-bottom:6px;">
+                    <img src="logo.png" style="width:50px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:8px;">
+                    <div style="padding-left: 60px; text-align:center; border-bottom:1px solid #000; padding-bottom:3px;">
+                        <h2 style="margin:0; font-size:15px; line-height: 1.2;">${orgName}</h2>
+                        <p style="margin:1px 0; font-size:8.5px; font-weight: bold;">${orgAddress}</p>
+                        <p style="margin:0; font-size:8px;">${orgDetailsLine1}</p>
+                        <p style="margin:0; font-size:8px;">${orgDetailsLine2}</p>
                     </div>
                 </div>
 
-                <h3 style="text-align:center; text-decoration:underline; margin: 5px 0 10px 0; font-size: 15px;">${title}</h3>
+                <h3 style="text-align:center; text-decoration:underline; margin: 3px 0 6px 0; font-size: 13px;">${title}</h3>
                 ${detailsHtml}
-                <div style="font-style:italic; font-size: 11px; margin-top: 5px;">Words: ${data.words}</div>
+                <div style="font-style:italic; font-size: 10px; margin-top: 3px;">Words: ${data.words}</div>
                 ${customInstructionsHtml}
                 
-                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '60px' : (type === 'invoice' ? '40px' : '80px')};">
-                    <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 5px; font-weight: 500; font-size: 12px;">Payer Signature</div>
-                    <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 5px; font-weight: 500; font-size: 12px;">Receiver Signature</div>
+                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '40px' : (type === 'invoice' ? '30px' : '60px')};">
+                    <div style="border-top:1px solid #000; width:150px; text-align:center; padding-top: 3px; font-weight: 500; font-size: 11px;">Payer Signature</div>
+                    <div style="border-top:1px solid #000; width:150px; text-align:center; padding-top: 3px; font-weight: 500; font-size: 11px;">Receiver Signature</div>
                 </div>
                 
-                <!-- COMPUTER GENERATED DISCLAIMER LINE -->
-                <div style="text-align: center; font-size: 8.5px; margin-top: 15px; color: #444;">
-                    This Is A Computer-Generated Document And Does Not Require A Stamp.
+                <div style="text-align: center; font-size: 8px; margin-top: 8px; color: #444;">
+                    This is a computer-generated document and does not require a stamp.
                 </div>
             </div>`;
 
         if (index === 0) {
-            contentHtml += `<div style="border-top: 2px dashed #666; margin: 25px 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 15px; position: relative; top: -9px; font-size: 12px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - - Cut Here - - - - ✂</span></div>`;
+            contentHtml += `<div style="border-top: 2px dashed #666; margin: 18px 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -8px; font-size: 11px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - - Cut Here - - - - ✂</span></div>`;
         }
     });
     
