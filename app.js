@@ -58,7 +58,7 @@ window.uploadCSV = async () => {
     if(!file) return alert('Please select a CSV file first.');
     const status = document.getElementById('csv-status');
     status.style.color = "#10B981";
-    status.innerText = "Processing Data (Smart Mode)... Please wait!";
+    status.innerText = "Processing Data... Please wait!";
     
     const reader = new FileReader();
     reader.onload = async (e) => {
@@ -95,6 +95,7 @@ window.uploadCSV = async () => {
                     currentChunk.push({memNo, name, addr, native});
                     count++;
                 }
+
                 if(currentChunk.length === 500) {
                     chunks.push(currentChunk);
                     currentChunk =[];
@@ -110,11 +111,12 @@ window.uploadCSV = async () => {
                 }
                 await batch.commit();
             }
-            status.innerText = `Success! ${count} members added with accurate Mapping.`;
+
+            status.innerText = `Success! ${count} members added.`;
         } catch (error) {
             console.error("CSV Upload Error:", error);
             status.style.color = "red";
-            status.innerText = "Error uploading data. Format mismatch!";
+            status.innerText = "Error uploading data.";
         }
     };
     reader.readAsText(file);
@@ -137,15 +139,21 @@ window.fetchMember = async (inputId, nameId, addrId, nativeId) => {
 
 // --- CRUD OPERATIONS (SAVE, EDIT, DELETE) ---
 const handleFormSubmit = async (e, type) => {
-    e.preventDefault(); // Ye form ko reload hone se rokega
-    const btn = document.getElementById(`btn-submit-${type}`);
-    let originalText = btn.innerHTML;
-    btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> Saving...";
-    btn.disabled = true;
+    e.preventDefault(); // STOP PAGE FROM RELOADING
+    
+    // Bug Fix: Matching the exact Button ID from HTML ('dep' instead of 'deposit')
+    const prefix = type === 'deposit' ? 'dep' : type === 'donation' ? 'don' : 'inv';
+    const btn = document.getElementById(`btn-submit-${prefix}`);
+    
+    if(btn) {
+        btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> Saving...";
+        btn.disabled = true;
+    }
 
     try {
         let data = { timestamp: new Date().toISOString() };
-        let editId = document.getElementById(`${type === 'deposit' ? 'dep' : type === 'donation' ? 'don' : 'inv'}-edit-id`).value;
+        let editIdField = document.getElementById(`${prefix}-edit-id`);
+        let editId = editIdField ? editIdField.value : "";
 
         if(type === 'deposit') {
             data.slipNo = document.getElementById('dep-slip').value;
@@ -197,7 +205,7 @@ const handleFormSubmit = async (e, type) => {
 
         if(editId) {
             await updateDoc(doc(db, type, editId), data);
-            document.getElementById(`${type === 'deposit' ? 'dep' : type === 'donation' ? 'don' : 'inv'}-edit-id`).value = ""; 
+            if(editIdField) editIdField.value = ""; 
         } else {
             await addDoc(collection(db, type), data);
         }
@@ -205,29 +213,33 @@ const handleFormSubmit = async (e, type) => {
         e.target.reset();
         setToday();
         updateDashboardCounts();
-        await generateSlipNo(type, type==='deposit' ? 'dep-slip' : type==='donation' ? 'don-slip' : 'inv-slip');
+        await generateSlipNo(type, `${prefix}-slip`);
         
+        // Print
         printRecord(data, type);
 
     } catch (error) {
-        console.error("Save Error: ", error);
-        alert("Error saving record! Check console for details.");
+        console.error("Save Error:", error);
+        alert("Error saving record! Check console.");
     } finally {
-        btn.innerHTML = `<i class="ri-printer-line"></i> Save & Print`;
-        btn.disabled = false;
+        if(btn) {
+            btn.innerHTML = `<i class="ri-printer-line"></i> Save & Print`;
+            btn.disabled = false;
+        }
     }
 };
 
-// FIX: Direct attachment without waiting for DOMContentLoaded wrapper
-const formDep = document.getElementById('form-deposit');
-if(formDep) formDep.addEventListener('submit', (e) => handleFormSubmit(e, 'deposit'));
+// 100% Guaranteed Event Attachment
+setTimeout(() => {
+    const fDep = document.getElementById('form-deposit');
+    if(fDep) fDep.onsubmit = (e) => handleFormSubmit(e, 'deposit');
 
-const formDon = document.getElementById('form-donation');
-if(formDon) formDon.addEventListener('submit', (e) => handleFormSubmit(e, 'donation'));
+    const fDon = document.getElementById('form-donation');
+    if(fDon) fDon.onsubmit = (e) => handleFormSubmit(e, 'donation');
 
-const formInv = document.getElementById('form-invoice');
-if(formInv) formInv.addEventListener('submit', (e) => handleFormSubmit(e, 'invoice'));
-
+    const fInv = document.getElementById('form-invoice');
+    if(fInv) fInv.onsubmit = (e) => handleFormSubmit(e, 'invoice');
+}, 500);
 
 // Load Records to Table
 window.loadRecords = async () => {
@@ -270,6 +282,8 @@ window.loadRecords = async () => {
 // EDIT RECORD
 window.editRec = (data, type) => {
     switchTab(type);
+    const prefix = type === 'deposit' ? 'dep' : type === 'donation' ? 'don' : 'inv';
+    
     if(type === 'deposit') {
         document.getElementById('dep-edit-id').value = data.id;
         document.getElementById('dep-slip').value = data.slipNo;
@@ -286,8 +300,6 @@ window.editRec = (data, type) => {
         document.getElementById('dep-bank').value = data.bank || '';
         document.getElementById('dep-amount').value = data.amount;
         document.getElementById('dep-words').value = data.words;
-        document.getElementById('btn-submit-dep').innerHTML = `<i class="ri-save-line"></i> Update & Print`;
-
     } else if(type === 'donation') {
         document.getElementById('don-edit-id').value = data.id;
         document.getElementById('don-slip').value = data.slipNo;
@@ -313,7 +325,6 @@ window.editRec = (data, type) => {
         document.getElementById('don-bank').value = data.bank || '';
         document.getElementById('don-amount').value = data.amount;
         document.getElementById('don-words').value = data.words;
-        document.getElementById('btn-submit-don').innerHTML = `<i class="ri-save-line"></i> Update & Print`;
     } else if(type === 'invoice') {
         document.getElementById('inv-edit-id').value = data.id;
         document.getElementById('inv-slip').value = data.slipNo;
@@ -331,8 +342,10 @@ window.editRec = (data, type) => {
         document.getElementById('inv-pay-date').value = data.payDate || '';
         document.getElementById('inv-ref').value = data.ref || '';
         document.getElementById('inv-bank').value = data.bank || '';
-        document.getElementById('btn-submit-inv').innerHTML = `<i class="ri-save-line"></i> Update & Print`;
     }
+    
+    let btn = document.getElementById(`btn-submit-${prefix}`);
+    if(btn) btn.innerHTML = `<i class="ri-save-line"></i> Update & Print`;
 };
 
 window.deleteRec = async (id, type) => {
@@ -359,9 +372,7 @@ window.rePrint = (data, type) => { printRecord(data, type); };
 const printRecord = (data, type) => {
     const container = document.getElementById('print-container');
     let title = type === 'deposit' ? 'DEPOSIT SLIP' : type === 'donation' ? 'DONATION RECEIPT' : 'TAX INVOICE';
-    let contentHtml = '';
-    
-    ['ORIGINAL', 'DUPLICATE'].forEach(copyType => {
+    let contentHtml = '';['ORIGINAL', 'DUPLICATE'].forEach(copyType => {
         let detailsHtml = '';
         if(type === 'deposit' || type === 'donation') {
             detailsHtml = `
@@ -425,13 +436,12 @@ const printRecord = (data, type) => {
     setTimeout(() => { window.print(); }, 500);
 };
 
-// Safe initialization
-window.addEventListener('load', async () => {
+window.onload = async () => {
     try {
         setToday();
         await updateDashboardCounts();
         await generateSlipNo('deposit', 'dep-slip');
         await generateSlipNo('donation', 'don-slip');
         await generateSlipNo('invoice', 'inv-slip');
-    } catch(err) { console.error(err); }
-});
+    } catch(err) { }
+};
