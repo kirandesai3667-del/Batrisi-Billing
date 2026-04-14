@@ -19,7 +19,6 @@ const db = getFirestore(app);
 const orgName = "Shree Batrisi Jain Co-Op Education Society Ltd";
 const orgAddress = "Sheth Shri Hiralal Hargovandas Batrishi Hall, Near R.T.O Circle, Subhashbridge, Collector Kacheri, Ahmedabad - 380027";
 const orgDetails = "GSTIN: 24AAATS6070J1ZE | Reg No: GH/230 (10/10/1944) | Mob: 9586423232 | Email: 32cedusociety@gmail.com";
-const logoUrl = "logo.png"; 
 
 // --- HELPER: FORMAT DATE TO DD/MM/YYYY ---
 window.formatDateIndian = (dateStr) => {
@@ -164,7 +163,7 @@ window.handleFormSubmit = async (e, type) => {
         } else if(type === 'donation') {
             data = { ...data, slipNo: document.getElementById('don-slip').value, date: document.getElementById('don-date').value, name: document.getElementById('don-name').value, address: document.getElementById('don-address').value, member: document.getElementById('don-member').value, native: document.getElementById('don-native').value, pan: document.getElementById('don-pan').value, desc: document.getElementById('don-desc').value === 'Custom' ? document.getElementById('don-custom-desc').value : document.getElementById('don-desc').value, payType: document.getElementById('don-pay-type').value, payDate: document.getElementById('don-pay-date').value, ref: document.getElementById('don-ref').value, bank: document.getElementById('don-bank').value, amount: document.getElementById('don-amount').value, words: document.getElementById('don-words').value };
         } else if(type === 'invoice') {
-            data = { ...data, slipNo: document.getElementById('inv-slip').value, date: document.getElementById('inv-date').value, name: document.getElementById('inv-name').value, address: document.getElementById('inv-address').value, gst: document.getElementById('inv-gst').value, desc: document.getElementById('inv-desc').value, basic: document.getElementById('inv-basic').value, cgst: document.getElementById('inv-cgst').value, sgst: document.getElementById('inv-sgst').value, total: document.getElementById('inv-total').value, words: document.getElementById('inv-words').value, payType: document.getElementById('inv-pay-type').value, payDate: document.getElementById('inv-pay-date').value, ref: document.getElementById('inv-ref').value, bank: document.getElementById('inv-bank').value };
+            data = { ...data, slipNo: document.getElementById('inv-slip').value, date: document.getElementById('inv-date').value, name: document.getElementById('inv-name').value, address: document.getElementById('inv-address').value, gst: document.getElementById('inv-gst').value, desc: document.getElementById('inv-desc').value, basic: document.getElementById('inv-basic').value, cgst: document.getElementById('inv-cgst').value, sgst: document.getElementById('inv-sgst').value, round: document.getElementById('inv-round').value, total: document.getElementById('inv-total').value, words: document.getElementById('inv-words').value, payType: document.getElementById('inv-pay-type').value, payDate: document.getElementById('inv-pay-date').value, ref: document.getElementById('inv-ref').value, bank: document.getElementById('inv-bank').value };
         }
 
         if(editId) {
@@ -239,48 +238,60 @@ const printRecord = (data, type) => {
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
     copiesArray.forEach((copy, index) => {
-        let details = `
-            <div class="print-grid" style="margin-bottom: 8px;">
-                <div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div>
-                <div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div>
-                <div class="print-row"><span class="print-label">Name:</span> ${data.name}</div>
-                <div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div>
-                <div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div>
-                <div class="print-row"><span class="print-label">Native:</span> ${data.native || '-'}</div>
-                <div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType}</div>
-                <div class="print-row"><span class="print-label">Amount:</span> <strong>₹ ${data.amount || data.total}</strong></div>
-            </div>
-            <div style="font-style:italic; font-size: 11px;">Words: ${data.words}</div>
-        `;
-        
+        let detailsHtml = "";
+
+        if(type === 'invoice') {
+            // INVOICE SPECIFIC TAX BREAKDOWN
+            detailsHtml = `
+                <div class="print-grid" style="margin-bottom: 5px;">
+                    <div class="print-row"><span class="print-label">Invoice No:</span> ${data.slipNo}</div>
+                    <div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div>
+                    <div class="print-row"><span class="print-label">Name:</span> ${data.name}</div>
+                    <div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div>
+                    <div class="print-row"><span class="print-label">GSTIN:</span> ${data.gst || '-'}</div>
+                    <div class="print-row"><span class="print-label">Description:</span> ${data.desc || '-'}</div>
+                    
+                    <div style="grid-column: span 2; margin-top: 5px; border-top: 1px dotted #ccc; padding-top: 5px;"></div>
+                    
+                    <div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${data.basic}</div>
+                    <div class="print-row"><span class="print-label">CGST (9%):</span> ₹ ${data.cgst}</div>
+                    <div class="print-row"><span class="print-label">SGST (9%):</span> ₹ ${data.sgst}</div>
+                    <div class="print-row"><span class="print-label">Round Off:</span> ₹ ${data.round || '0.00'}</div>
+                    <div class="print-row" style="font-size: 1.1em;"><span class="print-label">Total Amount:</span> <strong>₹ ${data.total}</strong></div>
+                </div>
+            `;
+        } else {
+            // DEPOSIT & DONATION STANDARD GRID
+            detailsHtml = `
+                <div class="print-grid" style="margin-bottom: 8px;">
+                    <div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div>
+                    <div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div>
+                    <div class="print-row"><span class="print-label">Name:</span> ${data.name}</div>
+                    <div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div>
+                    <div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div>
+                    <div class="print-row"><span class="print-label">Native:</span> ${data.native || '-'}</div>
+                    <div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType}</div>
+                    <div class="print-row"><span class="print-label">Amount:</span> <strong>₹ ${data.amount}</strong></div>
+                </div>
+            `;
+        }
+
         let customInstructionsHtml = '';
         if(type === 'deposit') {
             customInstructionsHtml = `
                 <div style="margin-top:10px; width:100%;">
                     <table style="width:100%; border-collapse: collapse; font-size: 10.5px; font-family: Arial, sans-serif; text-align: left;">
                         <tbody>
-                            <tr>
-                                <td colspan="2" style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: bold; font-size: 12px; text-transform: uppercase;">Instructions</td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid #000; padding: 3px 5px; width: 20px; text-align: center; font-weight: bold;">1.</td>
-                                <td style="border: 1px solid #000; padding: 3px 5px;">All Parking Responsibilities Shall Be Kindly Managed By The Party Booking The Hall.</td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid #000; padding: 3px 5px; text-align: center; font-weight: bold;">2.</td>
-                                <td style="border: 1px solid #000; padding: 3px 5px;">After Completion Of The Function, At The Time Of Final Settlement, You Are Requested To Please Bring And Submit This Deposit Slip.</td>
-                            </tr>
-                            <tr>
-                                <td style="border: 1px solid #000; padding: 3px 5px; text-align: center; font-weight: bold;">3.</td>
-                                <td style="border: 1px solid #000; padding: 3px 5px;">For Any Function, Wherever Invitations Are Issued, You Are Kindly Requested To Mention The Name Of The Sanstha As “Sheth Shri Hiralal Hargovandas Batrisi Hall.” In Case Of Non-Compliance, The Sanstha May Levy A Penalty As Per Its Rules.</td>
-                            </tr>
+                            <tr><td colspan="2" style="border: 1px solid #000; padding: 4px; text-align: center; font-weight: bold; font-size: 12px; text-transform: uppercase;">Instructions</td></tr>
+                            <tr><td style="border: 1px solid #000; padding: 3px 5px; width: 20px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 3px 5px;">All Parking Responsibilities Shall Be Kindly Managed By The Party Booking The Hall.</td></tr>
+                            <tr><td style="border: 1px solid #000; padding: 3px 5px; text-align: center; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 3px 5px;">After Completion Of The Function, At The Time Of Final Settlement, You Are Requested To Please Bring And Submit This Deposit Slip.</td></tr>
+                            <tr><td style="border: 1px solid #000; padding: 3px 5px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 3px 5px;">For Any Function, Wherever Invitations Are Issued, You Are Kindly Requested To Mention The Name Of The Sanstha As “Sheth Shri Hiralal Hargovandas Batrisi Hall.” In Case Of Non-Compliance, The Sanstha May Levy A Penalty As Per Its Rules.</td></tr>
                         </tbody>
                     </table>
                 </div>
             `;
         }
 
-        // PADDING BADHAI GAYI HAI. 
         contentHtml += `
             <div class="print-copy" style="box-sizing: border-box; width: 100%; margin: 0; border:2px solid #000; padding:15px; position:relative;">
                 <div style="position:absolute; top:10px; right:10px; border:1px solid #000; padding:2px 5px; font-weight: bold;">${copy}</div>
@@ -294,17 +305,16 @@ const printRecord = (data, type) => {
                 </div>
 
                 <h3 style="text-align:center; text-decoration:underline; margin: 5px 0 10px 0; font-size: 15px;">${title}</h3>
-                ${details}
+                ${detailsHtml}
+                <div style="font-style:italic; font-size: 11px; margin-top: 5px;">Words: ${data.words}</div>
                 ${customInstructionsHtml}
                 
-                <!-- SIGNATURE SPACE INCREASED (margin-top: 60px/80px) -->
-                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '60px' : '80px'};">
+                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '60px' : (type === 'invoice' ? '40px' : '80px')};">
                     <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 5px; font-weight: 500; font-size: 12px;">Payer Signature</div>
                     <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 5px; font-weight: 500; font-size: 12px;">Receiver Signature</div>
                 </div>
             </div>`;
 
-        // CUT LINE MARGIN INCREASED (margin: 25px 0)
         if (index === 0) {
             contentHtml += `
                 <div style="border-top: 2px dashed #666; margin: 25px 0; position: relative; text-align: center;">
