@@ -76,11 +76,10 @@
                 </div>
             </section>
 
-            <!-- 🛑 FIXED: Deposit Form -->
+            <!-- Deposit Form -->
             <section id="sec-deposit" class="page-section">
                 <div class="card form-card">
                     <div class="card-header"><div class="icon-box blue"><i class="ri-wallet-3-line"></i></div><h3>Generate Deposit Slip</h3></div>
-                    <!-- Yaha par ONSUBMIT me direct lock lagaya hai -->
                     <form id="form-deposit" onsubmit="event.preventDefault(); if(window.handleFormSubmit) window.handleFormSubmit(event, 'deposit');">
                         <input type="hidden" id="dep-edit-id">
                         <div class="grid-2">
@@ -104,7 +103,7 @@
                 </div>
             </section>
 
-            <!-- 🛑 FIXED: Donation Form -->
+            <!-- Donation Form -->
             <section id="sec-donation" class="page-section">
                 <div class="card form-card">
                     <div class="card-header"><div class="icon-box green"><i class="ri-hand-heart-line"></i></div><h3>Generate Donation Slip</h3></div>
@@ -136,7 +135,7 @@
                 </div>
             </section>
 
-            <!-- 🛑 FIXED: Tax Invoice Form -->
+            <!-- Tax Invoice Form -->
             <section id="sec-invoice" class="page-section">
                 <div class="card form-card">
                     <div class="card-header"><div class="icon-box purple"><i class="ri-file-list-3-line"></i></div><h3>Generate Tax Invoice</h3></div>
@@ -170,8 +169,13 @@
                 <div class="card">
                     <div class="records-header">
                         <h3><i class="ri-database-2-line"></i> Saved Records</h3>
-                        <div class="records-filters">
-                            <select id="record-filter" onchange="if(window.loadRecords) window.loadRecords()" class="modern-select"><option value="deposit">Deposit Slips</option><option value="donation">Donation Slips</option><option value="invoice">Tax Invoices</option></select>
+                        <div class="records-filters" style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                            <select id="record-filter" onchange="if(window.loadRecords) window.loadRecords()" class="modern-select">
+                                <option value="deposit">Deposit Slips</option>
+                                <option value="donation">Donation Slips</option>
+                                <option value="invoice">Tax Invoices</option>
+                            </select>
+                            <button onclick="if(window.exportData) window.exportData()" class="btn-submit" style="padding: 10px 15px; font-size: 13px; margin: 0; background: #10B981;"><i class="ri-file-excel-2-line"></i> Download Data</button>
                             <div class="search-box"><i class="ri-search-line"></i><input type="text" id="search-bar" placeholder="Search by name..." onkeyup="searchTable()"></div>
                         </div>
                     </div>
@@ -218,6 +222,17 @@
             document.getElementById('inv-total').value = roundedTotal; document.getElementById('inv-round').value = (roundedTotal - exactTotal).toFixed(2);
             numToWords(roundedTotal, 'inv-words');
         }
+
+        // GLOBAL LISTENER TO AUTO-CAPITALIZE TEXT INPUTS
+        document.addEventListener('input', function(e) {
+            if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'text') {
+                if (e.target.id === 'login-user' || e.target.id === 'login-pass') return; // Skip login inputs
+                let start = e.target.selectionStart;
+                let end = e.target.selectionEnd;
+                e.target.value = e.target.value.toUpperCase();
+                e.target.setSelectionRange(start, end);
+            }
+        });
     </script>
     
     <script type="module" src="app.js"></script>
