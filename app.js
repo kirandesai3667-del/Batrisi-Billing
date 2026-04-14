@@ -280,9 +280,9 @@ const printRecord = (data, type) => {
             `;
         }
 
-        // REDUCED PADDING AND MARGINS SO IT FITS IN ONE PAGE
+        // PADDING BADHAI GAYI HAI. 
         contentHtml += `
-            <div class="print-copy" style="box-sizing: border-box; width: 100%; margin: 0; border:2px solid #000; padding:10px 15px; position:relative;">
+            <div class="print-copy" style="box-sizing: border-box; width: 100%; margin: 0; border:2px solid #000; padding:15px; position:relative;">
                 <div style="position:absolute; top:10px; right:10px; border:1px solid #000; padding:2px 5px; font-weight: bold;">${copy}</div>
                 
                 <div style="position:relative; margin-bottom:10px;">
@@ -297,17 +297,18 @@ const printRecord = (data, type) => {
                 ${details}
                 ${customInstructionsHtml}
                 
-                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '35px' : '55px'};">
-                    <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 4px; font-weight: 500; font-size: 12px;">Payer Signature</div>
-                    <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 4px; font-weight: 500; font-size: 12px;">Receiver Signature</div>
+                <!-- SIGNATURE SPACE INCREASED (margin-top: 60px/80px) -->
+                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '60px' : '80px'};">
+                    <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 5px; font-weight: 500; font-size: 12px;">Payer Signature</div>
+                    <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 5px; font-weight: 500; font-size: 12px;">Receiver Signature</div>
                 </div>
             </div>`;
 
-        // REDUCED CUTLINE MARGIN
+        // CUT LINE MARGIN INCREASED (margin: 25px 0)
         if (index === 0) {
             contentHtml += `
-                <div style="border-top: 2px dashed #666; margin: 15px 0; position: relative; text-align: center;">
-                    <span style="background: #fff; padding: 0 10px; position: relative; top: -9px; font-size: 12px; color: #555; font-weight: bold; letter-spacing: 2px;">
+                <div style="border-top: 2px dashed #666; margin: 25px 0; position: relative; text-align: center;">
+                    <span style="background: #fff; padding: 0 15px; position: relative; top: -9px; font-size: 12px; color: #555; font-weight: bold; letter-spacing: 2px;">
                         ✂ - - - - Cut Here - - - - ✂
                     </span>
                 </div>
