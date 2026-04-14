@@ -254,22 +254,25 @@ const printRecord = (data, type) => {
         
         let customInstructionsHtml = '';
         if(type === 'deposit') {
-            // Updated Instructions to match the exact table format requested
+            // New Numbered Table Format
             customInstructionsHtml = `
                 <div style="margin-top:15px; width:100%;">
-                    <table style="width:100%; border-collapse: collapse; font-size: 10px; font-family: Arial, sans-serif; text-align: left;">
+                    <table style="width:100%; border-collapse: collapse; font-size: 11px; font-family: Arial, sans-serif; text-align: left;">
                         <tbody>
                             <tr>
-                                <td style="border: 1px solid #777; padding: 4px 6px;">Instructions (To Be Printed On Deposit Slip)</td>
+                                <td colspan="2" style="border: 1px solid #000; padding: 6px; text-align: center; font-weight: bold; font-size: 13px; text-transform: uppercase;">Instructions</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #777; padding: 4px 6px;">All Parking Responsibilities Shall Be Kindly Managed By The Party Booking The Hall.</td>
+                                <td style="border: 1px solid #000; padding: 4px 6px; width: 25px; text-align: center; font-weight: bold;">1.</td>
+                                <td style="border: 1px solid #000; padding: 4px 6px;">All Parking Responsibilities Shall Be Kindly Managed By The Party Booking The Hall.</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #777; padding: 4px 6px;">After Completion Of The Function, At The Time Of Final Settlement, You Are Requested To Please Bring And Submit This Deposit Slip.</td>
+                                <td style="border: 1px solid #000; padding: 4px 6px; text-align: center; font-weight: bold;">2.</td>
+                                <td style="border: 1px solid #000; padding: 4px 6px;">After Completion Of The Function, At The Time Of Final Settlement, You Are Requested To Please Bring And Submit This Deposit Slip.</td>
                             </tr>
                             <tr>
-                                <td style="border: 1px solid #777; padding: 4px 6px;">For Any Function, Wherever Invitations Are Issued, You Are Kindly Requested To Mention The Name Of The Sanstha As “Sheth Shri Hiralal Hargovandas Batrisi Hall.” In Case Of Non-Compliance, The Sanstha May Levy A Penalty As Per Its Rules.</td>
+                                <td style="border: 1px solid #000; padding: 4px 6px; text-align: center; font-weight: bold;">3.</td>
+                                <td style="border: 1px solid #000; padding: 4px 6px;">For Any Function, Wherever Invitations Are Issued, You Are Kindly Requested To Mention The Name Of The Sanstha As “Sheth Shri Hiralal Hargovandas Batrisi Hall.” In Case Of Non-Compliance, The Sanstha May Levy A Penalty As Per Its Rules.</td>
                             </tr>
                         </tbody>
                     </table>
@@ -277,9 +280,10 @@ const printRecord = (data, type) => {
             `;
         }
 
+        // OUTER BORDER CHANGED TO '2px solid #000' FOR CLEAR PROPER PRINT BORDER IN ALL SLIPS
         contentHtml += `
-            <div class="print-copy" style="border:1px dashed #000; padding:15px; margin-bottom:20px; position:relative;">
-                <div style="position:absolute; top:10px; right:10px; border:1px solid #000; padding:2px 5px;">${copy}</div>
+            <div class="print-copy" style="border:2px solid #000; padding:15px; margin-bottom:20px; position:relative;">
+                <div style="position:absolute; top:10px; right:10px; border:1px solid #000; padding:2px 5px; font-weight: bold;">${copy}</div>
                 
                 <div style="position:relative; margin-bottom:15px;">
                     <img src="logo.png" style="width:70px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:10px;">
@@ -294,8 +298,8 @@ const printRecord = (data, type) => {
                 ${customInstructionsHtml}
                 
                 <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '30px' : '60px'};">
-                    <div style="border-top:1px solid #000; width:150px; text-align:center;">Payer Signature</div>
-                    <div style="border-top:1px solid #000; width:150px; text-align:center;">Receiver Signature</div>
+                    <div style="border-top:1px solid #000; width:150px; text-align:center; padding-top: 5px;">Payer Signature</div>
+                    <div style="border-top:1px solid #000; width:150px; text-align:center; padding-top: 5px;">Receiver Signature</div>
                 </div>
             </div>`;
     });
