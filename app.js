@@ -149,7 +149,7 @@ window.exportData = async () => {
     document.body.removeChild(link);
 };
 
-// --- SAVE & UPDATE LOGIC (Main Persistence) ---
+// --- SAVE & UPDATE LOGIC ---
 window.handleFormSubmit = async (e, type) => {
     if(e) e.preventDefault();
     const prefix = type.substring(0, 3);
@@ -186,7 +186,7 @@ window.handleFormSubmit = async (e, type) => {
     finally { if(btn) { btn.innerHTML = `<i class="ri-printer-line"></i> Save & Print`; btn.disabled = false; } }
 };
 
-// --- LOAD RECORDS (Pulling from Cloud) ---
+// --- LOAD RECORDS ---
 window.loadRecords = async () => {
     const type = document.getElementById('record-filter').value;
     const tbody = document.getElementById('records-body');
@@ -254,14 +254,25 @@ const printRecord = (data, type) => {
         
         let customInstructionsHtml = '';
         if(type === 'deposit') {
+            // Updated Instructions to match the exact table format requested
             customInstructionsHtml = `
-                <div style="margin-top:15px; font-size:10px; font-family:Arial, sans-serif; border:1px solid #ddd; padding:8px;">
-                    <strong style="text-decoration:underline;">Instructions:</strong>
-                    <ul style="margin: 5px 0 0 0; padding-left: 20px;">
-                        <li>All parking responsibilities shall be kindly managed by the party booking the hall.</li>
-                        <li>After completion of the function, at the time of final settlement, you are requested to please bring and submit this deposit slip.</li>
-                        <li>For any function, wherever invitations are issued, you are kindly requested to mention the name of the Sanstha as <strong>“Sheth Shri Hiralal Hargovandas Batrisi Hall.”</strong> In case of non-compliance, the Sanstha may levy a penalty as per its rules.</li>
-                    </ul>
+                <div style="margin-top:15px; width:100%;">
+                    <table style="width:100%; border-collapse: collapse; font-size: 10px; font-family: Arial, sans-serif; text-align: left;">
+                        <tbody>
+                            <tr>
+                                <td style="border: 1px solid #777; padding: 4px 6px;">Instructions (To Be Printed On Deposit Slip)</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #777; padding: 4px 6px;">All Parking Responsibilities Shall Be Kindly Managed By The Party Booking The Hall.</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #777; padding: 4px 6px;">After Completion Of The Function, At The Time Of Final Settlement, You Are Requested To Please Bring And Submit This Deposit Slip.</td>
+                            </tr>
+                            <tr>
+                                <td style="border: 1px solid #777; padding: 4px 6px;">For Any Function, Wherever Invitations Are Issued, You Are Kindly Requested To Mention The Name Of The Sanstha As “Sheth Shri Hiralal Hargovandas Batrisi Hall.” In Case Of Non-Compliance, The Sanstha May Levy A Penalty As Per Its Rules.</td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             `;
         }
