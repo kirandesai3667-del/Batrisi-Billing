@@ -246,6 +246,11 @@ const printRecord = (data, type) => {
                     <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 5px; font-weight: 500; font-size: 12px;">Payer Signature</div>
                     <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 5px; font-weight: 500; font-size: 12px;">Receiver Signature</div>
                 </div>
+                
+                <!-- COMPUTER GENERATED DISCLAIMER LINE -->
+                <div style="text-align: center; font-size: 8.5px; margin-top: 15px; color: #444;">
+                    This Is A Computer-Generated Document And Does Not Require A Stamp.
+                </div>
             </div>`;
 
         if (index === 0) {
