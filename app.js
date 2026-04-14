@@ -21,6 +21,14 @@ const orgAddress = "Sheth Shri Hiralal Hargovandas Batrishi Hall, Near R.T.O Cir
 const orgDetails = "GSTIN: 24AAATS6070J1ZE | Reg No: GH/230 (10/10/1944) | Mob: 9586423232 | Email: 32cedusociety@gmail.com";
 const logoUrl = "logo.png"; 
 
+// --- HELPER: FORMAT DATE TO DD/MM/YYYY ---
+window.formatDateIndian = (dateStr) => {
+    if(!dateStr) return '';
+    const parts = dateStr.split('-');
+    if(parts.length === 3) return `${parts[2]}/${parts[1]}/${parts[0]}`;
+    return dateStr;
+};
+
 // --- DATE & SLIP LOGIC ---
 const setToday = () => {
     const today = new Date().toISOString().split('T')[0];
@@ -101,6 +109,46 @@ window.fetchMember = async (inputId, nameId, addrId, nativeId) => {
     }
 };
 
+// --- EXCEL/CSV EXPORT LOGIC ---
+window.exportData = async () => {
+    const type = document.getElementById('record-filter').value;
+    const q = query(collection(db, type), orderBy("timestamp", "desc"));
+    const qs = await getDocs(q);
+    
+    if(qs.empty) { alert("No data available to download!"); return; }
+
+    let csvContent = "data:text/csv;charset=utf-8,";
+    let headers = [];
+    let rows = [];
+
+    qs.forEach((docSnap) => {
+        let data = docSnap.data();
+        delete data.timestamp;
+        
+        // Convert dates to Indian Format for export
+        if(data.date) data.date = window.formatDateIndian(data.date);
+        if(data.payDate) data.payDate = window.formatDateIndian(data.payDate);
+        if(data.funcDate) data.funcDate = window.formatDateIndian(data.funcDate);
+
+        if(headers.length === 0) {
+            headers = Object.keys(data);
+            rows.push(headers.join(","));
+        }
+        
+        let row = headers.map(h => `"${(data[h] || '').toString().replace(/"/g, '""')}"`);
+        rows.push(row.join(","));
+    });
+
+    csvContent += rows.join("\r\n");
+    const encodedUri = encodeURI(csvContent);
+    const link = document.createElement("a");
+    link.setAttribute("href", encodedUri);
+    link.setAttribute("download", `${type}_Data_Export.csv`);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+};
+
 // --- SAVE & UPDATE LOGIC (Main Persistence) ---
 window.handleFormSubmit = async (e, type) => {
     if(e) e.preventDefault();
@@ -154,7 +202,7 @@ window.loadRecords = async () => {
         let d = docSnap.data(); d.id = docSnap.id;
         let tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><strong>${d.slipNo}</strong></td><td>${d.date}</td><td>${d.name}</td>
+            <td><strong>${d.slipNo}</strong></td><td>${window.formatDateIndian(d.date)}</td><td>${d.name}</td>
             <td style="color:#10B981; font-weight:600;">₹${d.amount || d.total}</td>
             <td>
                 <button class="btn-action btn-edit" onclick='editRec(${JSON.stringify(d)}, "${type}")'><i class="ri-edit-line"></i></button>
@@ -182,17 +230,18 @@ const updateDashboardCounts = async () => {
     if(document.getElementById('stat-inv')) document.getElementById('stat-inv').innerText = invs.size;
 };
 
-// --- PRINT LOGIC (Remains same for high quality) ---
+// --- PRINT LOGIC ---
 window.rePrint = (data, type) => { printRecord(data, type); };
 const printRecord = (data, type) => {
     const container = document.getElementById('print-container');
     let title = type.toUpperCase() + (type === 'invoice' ? ' INVOICE' : ' SLIP');
     let contentHtml = '';
+    
     ['ORIGINAL', 'DUPLICATE'].forEach(copy => {
         let details = `
             <div class="print-grid">
                 <div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div>
-                <div class="print-row"><span class="print-label">Date:</span> ${data.date}</div>
+                <div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div>
                 <div class="print-row"><span class="print-label">Name:</span> ${data.name}</div>
                 <div class="print-row"><span class="print-label">Address:</span> ${data.address || '-'}</div>
                 <div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div>
@@ -202,16 +251,38 @@ const printRecord = (data, type) => {
             </div>
             <div style="margin-top:10px; font-style:italic;">Words: ${data.words}</div>
         `;
+        
+        let customInstructionsHtml = '';
+        if(type === 'deposit') {
+            customInstructionsHtml = `
+                <div style="margin-top:15px; font-size:10px; font-family:Arial, sans-serif; border:1px solid #ddd; padding:8px;">
+                    <strong style="text-decoration:underline;">Instructions:</strong>
+                    <ul style="margin: 5px 0 0 0; padding-left: 20px;">
+                        <li>All parking responsibilities shall be kindly managed by the party booking the hall.</li>
+                        <li>After completion of the function, at the time of final settlement, you are requested to please bring and submit this deposit slip.</li>
+                        <li>For any function, wherever invitations are issued, you are kindly requested to mention the name of the Sanstha as <strong>“Sheth Shri Hiralal Hargovandas Batrisi Hall.”</strong> In case of non-compliance, the Sanstha may levy a penalty as per its rules.</li>
+                    </ul>
+                </div>
+            `;
+        }
+
         contentHtml += `
             <div class="print-copy" style="border:1px dashed #000; padding:15px; margin-bottom:20px; position:relative;">
                 <div style="position:absolute; top:10px; right:10px; border:1px solid #000; padding:2px 5px;">${copy}</div>
-                <div style="text-align:center; border-bottom:1px solid #000; margin-bottom:10px;">
-                    <img src="logo.png" style="width:60px; position:absolute; left:10px; top:10px;">
-                    <h2>${orgName}</h2><p style="font-size:10px;">${orgAddress}</p>
+                
+                <div style="position:relative; margin-bottom:15px;">
+                    <img src="logo.png" style="width:70px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:10px;">
+                    <div style="padding-left: 80px; text-align:center; border-bottom:1px solid #000; padding-bottom:8px;">
+                        <h2 style="margin:0; font-size:18px;">${orgName}</h2>
+                        <p style="margin:4px 0 0 0; font-size:10px;">${orgAddress}</p>
+                    </div>
                 </div>
+
                 <h3 style="text-align:center; text-decoration:underline; margin-bottom:10px;">${title}</h3>
                 ${details}
-                <div style="display:flex; justify-content:space-between; margin-top:50px;">
+                ${customInstructionsHtml}
+                
+                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '30px' : '60px'};">
                     <div style="border-top:1px solid #000; width:150px; text-align:center;">Payer Signature</div>
                     <div style="border-top:1px solid #000; width:150px; text-align:center;">Receiver Signature</div>
                 </div>
