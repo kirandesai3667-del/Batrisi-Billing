@@ -1,6 +1,5 @@
 // --- FIREBASE INITIALIZATION ---
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-// Naya function: writeBatch import kiya gaya hai fast upload ke liye
 import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, setDoc, getDoc, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
@@ -53,47 +52,60 @@ const generateSlipNo = async (collectionName, targetId) => {
     } catch(err) { console.error("Slip Error:", err); }
 };
 
-// --- MEMBER DATA (SUPER FAST BATCHED CSV UPLOAD) ---
+// --- SMART CSV PARSER (Fixes Address & Native mismatch) ---
 window.uploadCSV = async () => {
     const file = document.getElementById('csv-upload').files[0];
     if(!file) return alert('Please select a CSV file first.');
     const status = document.getElementById('csv-status');
     status.style.color = "#10B981";
-    status.innerText = "Processing Data (Super Fast Mode)... Please wait!";
+    status.innerText = "Processing Data (Smart Mode)... Please wait!";
     
     const reader = new FileReader();
     reader.onload = async (e) => {
         try {
-            const lines = e.target.result.split('\n');
-            let count = 0;
+            // Split lines exactly (handles windows & mac line endings)
+            const lines = e.target.result.split(/\r?\n/);
+            if (lines.length < 2) throw new Error("CSV is empty");
+
+            // Smart Header Mapping (Pehle row ko padh kar sahi column dhundhega)
+            const headers = lines[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h => h.replace(/"/g, '').trim().toLowerCase());
             
-            // 500 records ke chunks banayenge (Firebase ek baar me max 500 commit karta hai)
-            const chunks = [];
+            let memIdx = headers.findIndex(h => h.includes('number') || h.includes('no'));
+            let nameIdx = headers.findIndex(h => h.includes('name') && !h.includes('native'));
+            let addrIdx = headers.findIndex(h => h.includes('address'));
+            let nativeIdx = headers.findIndex(h => h.includes('native'));
+
+            // Agar headers alag naam se hue, to default (0,1,2,3) set karega
+            if (memIdx === -1) memIdx = 0;
+            if (nameIdx === -1) nameIdx = 1;
+            if (addrIdx === -1) addrIdx = 2;
+            if (nativeIdx === -1) nativeIdx = 3;
+
+            let count = 0;
+            const chunks =[];
             let currentChunk =[];
             
             for(let i=1; i<lines.length; i++){
                 if(!lines[i].trim()) continue;
                 const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
                 
-                let memNo = cols[0]?.replace(/"/g,'').trim();
-                let name = cols[1]?.replace(/"/g,'').trim();
-                let addr = cols[2]?.replace(/"/g,'').trim();
-                let native = cols[3]?.replace(/"/g,'').trim();
+                let memNo = cols[memIdx] ? cols[memIdx].replace(/"/g,'').trim() : "";
+                let name = cols[nameIdx] ? cols[nameIdx].replace(/"/g,'').trim() : "";
+                let addr = cols[addrIdx] ? cols[addrIdx].replace(/"/g,'').trim() : "";
+                let native = cols[nativeIdx] ? cols[nativeIdx].replace(/"/g,'').trim() : "";
 
                 if(memNo) {
                     currentChunk.push({memNo, name, addr, native});
                     count++;
                 }
 
-                // Jaise hi 500 record hon, naya chunk bana do
                 if(currentChunk.length === 500) {
                     chunks.push(currentChunk);
                     currentChunk =[];
                 }
             }
-            if(currentChunk.length > 0) chunks.push(currentChunk); // Baaki bache huye records
+            if(currentChunk.length > 0) chunks.push(currentChunk);
 
-            // Ek sath Database me save karenge (Batched Writes - Seconds me ho jayega!)
             for (let chunk of chunks) {
                 const batch = writeBatch(db);
                 for (let member of chunk) {
@@ -103,17 +115,17 @@ window.uploadCSV = async () => {
                 await batch.commit();
             }
 
-            status.innerText = `Success! ${count} members added instantly.`;
+            status.innerText = `Success! ${count} members added with accurate Mapping.`;
         } catch (error) {
             console.error("CSV Upload Error:", error);
             status.style.color = "red";
-            status.innerText = "Error uploading data. Check console.";
+            status.innerText = "Error uploading data. Format mismatch!";
         }
     };
     reader.readAsText(file);
 };
 
-// Auto-fill member details on form
+// Fetch Member (Auto-fill Data)
 window.fetchMember = async (inputId, nameId, addrId, nativeId) => {
     const val = document.getElementById(inputId).value.trim();
     if(!val) return;
@@ -216,7 +228,7 @@ document.addEventListener("DOMContentLoaded", () => {
     document.getElementById('form-invoice')?.addEventListener('submit', (e) => handleFormSubmit(e, 'invoice'));
 });
 
-// Load Records to Table
+// Load Records
 window.loadRecords = async () => {
     const type = document.getElementById('record-filter').value;
     const tbody = document.getElementById('records-body');
@@ -254,7 +266,7 @@ window.loadRecords = async () => {
     } catch (err) { console.error(err); }
 };
 
-// EDIT RECORD LOGIC
+// EDIT RECORD
 window.editRec = (data, type) => {
     switchTab(type);
     if(type === 'deposit') {
@@ -301,7 +313,6 @@ window.editRec = (data, type) => {
         document.getElementById('don-amount').value = data.amount;
         document.getElementById('don-words').value = data.words;
         document.getElementById('btn-submit-don').innerHTML = `<i class="ri-save-line"></i> Update & Print`;
-
     } else if(type === 'invoice') {
         document.getElementById('inv-edit-id').value = data.id;
         document.getElementById('inv-slip').value = data.slipNo;
@@ -341,7 +352,7 @@ const updateDashboardCounts = async () => {
     } catch (err) {}
 };
 
-// --- PRINTING LOGIC (ADDRESS ALIGNMENT FIXED HERE) ---
+// --- PRINTING LOGIC ---
 window.rePrint = (data, type) => { printRecord(data, type); };
 
 const printRecord = (data, type) => {
@@ -387,11 +398,9 @@ const printRecord = (data, type) => {
         
         let donationFooter = type === 'donation' ? `<div class="print-footer-text">PAN No.AAATS670J | URN NO.AAATS6070JF20217 | DATE 24-09-2021<br>Donation Exempted under section 80G(5) 180/09-10 Dated: 20/11/2009 of Income Tax Act 1961</div>` : '';
         
-        // Print Header - Isme Margin Fix kar diya gaya hai.
         contentHtml += `
             <div class="print-copy">
                 <div class="print-copy-type" style="position: absolute; top: 10px; right: 10px; border: 1px solid #000; padding: 3px 8px; font-weight: bold; font-size:11px;">${copyType}</div>
-                
                 <div class="print-header" style="position:relative; text-align:center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; min-height: 75px;">
                     <img src="${logoUrl}" alt="Logo" style="width:70px; position:absolute; left:10px; top:0;">
                     <div style="margin: 0 90px;">
@@ -400,7 +409,6 @@ const printRecord = (data, type) => {
                         <p style="font-size: 11px; margin: 2px 0;">${orgDetails}</p>
                     </div>
                 </div>
-
                 <div class="print-title">${title}</div>
                 ${detailsHtml}
                 <div class="print-signatures">
@@ -416,7 +424,6 @@ const printRecord = (data, type) => {
     setTimeout(() => { window.print(); }, 500);
 };
 
-// --- INIT CALLS ---
 window.onload = async () => {
     try {
         setToday();
