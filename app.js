@@ -52,7 +52,7 @@ const generateSlipNo = async (collectionName, targetId) => {
     } catch(err) { console.error("Slip Error:", err); }
 };
 
-// --- SMART CSV PARSER (Fixes Address & Native mismatch) ---
+// --- SMART CSV PARSER ---
 window.uploadCSV = async () => {
     const file = document.getElementById('csv-upload').files[0];
     if(!file) return alert('Please select a CSV file first.');
@@ -63,11 +63,9 @@ window.uploadCSV = async () => {
     const reader = new FileReader();
     reader.onload = async (e) => {
         try {
-            // Split lines exactly (handles windows & mac line endings)
             const lines = e.target.result.split(/\r?\n/);
             if (lines.length < 2) throw new Error("CSV is empty");
 
-            // Smart Header Mapping (Pehle row ko padh kar sahi column dhundhega)
             const headers = lines[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h => h.replace(/"/g, '').trim().toLowerCase());
             
             let memIdx = headers.findIndex(h => h.includes('number') || h.includes('no'));
@@ -75,7 +73,6 @@ window.uploadCSV = async () => {
             let addrIdx = headers.findIndex(h => h.includes('address'));
             let nativeIdx = headers.findIndex(h => h.includes('native'));
 
-            // Agar headers alag naam se hue, to default (0,1,2,3) set karega
             if (memIdx === -1) memIdx = 0;
             if (nameIdx === -1) nameIdx = 1;
             if (addrIdx === -1) addrIdx = 2;
@@ -98,7 +95,6 @@ window.uploadCSV = async () => {
                     currentChunk.push({memNo, name, addr, native});
                     count++;
                 }
-
                 if(currentChunk.length === 500) {
                     chunks.push(currentChunk);
                     currentChunk =[];
@@ -114,7 +110,6 @@ window.uploadCSV = async () => {
                 }
                 await batch.commit();
             }
-
             status.innerText = `Success! ${count} members added with accurate Mapping.`;
         } catch (error) {
             console.error("CSV Upload Error:", error);
@@ -142,7 +137,7 @@ window.fetchMember = async (inputId, nameId, addrId, nativeId) => {
 
 // --- CRUD OPERATIONS (SAVE, EDIT, DELETE) ---
 const handleFormSubmit = async (e, type) => {
-    e.preventDefault();
+    e.preventDefault(); // Ye form ko reload hone se rokega
     const btn = document.getElementById(`btn-submit-${type}`);
     let originalText = btn.innerHTML;
     btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> Saving...";
@@ -215,20 +210,26 @@ const handleFormSubmit = async (e, type) => {
         printRecord(data, type);
 
     } catch (error) {
-        alert("Error saving record!");
+        console.error("Save Error: ", error);
+        alert("Error saving record! Check console for details.");
     } finally {
         btn.innerHTML = `<i class="ri-printer-line"></i> Save & Print`;
         btn.disabled = false;
     }
 };
 
-document.addEventListener("DOMContentLoaded", () => {
-    document.getElementById('form-deposit')?.addEventListener('submit', (e) => handleFormSubmit(e, 'deposit'));
-    document.getElementById('form-donation')?.addEventListener('submit', (e) => handleFormSubmit(e, 'donation'));
-    document.getElementById('form-invoice')?.addEventListener('submit', (e) => handleFormSubmit(e, 'invoice'));
-});
+// FIX: Direct attachment without waiting for DOMContentLoaded wrapper
+const formDep = document.getElementById('form-deposit');
+if(formDep) formDep.addEventListener('submit', (e) => handleFormSubmit(e, 'deposit'));
 
-// Load Records
+const formDon = document.getElementById('form-donation');
+if(formDon) formDon.addEventListener('submit', (e) => handleFormSubmit(e, 'donation'));
+
+const formInv = document.getElementById('form-invoice');
+if(formInv) formInv.addEventListener('submit', (e) => handleFormSubmit(e, 'invoice'));
+
+
+// Load Records to Table
 window.loadRecords = async () => {
     const type = document.getElementById('record-filter').value;
     const tbody = document.getElementById('records-body');
@@ -424,12 +425,13 @@ const printRecord = (data, type) => {
     setTimeout(() => { window.print(); }, 500);
 };
 
-window.onload = async () => {
+// Safe initialization
+window.addEventListener('load', async () => {
     try {
         setToday();
         await updateDashboardCounts();
         await generateSlipNo('deposit', 'dep-slip');
         await generateSlipNo('donation', 'don-slip');
         await generateSlipNo('invoice', 'inv-slip');
-    } catch(err) { }
-};
+    } catch(err) { console.error(err); }
+});
