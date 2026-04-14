@@ -20,17 +20,24 @@ const db = getFirestore(app);
 const orgName = "Shree Batrisi Jain Co-Op Education Society Ltd";
 const orgAddress = "Sheth Shri Hiralal Hargovandas Batrishi Hall, Near R.T.O Circle, Subhashbridge, Collector Kacheri, Ahmedabad - 380027";
 const orgDetails = "GSTIN: 24AAATS6070J1ZE | Reg No: GH/230 (10/10/1944) | Mob: 9586423232 | Email: 32cedusociety@gmail.com";
-const logoUrl = "LOGO_URL_HERE"; 
+const logoUrl = "LOGO_URL_HERE"; // Apne logo ka RAW url yaha daale
 
-// --- UI UTILS ---
+// --- UI UTILS & EVENT LISTENERS ---
 window.toggleMenu = () => { document.querySelector('.sidebar').classList.toggle('active'); };
 
 window.switchTab = (tabId) => {
+    // Hide all sections & remove active class from all tabs
     document.querySelectorAll('.page-section').forEach(sec => sec.classList.remove('active'));
     document.querySelectorAll('.nav-links li').forEach(li => li.classList.remove('active'));
+    
+    // Show selected section & add active class to selected tab
     document.getElementById(`sec-${tabId}`).classList.add('active');
     document.getElementById(`tab-${tabId}`).classList.add('active');
-    if(window.innerWidth <= 768) toggleMenu();
+    
+    // Close sidebar on mobile after click
+    if(window.innerWidth <= 900) toggleMenu();
+    
+    // Load records if records tab is opened
     if(tabId === 'records') loadRecords();
 };
 
@@ -50,8 +57,8 @@ const setToday = () => {
 // --- NUMBER TO WORDS (INDIAN) ---
 window.numToWords = (num, targetId) => {
     if(!num || num == 0) { document.getElementById(targetId).value = ""; return; }
-    let a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
-    let b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
+    let a =['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+    let b =['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
     
     let n = Math.floor(num);
     if(n.toString().length > 9) return document.getElementById(targetId).value = "Limit Exceeded";
@@ -111,12 +118,11 @@ const generateSlipNo = async (collectionName, targetId) => {
 };
 
 // --- CRUD OPERATIONS ---
-
-// Handle Forms
 const handleFormSubmit = async (e, type) => {
     e.preventDefault();
     const btn = e.target.querySelector('button');
-    btn.innerText = "Saving...";
+    let originalText = btn.innerHTML;
+    btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> Saving...";
     btn.disabled = true;
 
     try {
@@ -184,44 +190,52 @@ const handleFormSubmit = async (e, type) => {
         console.error("Error adding document: ", error);
         alert("Error saving record!");
     } finally {
-        btn.innerText = `Save & Print ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+        btn.innerHTML = originalText;
         btn.disabled = false;
     }
 };
 
-document.getElementById('form-deposit').addEventListener('submit', (e) => handleFormSubmit(e, 'deposit'));
-document.getElementById('form-donation').addEventListener('submit', (e) => handleFormSubmit(e, 'donation'));
-document.getElementById('form-invoice').addEventListener('submit', (e) => handleFormSubmit(e, 'invoice'));
-
+// Attach Form Submit Listeners safely
+document.addEventListener("DOMContentLoaded", () => {
+    document.getElementById('form-deposit')?.addEventListener('submit', (e) => handleFormSubmit(e, 'deposit'));
+    document.getElementById('form-donation')?.addEventListener('submit', (e) => handleFormSubmit(e, 'donation'));
+    document.getElementById('form-invoice')?.addEventListener('submit', (e) => handleFormSubmit(e, 'invoice'));
+});
 
 // Load Records
 window.loadRecords = async () => {
     const type = document.getElementById('record-filter').value;
     const tbody = document.getElementById('records-body');
-    tbody.innerHTML = "<tr><td colspan='5'>Loading...</td></tr>";
+    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'><i class='ri-loader-4-line ri-spin'></i> Loading data...</td></tr>";
     
     try {
         const q = query(collection(db, type), orderBy("timestamp", "desc"));
         const querySnapshot = await getDocs(q);
         tbody.innerHTML = "";
         
+        if(querySnapshot.empty) {
+            tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No records found</td></tr>";
+            return;
+        }
+
         querySnapshot.forEach((docSnap) => {
             let data = docSnap.data();
             let tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${data.slipNo}</td>
+                <td><strong>${data.slipNo}</strong></td>
                 <td>${data.date}</td>
                 <td>${data.name}</td>
-                <td>₹${data.amount || data.total}</td>
+                <td style="color:#10B981; font-weight:600;">₹${data.amount || data.total}</td>
                 <td>
-                    <button class="btn-action btn-print" onclick='rePrint(${JSON.stringify(data)}, "${type}")'><i class="fas fa-print"></i></button>
-                    <button class="btn-action btn-del" onclick='deleteRec("${docSnap.id}", "${type}")'><i class="fas fa-trash"></i></button>
+                    <button class="btn-action btn-print" onclick='rePrint(${JSON.stringify(data)}, "${type}")' title="Print"><i class="ri-printer-line"></i></button>
+                    <button class="btn-action btn-del" onclick='deleteRec("${docSnap.id}", "${type}")' title="Delete"><i class="ri-delete-bin-line"></i></button>
                 </td>
             `;
             tbody.appendChild(tr);
         });
     } catch (err) {
-        tbody.innerHTML = "<tr><td colspan='5'>Error loading data</td></tr>";
+        tbody.innerHTML = "<tr><td colspan='5' style='text-align:center; color:red;'>Error loading data</td></tr>";
+        console.error("Load Record Error:", err);
     }
 };
 
@@ -230,7 +244,7 @@ window.searchTable = () => {
     let filter = document.getElementById('search-bar').value.toUpperCase();
     let trs = document.getElementById('records-table').getElementsByTagName("tr");
     for (let i = 1; i < trs.length; i++) {
-        let td = trs[i].getElementsByTagName("td")[2]; // Name column
+        let td = trs[i].getElementsByTagName("td")[2]; 
         if (td) {
             let txtValue = td.textContent || td.innerText;
             trs[i].style.display = txtValue.toUpperCase().indexOf(filter) > -1 ? "" : "none";
@@ -241,22 +255,30 @@ window.searchTable = () => {
 // Delete Record
 window.deleteRec = async (id, type) => {
     if(confirm("Are you sure you want to delete this record?")) {
-        await deleteDoc(doc(db, type, id));
-        loadRecords();
-        updateDashboardCounts();
+        try {
+            await deleteDoc(doc(db, type, id));
+            loadRecords();
+            updateDashboardCounts();
+        } catch(err) {
+            alert("Error deleting record.");
+            console.error(err);
+        }
     }
 };
 
 // Update Dashboard Counts
 const updateDashboardCounts = async () => {
-    const deps = await getDocs(collection(db, 'deposit'));
-    const dons = await getDocs(collection(db, 'donation'));
-    const invs = await getDocs(collection(db, 'invoice'));
-    document.getElementById('stat-dep').innerText = deps.size;
-    document.getElementById('stat-don').innerText = dons.size;
-    document.getElementById('stat-inv').innerText = invs.size;
+    try {
+        const deps = await getDocs(collection(db, 'deposit'));
+        const dons = await getDocs(collection(db, 'donation'));
+        const invs = await getDocs(collection(db, 'invoice'));
+        document.getElementById('stat-dep').innerText = deps.size;
+        document.getElementById('stat-don').innerText = dons.size;
+        document.getElementById('stat-inv').innerText = invs.size;
+    } catch (err) {
+        console.error("Error fetching counts", err);
+    }
 };
-
 
 // --- PRINTING LOGIC ---
 window.rePrint = (data, type) => { printRecord(data, type); };
@@ -267,7 +289,6 @@ const printRecord = (data, type) => {
     
     let contentHtml = '';
     
-    // Loop for Original and Duplicate
     ['ORIGINAL', 'DUPLICATE'].forEach(copyType => {
         let detailsHtml = '';
         
@@ -326,11 +347,14 @@ const printRecord = (data, type) => {
             </div>
         ` : '';
 
+        // If no Logo URL, hide image tag entirely to avoid broken image icon
+        let logoHtml = logoUrl !== "LOGO_URL_HERE" ? `<img src="${logoUrl}" alt="Logo">` : ``;
+
         contentHtml += `
             <div class="print-copy">
                 <div class="print-copy-type">${copyType}</div>
                 <div class="print-header">
-                    <img src="${logoUrl}" alt="Logo">
+                    ${logoHtml}
                     <h2>${orgName}</h2>
                     <p>${orgAddress}</p>
                     <p>${orgDetails}</p>
@@ -355,9 +379,14 @@ const printRecord = (data, type) => {
 
 // --- INIT CALLS ---
 window.onload = async () => {
-    setToday();
-    updateDashboardCounts();
-    await generateSlipNo('deposit', 'dep-slip');
-    await generateSlipNo('donation', 'don-slip');
-    await generateSlipNo('invoice', 'inv-slip');
+    try {
+        setToday();
+        await updateDashboardCounts();
+        await generateSlipNo('deposit', 'dep-slip');
+        await generateSlipNo('donation', 'don-slip');
+        await generateSlipNo('invoice', 'inv-slip');
+        console.log("App loaded successfully!");
+    } catch(err) {
+        console.error("Initialization error: ", err);
+    }
 };
