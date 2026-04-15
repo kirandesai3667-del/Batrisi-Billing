@@ -93,43 +93,71 @@ window.uploadCSV = async () => {
     reader.onload = async (e) => {
         try {
             const lines = e.target.result.split(/\r?\n/);
-            const headers = lines[0].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h => h.replace(/"/g, '').trim().toLowerCase());
-            let mIdx = headers.findIndex(h => h.includes('number') || h.includes('no'));
-            let nIdx = headers.findIndex(h => h.includes('name') && !h.includes('native'));
+            const headers = lines[0].toLowerCase().split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h => h.replace(/["\r]/g, '').trim());
+            
+            // Map strictly to the user's provided CSV format image:
+            // 0: Member Number, 1: Member Name, 2: Address, 3: Native Name, 4: Mobile Number
+            let mIdx = headers.findIndex(h => h.includes('member number'));
+            let nIdx = headers.findIndex(h => h.includes('member name'));
             let aIdx = headers.findIndex(h => h.includes('address'));
-            let ntIdx = headers.findIndex(h => h.includes('native'));
+            let ntIdx = headers.findIndex(h => h.includes('native name'));
+            let mobIdx = headers.findIndex(h => h.includes('mobile number'));
+
+            // Fallback to exact array positions to guarantee matching with your image structure
+            if (mIdx === -1) mIdx = 0;
+            if (nIdx === -1) nIdx = 1;
+            if (aIdx === -1) aIdx = 2;
+            if (ntIdx === -1) ntIdx = 3;
+            if (mobIdx === -1) mobIdx = 4;
 
             const batch = writeBatch(db);
             let count = 0;
             for(let i=1; i<lines.length; i++){
                 if(!lines[i].trim()) continue;
                 const cols = lines[i].split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/);
-                let memNo = cols[mIdx]?.replace(/"/g,'').trim();
+                let memNo = cols[mIdx]?.replace(/["\r]/g,'').trim();
+                
                 if(memNo) {
+                    // Extract Mobile
+                    let mob = cols[mobIdx]?.replace(/["\r]/g,'').trim() || '';
+                    // Allow blank manually if 0, null, or empty dashes
+                    if (mob === '0' || mob.toLowerCase() === 'null' || mob === '-') {
+                        mob = '';
+                    }
+
                     batch.set(doc(db, "members", memNo), {
-                        name: cols[nIdx]?.replace(/"/g,'').trim() || '',
-                        address: cols[aIdx]?.replace(/"/g,'').trim() || '',
-                        native: cols[ntIdx]?.replace(/"/g,'').trim() || ''
+                        name: cols[nIdx]?.replace(/["\r]/g,'').trim() || '',
+                        address: cols[aIdx]?.replace(/["\r]/g,'').trim() || '',
+                        native: cols[ntIdx]?.replace(/["\r]/g,'').trim() || '',
+                        mobile: mob
                     });
                     count++;
                 }
             }
             await batch.commit();
             status.innerText = `Success! ${count} Members saved permanently.`;
-        } catch (error) { status.innerText = "Error uploading CSV."; }
+        } catch (error) { status.innerText = "Error uploading CSV. Check format."; console.error(error); }
     };
     reader.readAsText(file);
 };
 
-window.fetchMember = async (inputId, nameId, addrId, nativeId) => {
+window.fetchMember = async (inputId, nameId, addrId, nativeId, mobileId) => {
     const val = document.getElementById(inputId).value.trim();
     if(!val) return;
     const docSnap = await getDoc(doc(db, "members", val));
     if(docSnap.exists()) {
         const data = docSnap.data();
-        document.getElementById(nameId).value = data.name || '';
-        document.getElementById(addrId).value = data.address || '';
-        document.getElementById(nativeId).value = data.native || '';
+        if(document.getElementById(nameId)) document.getElementById(nameId).value = data.name || '';
+        if(document.getElementById(addrId)) document.getElementById(addrId).value = data.address || '';
+        if(document.getElementById(nativeId)) document.getElementById(nativeId).value = data.native || '';
+        
+        if(mobileId && document.getElementById(mobileId)) {
+            let mob = data.mobile || '';
+            if(mob === '0' || mob.toLowerCase() === 'null' || mob === '-') {
+                mob = '';
+            }
+            document.getElementById(mobileId).value = mob;
+        }
     }
 };
 
@@ -322,7 +350,9 @@ const printRecord = (data, type) => {
 
                 <h3 style="text-align:center; text-decoration:underline; margin: 3px 0 6px 0; font-size: 13px;">${title}</h3>
                 ${detailsHtml}
-                <div style="font-style:italic; font-size: 10px; margin-top: 3px;">Words: ${data.words || '-'}</div>
+                
+                <!-- Displaying "Words: " exactly as required -->
+                <div style="font-style:italic; font-size: 10px; margin-top: 3px; font-weight: 600;">Words: ${data.words || '-'}</div>
                 
                 ${footerNoteHtml}
                 
