@@ -73,27 +73,38 @@ header { background: var(--surface); height: 70px; padding: 0 30px; display: fle
 .form-actions { margin-top: 30px; display: flex; justify-content: flex-end;}
 .btn-submit { background: linear-gradient(135deg, var(--secondary), var(--secondary-hover)); color: white; border: none; padding: 14px 28px; border-radius: var(--radius-md); font-size: 15px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: 0.2s;}
 
-/* Data Tables */
+/* Data Tables & Action Buttons */
+.records-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
 .modern-table { width: 100%; border-collapse: separate; border-spacing: 0; }
 .modern-table th, .modern-table td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border-color); font-size: 14px; }
 .modern-table th { background: #F9FAFB; font-weight: 600; color: #4B5563; font-size: 12px; }
 
+/* 3 Buttons: Edit, Print, Delete */
 .btn-action { width: 32px; height: 32px; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; color: white; display: inline-flex; align-items: center; justify-content: center; margin-right: 5px; transition: 0.2s;}
-.btn-edit { background: #F59E0B; } 
-.btn-print { background: var(--primary); } 
-.btn-del { background: #EF4444; }
+.btn-edit { background: #F59E0B; } .btn-edit:hover { background: #D97706; }
+.btn-print { background: var(--primary); } .btn-print:hover { background: var(--primary-hover); }
+.btn-del { background: #EF4444; } .btn-del:hover { background: #DC2626; }
 
-/* Print Logic */
+@media print { .print-only { display: block !important; } .no-print { display: none !important; } }
+@media (max-width: 900px) { .grid-2 { grid-template-columns: 1fr; } .sidebar { position: fixed; transform: translateX(-100%); height: 100%; box-shadow: var(--shadow-lg);} .sidebar.active { transform: translateX(0); } .menu-toggle { display: block; } }
+
+/* Print Logic Exact matching your previous requirements */
 .print-only { display: none; }
 @media print {
-    @page { size: A4 portrait; margin: 8mm; }
+    @page { size: A4 portrait; margin: 5mm; }
     body * { visibility: hidden; }
     .print-only, .print-only * { visibility: visible; }
-    .print-only { position: absolute; left: 0; top: 0; width: 100%; display: block !important;}
-    .print-copy { border: 2px solid #000; padding: 15px; border-radius: 0; margin-bottom: 10px; font-family: Arial, sans-serif; position: relative; color: #000;}
-    .print-copy-type { position: absolute; top: 10px; right: 10px; border: 1px solid #000; padding: 2px 6px; font-weight: bold; font-size: 10px;}
-    .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 15px 0; font-size: 11px;}
-    .print-row { border-bottom: 1px dotted #ccc; padding: 3px 0; display: flex;}
-    .print-label { font-weight: bold; width: 120px; flex-shrink: 0;}
-    .print-val { flex-grow: 1;}
+    .print-only { position: absolute; left: 0; top: 0; width: 100%; }
+    .print-page { display: flex; flex-direction: column; gap: 20px; }
+    .print-copy { border: 1px dashed #000; padding: 15px; border-radius: 5px; position: relative; font-family: Arial, sans-serif; font-size: 12px; color: #000; }
+    .print-copy-type { position: absolute; top: 10px; right: 10px; border: 1px solid #000; padding: 3px 8px; font-weight: bold;}
+    .print-header { text-align: center; border-bottom: 2px solid #000; padding-bottom: 10px; margin-bottom: 10px; }
+    .print-header h2 { font-size: 18px; margin-bottom: 5px; }
+    .print-title { text-align: center; font-size: 16px; font-weight: bold; margin: 10px 0; text-decoration: underline; }
+    .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px; }
+    .print-row { display: flex; gap: 5px; border-bottom: 1px dotted #ccc; padding-bottom: 3px; }
+    .print-label { font-weight: bold; min-width: 120px; }
+    .print-footer-text { font-size: 10px; text-align: center; margin-top: 10px; border-top: 1px solid #000; padding-top: 5px; }
+    .print-signatures { display: flex; justify-content: space-between; margin-top: 40px; padding: 0 20px; }
+    .sign-box { text-align: center; border-top: 1px solid #000; width: 150px; padding-top: 5px; }
 }
