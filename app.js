@@ -72,12 +72,21 @@ const generateSlipNo = async (type, targetId) => {
 window.fetchDepositForInvoice = async (nameVal) => {
     if(!nameVal) return;
     try {
-        const q = query(collection(db, 'deposit'), where('name', '==', nameVal.toUpperCase()), orderBy('timestamp', 'desc'), limit(1));
+        // Querying purely by name. Sorting in-memory ensures it works universally without throwing Firebase Index errors.
+        const q = query(collection(db, 'deposit'), where('name', '==', nameVal.toUpperCase()));
         const qs = await getDocs(q);
         if(!qs.empty) {
-            const d = qs.docs[0].data();
-            document.getElementById('inv-dep-ref').value = d.slipNo || '';
-            document.getElementById('inv-dep-date').value = d.date || '';
+            let docsList = [];
+            qs.forEach(docSnap => docsList.push(docSnap.data()));
+            // Sort to get the latest deposit slip
+            docsList.sort((a, b) => new Date(b.timestamp) - new Date(a.timestamp));
+            
+            const d = docsList[0];
+            if(document.getElementById('inv-dep-ref')) document.getElementById('inv-dep-ref').value = d.slipNo || '';
+            if(document.getElementById('inv-dep-date')) document.getElementById('inv-dep-date').value = d.date || '';
+        } else {
+            if(document.getElementById('inv-dep-ref')) document.getElementById('inv-dep-ref').value = '';
+            if(document.getElementById('inv-dep-date')) document.getElementById('inv-dep-date').value = '';
         }
     } catch(err) { console.error("Error fetching deposit", err); }
 };
@@ -95,15 +104,12 @@ window.uploadCSV = async () => {
             const lines = e.target.result.split(/\r?\n/);
             const headers = lines[0].toLowerCase().split(/,(?=(?:(?:[^"]*"){2})*[^"]*$)/).map(h => h.replace(/["\r]/g, '').trim());
             
-            // Map strictly to the user's provided CSV format image:
-            // 0: Member Number, 1: Member Name, 2: Address, 3: Native Name, 4: Mobile Number
             let mIdx = headers.findIndex(h => h.includes('member number'));
             let nIdx = headers.findIndex(h => h.includes('member name'));
             let aIdx = headers.findIndex(h => h.includes('address'));
             let ntIdx = headers.findIndex(h => h.includes('native name'));
             let mobIdx = headers.findIndex(h => h.includes('mobile number'));
 
-            // Fallback to exact array positions to guarantee matching with your image structure
             if (mIdx === -1) mIdx = 0;
             if (nIdx === -1) nIdx = 1;
             if (aIdx === -1) aIdx = 2;
@@ -118,9 +124,7 @@ window.uploadCSV = async () => {
                 let memNo = cols[mIdx]?.replace(/["\r]/g,'').trim();
                 
                 if(memNo) {
-                    // Extract Mobile
                     let mob = cols[mobIdx]?.replace(/["\r]/g,'').trim() || '';
-                    // Allow blank manually if 0, null, or empty dashes
                     if (mob === '0' || mob.toLowerCase() === 'null' || mob === '-') {
                         mob = '';
                     }
@@ -149,7 +153,7 @@ window.fetchMember = async (inputId, nameId, addrId, nativeId, mobileId) => {
         const data = docSnap.data();
         if(document.getElementById(nameId)) document.getElementById(nameId).value = data.name || '';
         if(document.getElementById(addrId)) document.getElementById(addrId).value = data.address || '';
-        if(document.getElementById(nativeId)) document.getElementById(nativeId).value = data.native || '';
+        if(nativeId && document.getElementById(nativeId)) document.getElementById(nativeId).value = data.native || '';
         
         if(mobileId && document.getElementById(mobileId)) {
             let mob = data.mobile || '';
@@ -206,7 +210,10 @@ window.handleFormSubmit = async (e, type) => {
         } else if(type === 'donation') {
             data = { ...data, slipNo: document.getElementById('don-slip').value, date: document.getElementById('don-date').value, name: document.getElementById('don-name').value, address: document.getElementById('don-address').value, member: document.getElementById('don-member').value, native: document.getElementById('don-native').value, pan: document.getElementById('don-pan').value, desc: document.getElementById('don-desc').value === 'Custom' ? document.getElementById('don-custom-desc').value : document.getElementById('don-desc').value, payType: document.getElementById('don-pay-type').value, payDate: document.getElementById('don-pay-date').value, ref: document.getElementById('don-ref').value, bank: document.getElementById('don-bank').value, amount: document.getElementById('don-amount').value, words: document.getElementById('don-words').value };
         } else if(type === 'invoice') {
-            data = { ...data, slipNo: document.getElementById('inv-slip').value, date: document.getElementById('inv-date').value, name: document.getElementById('inv-name').value, address: document.getElementById('inv-address').value, gst: document.getElementById('inv-gst').value, desc: document.getElementById('inv-desc-select').value === 'Other' ? document.getElementById('inv-desc-custom').value : document.getElementById('inv-desc-select').value, depRef: document.getElementById('inv-dep-ref').value, depDate: document.getElementById('inv-dep-date').value, basic: document.getElementById('inv-basic').value, cgst: document.getElementById('inv-cgst').value, sgst: document.getElementById('inv-sgst').value, round: document.getElementById('inv-round').value, total: document.getElementById('inv-total').value, words: document.getElementById('inv-words').value, payType: document.getElementById('inv-pay-type').value, payDate: document.getElementById('inv-pay-date').value, ref: document.getElementById('inv-ref').value, bank: document.getElementById('inv-bank').value };
+            data = { ...data, 
+                isMember: document.getElementById('inv-is-member') ? document.getElementById('inv-is-member').value : 'No',
+                member: document.getElementById('inv-member') ? document.getElementById('inv-member').value : '',
+                slipNo: document.getElementById('inv-slip').value, date: document.getElementById('inv-date').value, name: document.getElementById('inv-name').value, address: document.getElementById('inv-address').value, gst: document.getElementById('inv-gst').value, desc: document.getElementById('inv-desc-select').value === 'Other' ? document.getElementById('inv-desc-custom').value : document.getElementById('inv-desc-select').value, depRef: document.getElementById('inv-dep-ref').value, depDate: document.getElementById('inv-dep-date').value, basic: document.getElementById('inv-basic').value, cgst: document.getElementById('inv-cgst').value, sgst: document.getElementById('inv-sgst').value, round: document.getElementById('inv-round').value, total: document.getElementById('inv-total').value, words: document.getElementById('inv-words').value, payType: document.getElementById('inv-pay-type').value, payDate: document.getElementById('inv-pay-date').value, ref: document.getElementById('inv-ref').value, bank: document.getElementById('inv-bank').value };
         }
 
         if(editId) { await updateDoc(doc(db, type, editId), data); document.getElementById(`${prefix}-edit-id`).value = ""; }
@@ -215,8 +222,10 @@ window.handleFormSubmit = async (e, type) => {
         alert("Data Saved Successfully!");
         document.getElementById(`form-${type}`).reset();
         
-        // Reset custom description field display
-        if (type === 'invoice') document.getElementById('inv-desc-custom').style.display = 'none';
+        if (type === 'invoice') {
+            document.getElementById('inv-desc-custom').style.display = 'none';
+            if(document.getElementById('inv-member-group')) document.getElementById('inv-member-group').style.display = 'none';
+        }
         
         setToday();
         updateDashboardCounts();
@@ -334,6 +343,7 @@ const printRecord = (data, type) => {
                 </div>`;
         }
 
+        // Updated margin-top dynamically to ensure members have plenty of space to sign
         contentHtml += `
             <div class="print-copy" style="box-sizing: border-box; width: 100%; border:2px solid #000; padding:8px 15px; position:relative; overflow: hidden;">
                 <div style="position:absolute; top:6px; right:10px; border:1px solid #000; padding:1px 4px; font-weight: bold; font-size:9px;">${copy}</div>
@@ -351,12 +361,11 @@ const printRecord = (data, type) => {
                 <h3 style="text-align:center; text-decoration:underline; margin: 3px 0 6px 0; font-size: 13px;">${title}</h3>
                 ${detailsHtml}
                 
-                <!-- Displaying "Words: " exactly as required -->
                 <div style="font-style:italic; font-size: 10px; margin-top: 3px; font-weight: 600;">Words: ${data.words || '-'}</div>
                 
                 ${footerNoteHtml}
                 
-                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '20px' : (type === 'donation' ? '25px' : '40px')};">
+                <div style="display:flex; justify-content:space-between; margin-top:${type === 'deposit' ? '45px' : (type === 'donation' ? '45px' : '40px')};">
                     <div style="border-top:1px solid #000; width:150px; text-align:center; padding-top: 3px; font-weight: 500; font-size: 11px;">Payer Signature</div>
                     <div style="border-top:1px solid #000; width:150px; text-align:center; padding-top: 3px; font-weight: 500; font-size: 11px;">Receiver Signature</div>
                 </div>
