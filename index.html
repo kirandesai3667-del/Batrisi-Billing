@@ -152,6 +152,19 @@
                         <div class="grid-2">
                             <div class="input-group"><label>Invoice Number (Auto)</label><input type="text" id="inv-slip" readonly></div>
                             <div class="input-group"><label>Date</label><input type="date" id="inv-date" required></div>
+                            
+                            <!-- Toggle for Member Number auto-fill -->
+                            <div class="input-group"><label>Is Invoice for Member?</label>
+                                <select id="inv-is-member" onchange="toggleInvMember()">
+                                    <option value="No">No</option>
+                                    <option value="Yes">Yes</option>
+                                </select>
+                            </div>
+                            <div class="input-group" id="inv-member-group" style="display:none;">
+                                <label>Member Number</label>
+                                <input type="text" id="inv-member" onblur="fetchMemberForInvoice()">
+                            </div>
+                            
                             <div class="input-group"><label>Name</label><input type="text" id="inv-name" required onblur="if(window.fetchDepositForInvoice) window.fetchDepositForInvoice(this.value)"></div>
                             <div class="input-group"><label>Address</label><input type="text" id="inv-address"></div>
                             <div class="input-group"><label>GST Number</label><input type="text" id="inv-gst"></div>
@@ -219,6 +232,28 @@
         
         function checkCustomInvoiceDesc() {
             document.getElementById('inv-desc-custom').style.display = document.getElementById('inv-desc-select').value === 'Other' ? 'block' : 'none';
+        }
+
+        function toggleInvMember() {
+            const isMember = document.getElementById('inv-is-member').value;
+            const group = document.getElementById('inv-member-group');
+            if (isMember === 'Yes') {
+                group.style.display = 'flex';
+            } else {
+                group.style.display = 'none';
+                document.getElementById('inv-member').value = '';
+            }
+        }
+
+        async function fetchMemberForInvoice() {
+            if(window.fetchMember) {
+                await window.fetchMember('inv-member', 'inv-name', 'inv-address');
+                // Ensure Deposit auto-fetch triggers right after Name is filled
+                let nameVal = document.getElementById('inv-name').value;
+                if(nameVal && window.fetchDepositForInvoice) {
+                    window.fetchDepositForInvoice(nameVal);
+                }
+            }
         }
 
         // Properly generates exact wording (e.g. Seventeen Thousand Seven Hundred Rupees Only)
