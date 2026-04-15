@@ -1,13 +1,13 @@
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-app.js";
-import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, updateDoc, setDoc, getDoc, query, orderBy, writeBatch } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
+import { getFirestore, collection, addDoc, getDocs, doc, deleteDoc, query, orderBy, getDoc } from "https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore.js";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyDbZ4T8264CDQ5LSoH_4L0luB5VKQbiqkU",
-  authDomain: "batrisi-latest-app.firebaseapp.com",
-  projectId: "batrisi-latest-app",
-  storageBucket: "batrisi-latest-app.firebasestorage.app",
-  messagingSenderId: "175592360155",
-  appId: "1:175592360155:web:ba95f9aba4558fda9d64fe"
+    apiKey: "AIzaSyDbZ4T8264CDQ5LSoH_4L0luB5VKQbiqkU",
+    authDomain: "batrisi-latest-app.firebaseapp.com",
+    projectId: "batrisi-latest-app",
+    storageBucket: "batrisi-latest-app.firebasestorage.app",
+    messagingSenderId: "175592360155",
+    appId: "1:175592360155:web:ba95f9aba4558fda9d64fe"
 };
 
 const app = initializeApp(firebaseConfig);
@@ -16,13 +16,12 @@ const db = getFirestore(app);
 const ORG = {
     name: "Shree Batrisi Jain Co-Op Education Society Ltd",
     addr: "Near R.T.O Circle, Subhashbridge, Ahmedabad - 380027",
-    meta1: "GSTIN: 24AAATS6070J1ZE | Reg No: GH/230",
-    meta2: "Mob: 9586423232 | Email: 32cedusociety@gmail.com"
+    meta: "GSTIN: 24AAATS6070J1ZE | Mob: 9586423232"
 };
 
-// --- HELPERS ---
-const fmtAmt = (val) => parseFloat(val || 0).toFixed(2);
-const fmtDate = (str) => str ? str.split('-').reverse().join('/') : '-';
+// --- Formatters ---
+const fDate = (d) => d ? d.split('-').reverse().join('/') : '-';
+const fAmt = (v) => parseFloat(v || 0).toFixed(2);
 
 const getFY = () => {
     const d = new Date();
@@ -30,197 +29,157 @@ const getFY = () => {
     return d.getMonth() > 2 ? `${y}-${(y+1).toString().slice(2)}` : `${y-1}-${y.toString().slice(2)}`;
 };
 
-const genSlip = async (type, id) => {
+async function genSlip(type, id) {
     const fy = getFY();
-    const q = query(collection(db, type), orderBy("timestamp", "desc"));
-    const snap = await getDocs(q);
+    const snap = await getDocs(query(collection(db, type), orderBy("timestamp", "desc")));
     let max = 0;
     snap.forEach(d => {
-        let n = parseInt(d.data().slipNo.split('/')[1]);
-        if(n > max) max = n;
+        const parts = d.data().slipNo.split('/');
+        const num = parseInt(parts[1]); // Index 1 is the sequence
+        if(num > max) max = num;
     });
     const next = String(max + 1).padStart(3, '0');
     const prefix = type === 'donation' ? 'D' : (type === 'invoice' ? 'INV' : 'DEP');
     document.getElementById(id).value = `${prefix}/${next}/${fy}`;
-};
+}
 
-// --- FORM SUBMIT ---
 window.handleFormSubmit = async (e, type) => {
-    const prefix = type.slice(0, 3);
-    const btn = document.getElementById(`btn-submit-${prefix}`);
-    btn.innerText = "Processing...";
+    const pre = type.slice(0, 3);
+    const btn = document.getElementById(`btn-submit-${pre}`);
     btn.disabled = true;
 
-    try {
-        let data = { timestamp: new Date().toISOString() };
-        if(type === 'deposit') {
-            data = { ...data, 
-                slipNo: document.getElementById('dep-slip').value, date: document.getElementById('dep-date').value,
-                member: document.getElementById('dep-member').value, name: document.getElementById('dep-name').value,
-                address: document.getElementById('dep-address').value, mobile: document.getElementById('dep-mobile').value,
-                native: document.getElementById('dep-native').value, funcName: document.getElementById('dep-func-name').value,
-                funcDate: document.getElementById('dep-func-date').value, shift: document.getElementById('dep-shift').value,
-                payType: document.getElementById('dep-pay-type').value, payDate: document.getElementById('dep-pay-date').value,
-                ref: document.getElementById('dep-ref').value, bank: document.getElementById('dep-bank').value,
-                amount: fmtAmt(document.getElementById('dep-amount').value), words: document.getElementById('dep-words').value
-            };
-        } else if(type === 'donation') {
-            const descVal = document.getElementById('don-desc').value;
-            data = { ...data,
-                slipNo: document.getElementById('don-slip').value, date: document.getElementById('don-date').value,
-                name: document.getElementById('don-name').value, address: document.getElementById('don-address').value,
-                pan: document.getElementById('don-pan').value, 
-                desc: descVal === 'Custom' ? document.getElementById('don-custom-desc').value : descVal,
-                amount: fmtAmt(document.getElementById('don-amount').value), words: document.getElementById('don-words').value
-            };
-        } else if(type === 'invoice') {
-            const descVal = document.getElementById('inv-desc-select').value;
-            data = { ...data,
-                slipNo: document.getElementById('inv-slip').value, date: document.getElementById('inv-date').value,
-                name: document.getElementById('inv-name').value, gst: document.getElementById('inv-gst').value,
-                desc: descVal === 'Custom' ? document.getElementById('inv-custom-desc').value : descVal,
-                basic: fmtAmt(document.getElementById('inv-basic').value), 
-                cgst: document.getElementById('inv-cgst').value, sgst: document.getElementById('inv-sgst').value,
-                total: fmtAmt(document.getElementById('inv-total').value), words: document.getElementById('inv-words').value
-            };
-        }
+    let data = { timestamp: new Date().toISOString() };
+    if(type === 'deposit') {
+        data = { ...data, 
+            slipNo: document.getElementById('dep-slip').value, date: document.getElementById('dep-date').value,
+            name: document.getElementById('dep-name').value, member: document.getElementById('dep-member').value,
+            mobile: document.getElementById('dep-mobile').value, address: document.getElementById('dep-address').value,
+            native: document.getElementById('dep-native').value, funcName: document.getElementById('dep-func-name').value,
+            funcDate: document.getElementById('dep-func-date').value, shift: document.getElementById('dep-shift').value,
+            payType: document.getElementById('dep-pay-type').value, payDate: document.getElementById('dep-pay-date').value,
+            ref: document.getElementById('dep-ref').value, bank: document.getElementById('dep-bank').value,
+            amount: fAmt(document.getElementById('dep-amount').value), words: document.getElementById('dep-words').value
+        };
+    } else if(type === 'donation') {
+        const dVal = document.getElementById('don-desc').value;
+        data = { ...data,
+            slipNo: document.getElementById('don-slip').value, date: document.getElementById('don-date').value,
+            name: document.getElementById('don-name').value, pan: document.getElementById('don-pan').value,
+            desc: dVal === 'Other' ? document.getElementById('don-custom').value : dVal,
+            amount: fAmt(document.getElementById('don-amount').value), words: document.getElementById('don-words').value
+        };
+    } else {
+        const dVal = document.getElementById('inv-desc-select').value;
+        data = { ...data,
+            slipNo: document.getElementById('inv-slip').value, date: document.getElementById('inv-date').value,
+            name: document.getElementById('inv-name').value, gst: document.getElementById('inv-gst').value,
+            desc: dVal === 'Other' ? document.getElementById('inv-custom').value : dVal,
+            basic: fAmt(document.getElementById('inv-basic').value), cgst: document.getElementById('inv-cgst').value,
+            sgst: document.getElementById('inv-sgst').value, total: fAmt(document.getElementById('inv-total').value), words: document.getElementById('inv-words').value
+        };
+    }
 
-        const editId = document.getElementById(`${prefix}-edit-id`).value;
-        if(editId) await updateDoc(doc(db, type, editId), data);
-        else await addDoc(collection(db, type), data);
-
-        alert("Success!");
-        document.getElementById(`form-${type}`).reset();
-        printRec(data, type);
-        init();
-    } catch (err) { alert("Error!"); console.error(err); }
-    finally { btn.innerText = "Save & Print"; btn.disabled = false; }
+    await addDoc(collection(db, type), data);
+    alert("Saved Successfully!");
+    printRec(data, type);
+    location.reload();
 };
 
-// --- PRINT LOGIC ---
 const printRec = (data, type) => {
-    const container = document.getElementById('print-container');
-    let html = '';
-    const copies = ['ORIGINAL COPY', 'OFFICE COPY'];
+    const cont = document.getElementById('print-container');
+    let body = '';
+    const copies = ['ORIGINAL', 'DUPLICATE'];
 
-    copies.forEach((copy, idx) => {
-        let fields = '';
+    copies.forEach((c) => {
+        let rows = '';
         if(type === 'deposit') {
-            fields = `
-                <div class="print-grid">
-                    <div class="print-row"><span class="print-label">Slip No:</span>${data.slipNo}</div>
-                    <div class="print-row"><span class="print-label">Date:</span>${fmtDate(data.date)}</div>
-                    <div class="print-row"><span class="print-label">Member No:</span>${data.member || '-'}</div>
-                    <div class="print-row"><span class="print-label">Name:</span>${data.name}</div>
-                    <div class="print-row"><span class="print-label">Address:</span>${data.address || '-'}</div>
-                    <div class="print-row"><span class="print-label">Mobile:</span>${data.mobile || '-'}</div>
-                    <div class="print-row"><span class="print-label">Function:</span>${data.funcName || '-'}</div>
-                    <div class="print-row"><span class="print-label">Func Date:</span>${fmtDate(data.funcDate)}</div>
-                    <div class="print-row" style="grid-column:span 2"><span class="print-label">Shift:</span>${data.shift}</div>
-                    <div class="print-row"><span class="print-label">Pay Type:</span>${data.payType}</div>
-                    <div class="print-row"><span class="print-label">Pay Date:</span>${fmtDate(data.payDate)}</div>
-                    <div class="print-row"><span class="print-label">Ref/Bank:</span>${data.ref} / ${data.bank}</div>
-                    <div class="print-row"><span class="print-label">Amount:</span><strong>₹ ${data.amount}</strong></div>
-                </div>`;
+            rows = `
+            <div class="print-grid">
+                <div class="print-row"><span class="print-label">Slip No:</span><span class="print-val">${data.slipNo}</span></div>
+                <div class="print-row"><span class="print-label">Date:</span><span class="print-val">${fDate(data.date)}</span></div>
+                <div class="print-row"><span class="print-label">Member No:</span><span class="print-val">${data.member||'-'}</span></div>
+                <div class="print-row"><span class="print-label">Mobile:</span><span class="print-val">${data.mobile||'-'}</span></div>
+                <div class="print-row" style="grid-column:span 2"><span class="print-label">Name:</span><span class="print-val">${data.name}</span></div>
+                <div class="print-row" style="grid-column:span 2"><span class="print-label">Address:</span><span class="print-val">${data.address||'-'}</span></div>
+                <div class="print-row"><span class="print-label">Function:</span><span class="print-val">${data.funcName||'-'}</span></div>
+                <div class="print-row"><span class="print-label">Func Date:</span><span class="print-val">${fDate(data.funcDate)}</span></div>
+                <div class="print-row" style="grid-column:span 2"><span class="print-label">Shift:</span><span class="print-val">${data.shift}</span></div>
+                <div class="print-row"><span class="print-label">Ref No:</span><span class="print-val">${data.ref||'-'}</span></div>
+                <div class="print-row"><span class="print-label">Bank:</span><span class="print-val">${data.bank||'-'}</span></div>
+                <div class="print-row"><span class="print-label">Pay Date:</span><span class="print-val">${fDate(data.payDate)}</span></div>
+                <div class="print-row"><span class="print-label">Amount:</span><span class="print-val"><strong>₹ ${data.amount}</strong></span></div>
+            </div>`;
         } else if(type === 'donation') {
-            fields = `
-                <div class="print-grid">
-                    <div class="print-row"><span class="print-label">Slip No:</span>${data.slipNo}</div>
-                    <div class="print-row"><span class="print-label">Date:</span>${fmtDate(data.date)}</div>
-                    <div class="print-row"><span class="print-label">Name:</span>${data.name}</div>
-                    <div class="print-row"><span class="print-label">PAN:</span>${data.pan || '-'}</div>
-                    <div class="print-row" style="grid-column:span 2"><span class="print-label">Description:</span>${data.desc}</div>
-                    <div class="print-row"><span class="print-label">Amount:</span><strong>₹ ${data.amount}</strong></div>
-                </div>
-                <p style="text-align:center; font-style:italic; margin: 10px 0; font-size:12px;">"Thank you for your generous donation. Your support is greatly appreciated."</p>`;
+            rows = `
+            <div class="print-grid">
+                <div class="print-row"><span class="print-label">Slip No:</span><span class="print-val">${data.slipNo}</span></div>
+                <div class="print-row"><span class="print-label">Date:</span><span class="print-val">${fDate(data.date)}</span></div>
+                <div class="print-row" style="grid-column:span 2"><span class="print-label">Name:</span><span class="print-val">${data.name}</span></div>
+                <div class="print-row"><span class="print-label">PAN:</span><span class="print-val">${data.pan||'-'}</span></div>
+                <div class="print-row"><span class="print-label">Description:</span><span class="print-val">${data.desc}</span></div>
+                <div class="print-row"><span class="print-label">Amount:</span><span class="print-val"><strong>₹ ${data.amount}</strong></span></div>
+            </div>
+            <p style="text-align:center; font-size:11px; margin-top:10px;">"Thank you for your generous donation. Your support is greatly appreciated."</p>`;
         } else {
-            fields = `
-                <div class="print-grid">
-                    <div class="print-row"><span class="print-label">Invoice No:</span>${data.slipNo}</div>
-                    <div class="print-row"><span class="print-label">Date:</span>${fmtDate(data.date)}</div>
-                    <div class="print-row"><span class="print-label">Name:</span>${data.name}</div>
-                    <div class="print-row"><span class="print-label">GSTIN:</span>${data.gst || '-'}</div>
-                    <div class="print-row" style="grid-column:span 2"><span class="print-label">Description:</span>${data.desc}</div>
-                    <div class="print-row"><span class="print-label">Basic Amount:</span>₹ ${data.basic}</div>
-                    <div class="print-row"><span class="print-label">CGST (0.9%):</span>₹ ${data.cgst}</div>
-                    <div class="print-row"><span class="print-label">SGST (0.9%):</span>₹ ${data.sgst}</div>
-                    <div class="print-row"><span class="print-label">Total:</span><strong>₹ ${data.total}</strong></div>
-                </div>`;
+            rows = `
+            <div class="print-grid">
+                <div class="print-row"><span class="print-label">Invoice No:</span><span class="print-val">${data.slipNo}</span></div>
+                <div class="print-row"><span class="print-label">Date:</span><span class="print-val">${fDate(data.date)}</span></div>
+                <div class="print-row"><span class="print-label">GSTIN:</span><span class="print-val">${data.gst||'-'}</span></div>
+                <div class="print-row"><span class="print-label">Description:</span><span class="print-val">${data.desc}</span></div>
+                <div class="print-row"><span class="print-label">Basic:</span><span class="print-val">₹ ${data.basic}</span></div>
+                <div class="print-row"><span class="print-label">CGST (0.9%):</span><span class="print-val">₹ ${data.cgst}</span></div>
+                <div class="print-row"><span class="print-label">SGST (0.9%):</span><span class="print-val">₹ ${data.sgst}</span></div>
+                <div class="print-row"><span class="print-label">Total:</span><span class="print-val"><strong>₹ ${data.total}</strong></span></div>
+            </div>`;
         }
 
-        html += `
-            <div class="print-copy">
-                <div style="text-align:center; border-bottom:1px solid #000; padding-bottom:5px;">
-                    <div style="position:absolute; right:20px; font-size:10px; border:1px solid #000; padding:2px;">${copy}</div>
-                    <h2 style="margin:0">${ORG.name}</h2>
-                    <p style="font-size:11px; margin:2px 0;">${ORG.addr}</p>
-                    <p style="font-size:10px; margin:0;">${ORG.meta1} | ${ORG.meta2}</p>
-                </div>
-                <h3 style="text-align:center; text-decoration:underline; margin:10px 0;">${type.toUpperCase()} SLIP</h3>
-                ${fields}
-                <div style="font-size:11px; margin:10px 0;"><strong>Words:</strong> ${data.words}</div>
-                <div style="display:flex; justify-content:space-between; margin-top:40px;">
-                    <div style="border-top:1px solid #000; width:150px; text-align:center;">Authorized Signatory</div>
-                    <div style="border-top:1px solid #000; width:150px; text-align:center;">Receiver's Signature</div>
-                </div>
-            </div>`;
-        if(idx === 0) html += `<div style="border-top:1px dashed #999; margin:20px 0; text-align:center; font-size:10px;">✂ Cut Here</div>`;
+        body += `
+        <div class="print-copy">
+            <span class="print-copy-type">${c}</span>
+            <div style="text-align:center; position:relative;">
+                <img src="logo.png" style="width:50px; position:absolute; left:0; top:0;">
+                <h2 style="margin:0">${ORG.name}</h2>
+                <p style="font-size:11px; margin:2px 0;">${ORG.addr}</p>
+                <p style="font-size:10px; margin:0;">${ORG.meta}</p>
+            </div>
+            <h3 style="text-align:center; text-decoration:underline; margin:10px 0;">${type.toUpperCase()}</h3>
+            ${rows}
+            <div style="font-size:11px; margin-top:5px;"><strong>Words:</strong> ${data.words}</div>
+            <div style="display:flex; justify-content:space-between; margin-top:50px;">
+                <div style="border-top:1px solid #000; width:150px; text-align:center; font-size:11px;">Payer Signature</div>
+                <div style="border-top:1px solid #000; width:150px; text-align:center; font-size:11px;">Receiver Signature</div>
+            </div>
+        </div><div style="border-top:1px dashed #999; margin:15px 0; text-align:center; font-size:9px;">✂ Cut Here</div>`;
     });
-
-    container.innerHTML = html;
-    setTimeout(() => { window.print(); }, 500);
+    cont.innerHTML = body;
+    setTimeout(()=>window.print(), 500);
 };
 
-// --- CORE FUNCTIONS ---
 window.loadRecords = async () => {
-    const type = document.getElementById('record-filter').value;
+    const t = document.getElementById('record-filter').value;
+    const snap = await getDocs(query(collection(db, t), orderBy("timestamp", "desc")));
     const body = document.getElementById('records-body');
-    body.innerHTML = 'Loading...';
-    const q = query(collection(db, type), orderBy("timestamp", "desc"));
-    const snap = await getDocs(q);
     body.innerHTML = '';
-    snap.forEach(docSnap => {
-        const d = docSnap.data();
-        const tr = document.createElement('tr');
-        tr.innerHTML = `<td>${d.slipNo}</td><td>${fmtDate(d.date)}</td><td>${d.name}</td><td>₹ ${d.amount || d.total}</td>
-            <td>
-                <button class="btn-action btn-print" onclick='window.rePrint(${JSON.stringify(d)}, "${type}")'><i class="ri-printer-line"></i></button>
-                <button class="btn-action btn-del" onclick='window.deleteRec("${docSnap.id}", "${type}")'><i class="ri-delete-bin-line"></i></button>
-            </td>`;
-        body.appendChild(tr);
+    snap.forEach(d => {
+        const row = d.data();
+        body.innerHTML += `<tr><td>${row.slipNo}</td><td>${fDate(row.date)}</td><td>${row.name}</td><td>₹ ${row.amount||row.total}</td>
+        <td><button class="btn-action btn-print" onclick='window.rePrint(${JSON.stringify(row)}, "${t}")'><i class="ri-printer-line"></i></button></td></tr>`;
     });
 };
 
 window.rePrint = (data, type) => printRec(data, type);
-window.deleteRec = async (id, type) => { if(confirm("Delete?")) { await deleteDoc(doc(db, type, id)); window.loadRecords(); } };
 
-window.fetchMember = async (inId, nameId, addrId, natId) => {
-    const val = document.getElementById(inId).value;
-    if(!val) return;
-    const snap = await getDoc(doc(db, "members", val));
+window.fetchMember = async (id, name, addr, nat) => {
+    const v = document.getElementById(id).value;
+    if(!v) return;
+    const snap = await getDoc(doc(db, "members", v));
     if(snap.exists()) {
         const d = snap.data();
-        document.getElementById(nameId).value = d.name;
-        document.getElementById(addrId).value = d.address;
-        document.getElementById(natId).value = d.native || '';
+        document.getElementById(name).value = d.name;
+        document.getElementById(addr).value = d.address;
+        document.getElementById(nat).value = d.native||'';
     }
-};
-
-window.uploadCSV = async () => {
-    const file = document.getElementById('csv-upload').files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-        const rows = e.target.result.split('\n');
-        const batch = writeBatch(db);
-        rows.forEach(row => {
-            const cols = row.split(',');
-            if(cols[0]) batch.set(doc(db, "members", cols[0].trim()), { name: cols[1]?.trim(), address: cols[2]?.trim() });
-        });
-        await batch.commit();
-        alert("Upload Done");
-    };
-    reader.readAsText(file);
 };
 
 const init = () => {
@@ -228,7 +187,6 @@ const init = () => {
     genSlip('donation', 'don-slip');
     genSlip('invoice', 'inv-slip');
     const today = new Date().toISOString().split('T')[0];
-    ['dep-date', 'don-date', 'inv-date'].forEach(id => document.getElementById(id).value = today);
+    ['dep-date','don-date','inv-date'].forEach(i => document.getElementById(i).value = today);
 };
-
 init();
