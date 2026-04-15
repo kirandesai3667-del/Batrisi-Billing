@@ -105,6 +105,6 @@ header { background: var(--surface); height: 70px; padding: 0 30px; display: fle
     .print-row { display: flex; gap: 5px; border-bottom: 1px dotted #ccc; padding-bottom: 3px; }
     .print-label { font-weight: bold; min-width: 120px; }
     .print-footer-text { font-size: 10px; text-align: center; margin-top: 10px; border-top: 1px solid #000; padding-top: 5px; }
-    .print-signatures { display: flex; justify-content: space-between; margin-top: 60px; padding: 0 20px; } /* Increased from 40px to 60px */
+    .print-signatures { display: flex; justify-content: space-between; margin-top: 40px; padding: 0 20px; }
     .sign-box { text-align: center; border-top: 1px solid #000; width: 150px; padding-top: 5px; }
 }
