@@ -85,7 +85,7 @@
                         <div class="grid-2">
                             <div class="input-group"><label>Slip Number (Auto)</label><input type="text" id="dep-slip" readonly></div>
                             <div class="input-group"><label>Date</label><input type="date" id="dep-date" required></div>
-                            <div class="input-group"><label>Member Number (Auto-fill)</label><input type="text" id="dep-member" onblur="if(window.fetchMember) window.fetchMember('dep-member', 'dep-name', 'dep-address', 'dep-native')"></div>
+                            <div class="input-group"><label>Member Number (Auto-fill)</label><input type="text" id="dep-member" onblur="if(window.fetchMember) window.fetchMember('dep-member', 'dep-name', 'dep-address', 'dep-native', 'dep-mobile')"></div>
                             <div class="input-group"><label>Name</label><input type="text" id="dep-name" required></div>
                             <div class="input-group"><label>Mobile Number</label><input type="text" id="dep-mobile"></div>
                             <div class="input-group"><label>Address</label><input type="text" id="dep-address"></div>
@@ -221,6 +221,7 @@
             document.getElementById('inv-desc-custom').style.display = document.getElementById('inv-desc-select').value === 'Other' ? 'block' : 'none';
         }
 
+        // Properly generates exact wording (e.g. Seventeen Thousand Seven Hundred Rupees Only)
         function numToWords(num, targetId) {
             if(!num || num == 0) { document.getElementById(targetId).value = ""; return; }
             let a =['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
