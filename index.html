@@ -9,9 +9,10 @@
 </head>
 <body>
 
+    <!-- LOGIN SCREEN -->
     <div id="login-overlay" class="login-overlay">
         <div class="login-box card">
-            <img src="logo.png" alt="Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3031/3031293.png'" class="login-logo">
+            <img src="logo.png" alt="Logo" class="login-logo">
             <h2>Admin Login</h2>
             <div class="input-group"><input type="text" id="login-user" placeholder="Admin ID"></div>
             <div class="input-group" style="margin-top: 15px;"><input type="password" id="login-pass" placeholder="Password"></div>
@@ -19,9 +20,10 @@
         </div>
     </div>
 
+    <!-- Sidebar -->
     <nav class="sidebar no-print">
         <div class="logo-area">
-            <img src="logo.png" alt="Logo" class="custom-brand-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3031/3031293.png'">
+            <img src="logo.png" alt="Logo" class="custom-brand-logo">
             <h3>Batrisi Jain Society</h3>
         </div>
         <ul class="nav-links">
@@ -30,7 +32,6 @@
             <li onclick="switchTab('donation')" id="tab-donation"><i class="ri-hand-heart-line"></i> Donation Slip</li>
             <li onclick="switchTab('invoice')" id="tab-invoice"><i class="ri-file-list-3-line"></i> Tax Invoice</li>
             <li onclick="switchTab('records')" id="tab-records"><i class="ri-database-2-line"></i> Records</li>
-            <li onclick="switchTab('admin')" id="tab-admin"><i class="ri-settings-4-line"></i> Admin Panel</li>
         </ul>
         <button onclick="logout()" class="btn-logout"><i class="ri-logout-box-r-line"></i> Logout</button>
     </nav>
@@ -38,39 +39,40 @@
     <main class="main-content no-print">
         <header>
             <div class="header-left"><h2>Billing System</h2></div>
-            <div class="user-profile"><i class="ri-user-star-line"></i> Super Admin</div>
+            <div class="user-profile"><i class="ri-user-star-line"></i> <span>Super Admin</span></div>
         </header>
 
         <div class="content-wrapper">
+            
             <section id="sec-dashboard" class="page-section active">
-                <div class="card" style="text-align: center;">
+                <div class="card header-card">
+                    <div class="header-card-bg"></div>
                     <h2>Shree Batrisi Jain Co-Op Education Society Ltd</h2>
-                    <p>Ahmedabad - 380027</p>
                 </div>
                 <div class="dashboard-stats">
-                    <div class="stat-card blue-gradient"><h3>Deposits</h3><p id="stat-dep">0</p></div>
-                    <div class="stat-card green-gradient"><h3>Donations</h3><p id="stat-don">0</p></div>
-                    <div class="stat-card modern-white"><h3>Invoices</h3><p id="stat-inv">0</p></div>
+                    <div class="stat-card blue-gradient"><h3>Total Deposits</h3><p id="stat-dep">0</p></div>
+                    <div class="stat-card green-gradient"><h3>Total Donations</h3><p id="stat-don">0</p></div>
+                    <div class="stat-card modern-white"><h3>Total Invoices</h3><p id="stat-inv">0</p></div>
                 </div>
             </section>
 
             <!-- DEPOSIT SLIP -->
             <section id="sec-deposit" class="page-section">
                 <div class="card">
-                    <h3>Generate Deposit Slip</h3>
+                    <div class="card-header"><div class="icon-box blue"><i class="ri-wallet-3-line"></i></div><h3>Deposit Slip</h3></div>
                     <form id="form-deposit" onsubmit="event.preventDefault(); window.handleFormSubmit(event, 'deposit');">
                         <input type="hidden" id="dep-edit-id">
                         <div class="grid-2">
-                            <div class="input-group"><label>Slip Number</label><input type="text" id="dep-slip" readonly></div>
+                            <div class="input-group"><label>Slip No (Auto)</label><input type="text" id="dep-slip" readonly></div>
                             <div class="input-group"><label>Date</label><input type="date" id="dep-date" required></div>
-                            <div class="input-group"><label>Member Number</label><input type="text" id="dep-member" onblur="window.fetchMember('dep-member', 'dep-name', 'dep-address', 'dep-native')"></div>
+                            <div class="input-group"><label>Member Number (Auto-fill)</label><input type="text" id="dep-member" onblur="window.fetchMember('dep-member', 'dep-name', 'dep-address', 'dep-native')"></div>
                             <div class="input-group"><label>Name</label><input type="text" id="dep-name" required></div>
-                            <div class="input-group"><label>Address</label><input type="text" id="dep-address"></div>
                             <div class="input-group"><label>Mobile Number</label><input type="text" id="dep-mobile"></div>
+                            <div class="input-group"><label>Address</label><input type="text" id="dep-address"></div>
                             <div class="input-group"><label>Native Name</label><input type="text" id="dep-native"></div>
                             <div class="input-group"><label>Function Name</label><input type="text" id="dep-func-name"></div>
                             <div class="input-group"><label>Function Date</label><input type="date" id="dep-func-date"></div>
-                            <div class="input-group"><label>Function Shift</label>
+                            <div class="input-group"><label>Shift</label>
                                 <select id="dep-shift">
                                     <option value="Morning (08:00 AM – 02:00 PM)">Morning (08:00 AM – 02:00 PM)</option>
                                     <option value="Evening (04:00 PM – 10:00 PM)">Evening (04:00 PM – 10:00 PM)</option>
@@ -79,7 +81,7 @@
                             </div>
                             <div class="input-group"><label>Payment Type</label><select id="dep-pay-type"><option value="Cheque">Cheque</option><option value="Online">Online</option><option value="Cash">Cash</option></select></div>
                             <div class="input-group"><label>Payment Date</label><input type="date" id="dep-pay-date"></div>
-                            <div class="input-group"><label>Reference/Cheque No</label><input type="text" id="dep-ref"></div>
+                            <div class="input-group"><label>Ref/Cheque No</label><input type="text" id="dep-ref"></div>
                             <div class="input-group"><label>Bank Name</label><input type="text" id="dep-bank"></div>
                             <div class="input-group"><label>Amount (₹)</label><input type="number" step="0.01" id="dep-amount" required oninput="numToWords(this.value, 'dep-words')"></div>
                             <div class="input-group"><label>Amount in Words</label><input type="text" id="dep-words" readonly class="highlight-input"></div>
@@ -92,20 +94,19 @@
             <!-- DONATION SLIP -->
             <section id="sec-donation" class="page-section">
                 <div class="card">
-                    <h3>Generate Donation Slip</h3>
+                    <div class="card-header"><div class="icon-box green"><i class="ri-hand-heart-line"></i></div><h3>Donation Slip</h3></div>
                     <form id="form-donation" onsubmit="event.preventDefault(); window.handleFormSubmit(event, 'donation');">
                         <input type="hidden" id="don-edit-id">
                         <div class="grid-2">
-                            <div class="input-group"><label>Slip Number</label><input type="text" id="don-slip" readonly></div>
+                            <div class="input-group"><label>Slip No</label><input type="text" id="don-slip" readonly></div>
                             <div class="input-group"><label>Date</label><input type="date" id="don-date" required></div>
                             <div class="input-group"><label>Name</label><input type="text" id="don-name" required></div>
-                            <div class="input-group"><label>Address</label><input type="text" id="don-address"></div>
-                            <div class="input-group"><label>PAN Number</label><input type="text" id="don-pan"></div>
+                            <div class="input-group"><label>PAN No</label><input type="text" id="don-pan"></div>
                             <div class="input-group"><label>Description</label>
-                                <select id="don-desc" onchange="checkCustom('don-desc', 'don-custom-desc')">
-                                    <option value="Dattak Yojna">Dattak Yojna</option><option value="General Sahay">General Sahay</option><option value="Custom">Other</option>
+                                <select id="don-desc" onchange="toggleCustom('don-desc', 'don-custom')">
+                                    <option value="Dattak Yojna">Dattak Yojna</option><option value="General Sahay">General Sahay</option><option value="Other">Other</option>
                                 </select>
-                                <input type="text" id="don-custom-desc" style="display:none; margin-top:8px;" placeholder="Enter Description">
+                                <input type="text" id="don-custom" style="display:none; margin-top:8px;" placeholder="Type Description">
                             </div>
                             <div class="input-group"><label>Amount (₹)</label><input type="number" step="0.01" id="don-amount" required oninput="numToWords(this.value, 'don-words')"></div>
                             <div class="input-group"><label>Amount in Words</label><input type="text" id="don-words" readonly class="highlight-input"></div>
@@ -118,7 +119,7 @@
             <!-- TAX INVOICE -->
             <section id="sec-invoice" class="page-section">
                 <div class="card">
-                    <h3>Generate Tax Invoice</h3>
+                    <div class="card-header"><div class="icon-box purple"><i class="ri-file-list-3-line"></i></div><h3>Tax Invoice</h3></div>
                     <form id="form-invoice" onsubmit="event.preventDefault(); window.handleFormSubmit(event, 'invoice');">
                         <input type="hidden" id="inv-edit-id">
                         <div class="grid-2">
@@ -127,11 +128,11 @@
                             <div class="input-group"><label>Name</label><input type="text" id="inv-name" required></div>
                             <div class="input-group"><label>GST No</label><input type="text" id="inv-gst"></div>
                             <div class="input-group"><label>Description</label>
-                                <select id="inv-desc-select" onchange="checkCustom('inv-desc-select', 'inv-custom-desc')">
+                                <select id="inv-desc-select" onchange="toggleCustom('inv-desc-select', 'inv-custom')">
                                     <option value="Maintenance">Maintenance</option>
-                                    <option value="Custom">Other</option>
+                                    <option value="Other">Other</option>
                                 </select>
-                                <input type="text" id="inv-custom-desc" style="display:none; margin-top:8px;" placeholder="Enter Description">
+                                <input type="text" id="inv-custom" style="display:none; margin-top:8px;" placeholder="Type Description">
                             </div>
                             <div class="input-group"><label>Basic Amount (₹)</label><input type="number" step="0.01" id="inv-basic" required oninput="calcInvoice()"></div>
                             <div class="input-group"><label>CGST (0.9%)</label><input type="number" id="inv-cgst" readonly></div>
@@ -146,12 +147,10 @@
 
             <section id="sec-records" class="page-section">
                 <div class="card">
-                    <div class="records-header" style="display:flex; justify-content:space-between; margin-bottom:15px;">
-                        <h3>Saved Records</h3>
+                    <div style="display:flex; justify-content:space-between; margin-bottom:20px;">
+                        <h3>Records</h3>
                         <select id="record-filter" onchange="window.loadRecords()">
-                            <option value="deposit">Deposits</option>
-                            <option value="donation">Donations</option>
-                            <option value="invoice">Invoices</option>
+                            <option value="deposit">Deposits</option><option value="donation">Donations</option><option value="invoice">Invoices</option>
                         </select>
                     </div>
                     <table class="modern-table">
@@ -161,62 +160,41 @@
                 </div>
             </section>
 
-            <section id="sec-admin" class="page-section">
-                <div class="card">
-                    <h3>CSV Database Upload</h3>
-                    <input type="file" id="csv-upload" accept=".csv">
-                    <button onclick="window.uploadCSV()" class="btn-submit" style="margin-top:15px;">Upload Members</button>
-                    <p id="csv-status"></p>
-                </div>
-            </section>
         </div>
     </main>
 
     <div id="print-container" class="print-only"></div>
 
     <script>
-        function checkLogin() { if(document.getElementById('login-user').value === 'Batrisi' && document.getElementById('login-pass').value === 'Bat@3232') { document.getElementById('login-overlay').style.display = 'none'; sessionStorage.setItem('isAdmin', 'true'); } else alert('Invalid!'); }
+        function checkLogin() { if(document.getElementById('login-user').value==='Batrisi' && document.getElementById('login-pass').value==='Bat@3232') { document.getElementById('login-overlay').style.display='none'; sessionStorage.setItem('auth','ok'); } }
         function logout() { sessionStorage.clear(); location.reload(); }
-        function switchTab(id) { 
-            document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active')); 
-            document.querySelectorAll('.nav-links li').forEach(l => l.classList.remove('active'));
-            document.getElementById('sec-'+id).classList.add('active');
-            document.getElementById('tab-'+id).classList.add('active');
-            if(id === 'records') window.loadRecords();
-        }
-        function checkCustom(selectId, inputId) {
-            document.getElementById(inputId).style.display = document.getElementById(selectId).value === 'Custom' ? 'block' : 'none';
-        }
-        function numToWords(num, targetId) {
-            if(!num || num == 0) return;
-            let n = parseFloat(num).toFixed(2).split('.');
-            let words = convert(n[0]) + " Rupees";
-            if(n[1] > 0) words += " and " + convert(n[1]) + " Paise";
-            document.getElementById(targetId).value = words + " Only";
-        }
-        function convert(n) {
+        function switchTab(id) { document.querySelectorAll('.page-section').forEach(s=>s.classList.remove('active')); document.getElementById('sec-'+id).classList.add('active'); if(id==='records') window.loadRecords(); }
+        function toggleCustom(sid, iid) { document.getElementById(iid).style.display = document.getElementById(sid).value==='Other'?'block':'none'; }
+        
+        function numToWords(num, target) {
+            if(!num) return;
             let a = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
             let b = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
-            let num = ("000000000" + n).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
-            if (!num) return '';
+            let n = ("000000000" + Math.floor(num)).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
             let str = '';
-            str += (num[1] != 0) ? (a[Number(num[1])] || b[num[1][0]] + ' ' + a[num[1][1]]) + ' Crore ' : '';
-            str += (num[2] != 0) ? (a[Number(num[2])] || b[num[2][0]] + ' ' + a[num[2][1]]) + ' Lakh ' : '';
-            str += (num[3] != 0) ? (a[Number(num[3])] || b[num[3][0]] + ' ' + a[num[3][1]]) + ' Thousand ' : '';
-            str += (num[4] != 0) ? (a[Number(num[4])] || b[num[4][0]] + ' ' + a[num[4][1]]) + ' Hundred ' : '';
-            str += (num[5] != 0) ? (a[Number(num[5])] || b[num[5][0]] + ' ' + a[num[5][1]]) : '';
-            return str.trim();
+            str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + ' Crore ' : '';
+            str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + ' Lakh ' : '';
+            str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + ' Thousand ' : '';
+            str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + ' Hundred ' : '';
+            str += (n[5] != 0) ? (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) : '';
+            document.getElementById(target).value = str.trim() + " Rupees Only";
         }
+
         function calcInvoice() {
-            let basic = parseFloat(document.getElementById('inv-basic').value) || 0;
-            let tax = basic * 0.009; // 0.9%
-            let total = basic + tax + tax;
-            document.getElementById('inv-cgst').value = tax.toFixed(2);
-            document.getElementById('inv-sgst').value = tax.toFixed(2);
-            document.getElementById('inv-total').value = total.toFixed(2);
-            numToWords(total, 'inv-words');
+            let b = parseFloat(document.getElementById('inv-basic').value)||0;
+            let t = b * 0.009; // 0.9%
+            let tot = b + t + t;
+            document.getElementById('inv-cgst').value = t.toFixed(2);
+            document.getElementById('inv-sgst').value = t.toFixed(2);
+            document.getElementById('inv-total').value = tot.toFixed(2);
+            numToWords(tot, 'inv-words');
         }
-        window.onload = () => { if(sessionStorage.getItem('isAdmin')) document.getElementById('login-overlay').style.display='none'; };
+        window.onload = () => { if(sessionStorage.getItem('auth')) document.getElementById('login-overlay').style.display='none'; };
     </script>
     <script type="module" src="app.js"></script>
 </body>
