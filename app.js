@@ -448,8 +448,7 @@ const printRecord = (data, type) => {
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
-    // Yahan maine print hone wale section ki height ko compress karne ke liye ek internal CSS joda hai.
-    // Isse lines ke beech ka gap kam ho jayega aur ek page me aaram se fit ho jayega.
+    // Internal CSS to keep the form tight enough to fit on one page
     contentHtml += `
     <style>
         @media print {
@@ -568,8 +567,9 @@ const printRecord = (data, type) => {
                 </div>
             </div>`;
 
+        // YAHAN CHANGE KIYA GAYA HAI: Margin badha kar 35px kar diya gaya hai dono taraf
         if (index === 0) {
-            contentHtml += `<div style="border-top: 1px dashed #666; margin: 5px 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 5px; position: relative; top: -6px; font-size: 9px; color: #555; font-weight: bold; letter-spacing: 1px;">✂ - - Cut Here - - ✂</span></div>`;
+            contentHtml += `<div style="border-top: 2px dashed #666; margin: 35px 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -8px; font-size: 11px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
         }
     });
     
