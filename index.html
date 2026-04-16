@@ -62,6 +62,17 @@
                     <div class="stat-card green-gradient"><div class="stat-icon"><i class="ri-hand-heart-fill"></i></div><div class="stat-info"><h3>Total Donations</h3><p id="stat-don">0</p></div></div>
                     <div class="stat-card modern-white"><div class="stat-icon" style="color: #4F46E5;"><i class="ri-file-list-3-fill"></i></div><div class="stat-info"><h3 style="color: #6B7280;">Total Invoices</h3><p id="stat-inv" style="color: #111827;">0</p></div></div>
                 </div>
+
+                <!-- Upcoming Functions Widget -->
+                <div class="card" style="margin-top: 25px;">
+                    <div class="card-header"><div class="icon-box" style="background:#F59E0B;"><i class="ri-calendar-event-line"></i></div><h3>Upcoming Functions</h3></div>
+                    <div class="table-responsive">
+                        <table class="modern-table">
+                            <thead><tr><th>Function Date</th><th>Shift</th><th>Function Type</th><th>Name</th><th>Mobile</th></tr></thead>
+                            <tbody id="upcoming-functions-body"></tbody>
+                        </table>
+                    </div>
+                </div>
             </section>
 
             <!-- Admin / CSV Panel -->
@@ -90,7 +101,7 @@
                             <div class="input-group"><label>Mobile Number</label><input type="text" id="dep-mobile"></div>
                             <div class="input-group"><label>Address</label><input type="text" id="dep-address"></div>
                             <div class="input-group"><label>Native Name</label><input type="text" id="dep-native"></div>
-                            <div class="input-group"><label>Function Name</label><input type="text" id="dep-func-name"></div>
+                            <div class="input-group"><label>Function Type</label><input type="text" id="dep-func-name"></div>
                             <div class="input-group"><label>Function Date</label><input type="date" id="dep-func-date"></div>
                             <div class="input-group"><label>Function Shift</label>
                                 <select id="dep-func-shift">
@@ -101,7 +112,7 @@
                             </div>
                             <div class="input-group"><label>Payment Type</label><select id="dep-pay-type" required><option value="Cheque">Cheque</option><option value="Online">Online</option></select></div>
                             <div class="input-group"><label>Payment Date</label><input type="date" id="dep-pay-date"></div>
-                            <div class="input-group"><label>Reference Number</label><input type="text" id="dep-ref"></div>
+                            <div class="input-group"><label>Cheque No/Ref Number</label><input type="text" id="dep-ref"></div>
                             <div class="input-group"><label>Bank Name</label><input type="text" id="dep-bank"></div>
                             <div class="input-group"><label>Amount (₹)</label><input type="number" id="dep-amount" required oninput="numToWords(this.value, 'dep-words')"></div>
                             <div class="input-group"><label>In Words</label><input type="text" id="dep-words" readonly class="highlight-input"></div>
@@ -133,7 +144,7 @@
                             </div>
                             <div class="input-group"><label>Payment Type</label><select id="don-pay-type" required><option value="Cheque">Cheque</option><option value="Online">Online</option></select></div>
                             <div class="input-group"><label>Payment Date</label><input type="date" id="don-pay-date"></div>
-                            <div class="input-group"><label>Reference Number</label><input type="text" id="don-ref"></div>
+                            <div class="input-group"><label>Cheque No/Ref Number</label><input type="text" id="don-ref"></div>
                             <div class="input-group"><label>Bank Name</label><input type="text" id="don-bank"></div>
                             <div class="input-group"><label>Amount (₹)</label><input type="number" id="don-amount" required oninput="numToWords(this.value, 'don-words')"></div>
                             <div class="input-group"><label>In Words</label><input type="text" id="don-words" readonly class="highlight-input"></div>
@@ -185,7 +196,7 @@
                             <div class="input-group"><label>In Words</label><input type="text" id="inv-words" readonly></div>
                             <div class="input-group"><label>Payment Type</label><select id="inv-pay-type" required><option value="Cheque">Cheque</option><option value="Online">Online</option></select></div>
                             <div class="input-group"><label>Payment Date</label><input type="date" id="inv-pay-date"></div>
-                            <div class="input-group"><label>Reference Number</label><input type="text" id="inv-ref"></div>
+                            <div class="input-group"><label>Cheque No/Ref Number</label><input type="text" id="inv-ref"></div>
                             <div class="input-group"><label>Bank Name</label><input type="text" id="inv-bank"></div>
                         </div>
                         <div class="form-actions"><button type="submit" class="btn-submit" id="btn-submit-inv"><i class="ri-printer-line"></i> Save & Print</button></div>
@@ -210,7 +221,9 @@
                     </div>
                     <div class="table-responsive">
                         <table id="records-table" class="modern-table">
-                            <thead><tr><th>Slip No.</th><th>Date</th><th>Name</th><th>Amount</th><th>Actions</th></tr></thead>
+                            <thead id="records-head">
+                                <!-- Dynamic Headers via JS -->
+                            </thead>
                             <tbody id="records-body"></tbody>
                         </table>
                     </div>
@@ -256,7 +269,6 @@
             }
         }
 
-        // Properly generates exact wording (e.g. Seventeen Thousand Seven Hundred Rupees Only)
         function numToWords(num, targetId) {
             if(!num || num == 0) { document.getElementById(targetId).value = ""; return; }
             let a =['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
