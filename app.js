@@ -453,8 +453,8 @@ const printRecord = (data, type) => {
                 </div>`;
         }
 
-        // Updated margin/padding dynamics to ensure members have plenty of space and everything fits on A4
-        let signatureMargin = type === 'deposit' ? '20px' : '28px';
+        // Exact khali space ensure kiya gaya hai signature se pehle
+        let signatureMargin = '40px'; // Signature ke theek upar 40px ka khali area rahega
 
         contentHtml += `
             <div class="print-copy" style="box-sizing: border-box; width: 100%; border:2px solid #000; padding:5px 12px; position:relative; overflow: hidden; page-break-inside: avoid;">
@@ -477,14 +477,14 @@ const printRecord = (data, type) => {
                 
                 ${footerNoteHtml}
                 
-                <div style="display:flex; justify-content:space-between; margin-top:${signatureMargin};">
+                <div style="display:flex; justify-content:space-between; margin-top:${signatureMargin}; margin-bottom: 2px;">
                     <div style="border-top:1px solid #000; width:130px; text-align:center; padding-top: 2px; font-weight: 500; font-size: 10px;">Payer Signature</div>
                     <div style="border-top:1px solid #000; width:130px; text-align:center; padding-top: 2px; font-weight: 500; font-size: 10px;">Receiver Signature</div>
                 </div>
             </div>`;
 
         if (index === 0) {
-            contentHtml += `<div style="border-top: 2px dashed #666; margin: 8px 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -7px; font-size: 10px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
+            contentHtml += `<div style="border-top: 1px dashed #666; margin: 6px 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 5px; position: relative; top: -6px; font-size: 9px; color: #555; font-weight: bold; letter-spacing: 1px;">✂ - - Cut Here - - ✂</span></div>`;
         }
     });
     
