@@ -448,13 +448,13 @@ const printRecord = (data, type) => {
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
-    // Internal CSS to keep the form tight enough to fit on one page
+    // CSS for normal readable large fonts that properly utilize A4 paper space
     contentHtml += `
     <style>
         @media print {
-            .print-grid { gap: 3px 8px !important; }
-            .print-row { padding-bottom: 1px !important; border-bottom: 1px dotted #ccc; font-size: 9.5px !important; }
-            .print-label { font-size: 9.5px !important; }
+            .print-grid { gap: 6px 12px !important; margin-bottom: 8px !important; }
+            .print-row { padding-bottom: 3px !important; border-bottom: 1px dotted #ccc; font-size: 11.5px !important; }
+            .print-label { font-size: 11.5px !important; font-weight: bold; }
         }
     </style>
     `;
@@ -462,7 +462,7 @@ const printRecord = (data, type) => {
     copiesArray.forEach((copy, index) => {
         let detailsHtml = "";
         if(type === 'invoice') {
-            detailsHtml = `<div class="print-grid" style="margin-bottom: 2px;">
+            detailsHtml = `<div class="print-grid">
                 <div class="print-row"><span class="print-label">Invoice No:</span> ${data.slipNo}</div>
                 <div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div>
                 <div class="print-row"><span class="print-label">Name:</span> ${data.name}</div>
@@ -475,7 +475,7 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Pay Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
                 <div class="print-row"><span class="print-label">Cheque & Ref No.:</span> ${data.ref || '-'}</div>
                 <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
-                <div style="grid-column: span 2; margin-top: 1px; border-top: 1px dotted #ccc; padding-top: 1px;"></div>
+                <div style="grid-column: span 2; margin-top: 2px; border-top: 1px dotted #ccc; padding-top: 2px;"></div>
                 <div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${parseFloat(data.basic || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">CGST (0.9%):</span> ₹ ${parseFloat(data.cgst || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">SGST (0.9%):</span> ₹ ${parseFloat(data.sgst || 0).toFixed(2)}</div>
@@ -483,7 +483,7 @@ const printRecord = (data, type) => {
                 <div class="print-row" style="font-size: 1.1em; grid-column: span 2;"><span class="print-label">Total Amount:</span> <strong>₹ ${parseFloat(data.total || 0).toFixed(2)}</strong></div>
             </div>`;
         } else if (type === 'donation') {
-            detailsHtml = `<div class="print-grid" style="margin-bottom: 2px;">
+            detailsHtml = `<div class="print-grid">
                 <div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div>
                 <div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div>
                 <div class="print-row"><span class="print-label">Name:</span> ${data.name}</div>
@@ -500,14 +500,14 @@ const printRecord = (data, type) => {
             </div>`;
         } else {
             // Deposit Details
-            detailsHtml = `<div class="print-grid" style="margin-bottom: 2px;">
+            detailsHtml = `<div class="print-grid">
                 <div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div>
                 <div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div>
                 <div class="print-row"><span class="print-label">Name:</span> ${data.name}</div>
                 <div class="print-row"><span class="print-label">Mobile No:</span> ${data.mobile || '-'}</div>
-                <div class="print-row"><span class="print-label">Address:</span> <span style="word-break: break-word;">${data.address || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Native:</span> ${data.native || '-'}</div>
+                <div class="print-row" style="grid-column: span 2;"><span class="print-label">Address:</span> <span style="word-break: break-word;">${data.address || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div>
+                <div class="print-row"><span class="print-label">Native:</span> ${data.native || '-'}</div>
                 <div class="print-row"><span class="print-label">Function Type:</span> ${data.funcName || '-'}</div>
                 <div class="print-row"><span class="print-label">Function Date:</span> ${window.formatDateIndian(data.funcDate) || '-'}</div>
                 <div class="print-row"><span class="print-label">Function Shift:</span> ${data.funcShift || '-'}</div>
@@ -515,61 +515,62 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Pay Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
                 <div class="print-row"><span class="print-label">Cheque & Ref No.:</span> ${data.ref || '-'}</div>
                 <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
-                <div class="print-row" style="grid-column: span 2; font-size: 1.1em;"><span class="print-label">Amount:</span> <strong>₹ ${parseFloat(data.amount || 0).toFixed(2)}</strong></div>
+                <div class="print-row" style="grid-column: span 2; font-size: 1.2em;"><span class="print-label">Amount:</span> <strong>₹ ${parseFloat(data.amount || 0).toFixed(2)}</strong></div>
             </div>`;
         }
 
         // --- CUSTOM FOOTER LOGIC ---
         let footerNoteHtml = '';
         if(type === 'deposit') {
-            footerNoteHtml = `<div style="margin-top:2px; width:100%;"><table style="width:100%; border-collapse: collapse; font-size: 8px; font-family: Arial, sans-serif; text-align: left;"><tbody>
-                <tr><td colspan="2" style="border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold; font-size: 8.5px; text-transform: uppercase;">Instructions</td></tr>
-                <tr><td style="border: 1px solid #000; padding: 1px 2px; width: 10px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 1px 2px;">The entire responsibility for vehicle management and parking shall lie solely with the host/booking organization. The Sanstha assumes no liability for parking-related issues.</td></tr>
-                <tr><td style="border: 1px solid #000; padding: 1px 2px; text-align: center; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 1px 2px;">For the final settlement and processing of refunds, it is mandatory to produce and submit the Original Deposit Receipt. No settlement will be processed without this document.</td></tr>
-                <tr><td style="border: 1px solid #000; padding: 1px 2px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 1px 2px;">As a mandatory requirement, the venue must be identified on all invitations (Physical or Digital) exactly as: “Sheth Shri Hiralal Hargovandas Batrisi Hall.” Please note that the Sanstha reserves the right to levy a penalty for any non-compliance or abbreviation of this name.</td></tr>
+            footerNoteHtml = `<div style="margin-top:5px; width:100%;"><table style="width:100%; border-collapse: collapse; font-size: 10px; font-family: Arial, sans-serif; text-align: left;"><tbody>
+                <tr><td colspan="2" style="border: 1px solid #000; padding: 2px; text-align: center; font-weight: bold; font-size: 10.5px; text-transform: uppercase;">Instructions</td></tr>
+                <tr><td style="border: 1px solid #000; padding: 2px 4px; width: 12px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 2px 4px;">The entire responsibility for vehicle management and parking shall lie solely with the host/booking organization. The Sanstha assumes no liability for parking-related issues.</td></tr>
+                <tr><td style="border: 1px solid #000; padding: 2px 4px; text-align: center; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 2px 4px;">For the final settlement and processing of refunds, it is mandatory to produce and submit the Original Deposit Receipt. No settlement will be processed without this document.</td></tr>
+                <tr><td style="border: 1px solid #000; padding: 2px 4px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 2px 4px;">As a mandatory requirement, the venue must be identified on all invitations (Physical or Digital) exactly as: “Sheth Shri Hiralal Hargovandas Batrisi Hall.” Please note that the Sanstha reserves the right to levy a penalty for any non-compliance or abbreviation of this name.</td></tr>
                 </tbody></table></div>`;
         } else if (type === 'donation') {
             footerNoteHtml = `
-                <div style="margin-top: 4px; border: 1px solid #000; padding: 3px; font-family: Arial, sans-serif; text-align: center; font-size: 8.5px; line-height: 1.2;">
+                <div style="margin-top: 8px; border: 1px solid #000; padding: 6px; font-family: Arial, sans-serif; text-align: center; font-size: 10px; line-height: 1.4;">
                     <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
                     DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOME TAX ACT 1961 (RENEWAL)<br>
-                    <strong style="display:block; margin-top: 2px;">Thank you for your generous donation. Your support is sincerely appreciated.</strong>
+                    <strong style="display:block; margin-top: 4px;">Thank you for your generous donation. Your support is sincerely appreciated.</strong>
                 </div>`;
         }
 
-        // BADA SIGNATURE SPACE (55px)
-        let signatureMargin = '55px'; 
+        // Properly sized signature margin
+        let signatureMargin = '50px'; 
 
         contentHtml += `
-            <div class="print-copy" style="box-sizing: border-box; width: 100%; border:2px solid #000; padding:4px 10px; position:relative; overflow: hidden; page-break-inside: avoid;">
-                <div style="position:absolute; top:4px; right:8px; border:1px solid #000; padding:1px 4px; font-weight: bold; font-size:9px;">${copy}</div>
+            <div class="print-copy" style="box-sizing: border-box; width: 100%; border:2px solid #000; padding:15px 20px; position:relative; overflow: hidden; page-break-inside: avoid;">
+                <div style="position:absolute; top:8px; right:12px; border:1px solid #000; padding:2px 6px; font-weight: bold; font-size:11px;">${copy}</div>
                 
-                <div style="position:relative; margin-bottom:2px;">
-                    <img src="logo.png" style="width:40px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:5px;">
-                    <div style="padding-left: 50px; text-align:center; border-bottom:1px solid #000; padding-bottom:2px;">
-                        <h2 style="margin:0; font-size:13px; line-height: 1.2;">${orgName}</h2>
-                        <p style="margin:1px 0; font-size:7.5px; font-weight: bold;">${orgAddress}</p>
-                        <p style="margin:0; font-size:7px;">${orgDetailsLine1}</p>
-                        <p style="margin:0; font-size:7px;">${orgDetailsLine2}</p>
+                <div style="position:relative; margin-bottom:8px;">
+                    <img src="logo.png" style="width:55px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:8px;">
+                    <div style="padding-left: 65px; text-align:center; border-bottom:1px solid #000; padding-bottom:5px;">
+                        <h2 style="margin:0; font-size:17px; line-height: 1.2;">${orgName}</h2>
+                        <p style="margin:2px 0; font-size:10px; font-weight: bold;">${orgAddress}</p>
+                        <p style="margin:0; font-size:9.5px;">${orgDetailsLine1}</p>
+                        <p style="margin:0; font-size:9.5px;">${orgDetailsLine2}</p>
                     </div>
                 </div>
 
-                <h3 style="text-align:center; text-decoration:underline; margin: 2px 0 3px 0; font-size: 11px;">${title}</h3>
+                <h3 style="text-align:center; text-decoration:underline; margin: 5px 0 8px 0; font-size: 14px; font-weight:bold;">${title}</h3>
+                
                 ${detailsHtml}
                 
-                <div style="font-style:italic; font-size: 9px; margin-top: 1px; font-weight: 600;">In Words: ${data.words || '-'}</div>
+                <div style="font-style:italic; font-size: 11px; margin-top: 3px; font-weight: 600;">In Words: ${data.words || '-'}</div>
                 
                 ${footerNoteHtml}
                 
-                <div style="display:flex; justify-content:space-between; margin-top:${signatureMargin}; margin-bottom: 2px;">
-                    <div style="border-top:1px solid #000; width:120px; text-align:center; padding-top: 2px; font-weight: 500; font-size: 9px;">Payer Signature</div>
-                    <div style="border-top:1px solid #000; width:120px; text-align:center; padding-top: 2px; font-weight: 500; font-size: 9px;">Receiver Signature</div>
+                <div style="display:flex; justify-content:space-between; margin-top:${signatureMargin}; margin-bottom: 5px;">
+                    <div style="border-top:1px solid #000; width:180px; text-align:center; padding-top: 4px; font-weight: bold; font-size: 11.5px;">Payer Signature</div>
+                    <div style="border-top:1px solid #000; width:180px; text-align:center; padding-top: 4px; font-weight: bold; font-size: 11.5px;">Receiver Signature</div>
                 </div>
             </div>`;
 
-        // YAHAN CHANGE KIYA GAYA HAI: Margin badha kar 35px kar diya gaya hai dono taraf
+        // Cut Here space
         if (index === 0) {
-            contentHtml += `<div style="border-top: 2px dashed #666; margin: 35px 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -8px; font-size: 11px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
+            contentHtml += `<div style="border-top: 2px dashed #666; margin: 25px 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -8px; font-size: 11px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
         }
     });
     
