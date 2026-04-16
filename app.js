@@ -239,19 +239,55 @@ window.allRecords = {};
 
 window.loadRecords = async () => {
     const type = document.getElementById('record-filter').value;
+    const thead = document.getElementById('records-head');
     const tbody = document.getElementById('records-body');
-    tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>Fetching...</td></tr>";
+    
+    // Dynamic Table Header based on Selection
+    if(type === 'deposit') {
+        thead.innerHTML = `<tr><th>Slip No.</th><th>Name</th><th>Func. Date</th><th>Func. Type</th><th>Shift</th><th>Amount</th><th>Actions</th></tr>`;
+    } else {
+        thead.innerHTML = `<tr><th>Slip No.</th><th>Date</th><th>Name</th><th>Amount</th><th>Actions</th></tr>`;
+    }
+
+    tbody.innerHTML = `<tr><td colspan='${type==='deposit'? 7 : 5}' style='text-align:center;'>Fetching...</td></tr>`;
+    
     const q = query(collection(db, type), orderBy("timestamp", "desc"));
     const qs = await getDocs(q);
     tbody.innerHTML = "";
-    if(qs.empty) { tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No Data</td></tr>"; return; }
+    
+    if(qs.empty) { tbody.innerHTML = `<tr><td colspan='${type==='deposit'? 7 : 5}' style='text-align:center;'>No Data</td></tr>`; return; }
     
     window.allRecords = {};
     qs.forEach((docSnap) => {
         let d = docSnap.data(); d.id = docSnap.id;
         window.allRecords[d.id] = d;
         let tr = document.createElement('tr');
-        tr.innerHTML = `<td><strong>${d.slipNo}</strong></td><td>${window.formatDateIndian(d.date)}</td><td>${d.name}</td><td style="color:#10B981; font-weight:600;">₹${parseFloat(d.amount || d.total).toFixed(2)}</td><td><button class="btn-action btn-edit" onclick='editRec("${d.id}", "${type}")'><i class="ri-edit-line"></i></button><button class="btn-action btn-print" onclick='rePrint("${d.id}", "${type}")'><i class="ri-printer-line"></i></button><button class="btn-action btn-del" onclick='deleteRec("${d.id}", "${type}")'><i class="ri-delete-bin-line"></i></button></td>`;
+        
+        if(type === 'deposit') {
+            tr.innerHTML = `
+                <td><strong>${d.slipNo}</strong></td>
+                <td>${d.name}</td>
+                <td style="color:#4F46E5; font-weight:600;">${window.formatDateIndian(d.funcDate) || '-'}</td>
+                <td>${d.funcName || '-'}</td>
+                <td>${d.funcShift || '-'}</td>
+                <td style="color:#10B981; font-weight:600;">₹${parseFloat(d.amount || 0).toFixed(2)}</td>
+                <td>
+                    <button class="btn-action btn-edit" onclick='editRec("${d.id}", "${type}")'><i class="ri-edit-line"></i></button>
+                    <button class="btn-action btn-print" onclick='rePrint("${d.id}", "${type}")'><i class="ri-printer-line"></i></button>
+                    <button class="btn-action btn-del" onclick='deleteRec("${d.id}", "${type}")'><i class="ri-delete-bin-line"></i></button>
+                </td>`;
+        } else {
+            tr.innerHTML = `
+                <td><strong>${d.slipNo}</strong></td>
+                <td>${window.formatDateIndian(d.date)}</td>
+                <td>${d.name}</td>
+                <td style="color:#10B981; font-weight:600;">₹${parseFloat(d.amount || d.total).toFixed(2)}</td>
+                <td>
+                    <button class="btn-action btn-edit" onclick='editRec("${d.id}", "${type}")'><i class="ri-edit-line"></i></button>
+                    <button class="btn-action btn-print" onclick='rePrint("${d.id}", "${type}")'><i class="ri-printer-line"></i></button>
+                    <button class="btn-action btn-del" onclick='deleteRec("${d.id}", "${type}")'><i class="ri-delete-bin-line"></i></button>
+                </td>`;
+        }
         tbody.appendChild(tr);
     });
 };
@@ -357,10 +393,47 @@ window.editRec = (id, type) => {
 window.deleteRec = async (id, type) => { if(confirm("Confirm Delete?")) { await deleteDoc(doc(db, type, id)); loadRecords(); updateDashboardCounts(); } };
 
 const updateDashboardCounts = async () => {
-    const deps = await getDocs(collection(db, 'deposit')); const dons = await getDocs(collection(db, 'donation')); const invs = await getDocs(collection(db, 'invoice'));
+    // Stat boxes
+    const deps = await getDocs(collection(db, 'deposit')); 
+    const dons = await getDocs(collection(db, 'donation')); 
+    const invs = await getDocs(collection(db, 'invoice'));
     if(document.getElementById('stat-dep')) document.getElementById('stat-dep').innerText = deps.size;
     if(document.getElementById('stat-don')) document.getElementById('stat-don').innerText = dons.size;
     if(document.getElementById('stat-inv')) document.getElementById('stat-inv').innerText = invs.size;
+
+    // Upcoming Functions Logic
+    const today = new Date().toISOString().split('T')[0];
+    let upcomingList = [];
+    deps.forEach(docSnap => {
+        let d = docSnap.data();
+        if(d.funcDate && d.funcDate >= today) {
+            upcomingList.push(d);
+        }
+    });
+
+    // Sort upcoming events by date
+    upcomingList.sort((a, b) => new Date(a.funcDate) - new Date(b.funcDate));
+    
+    // Render top 10 upcoming events
+    const upBody = document.getElementById('upcoming-functions-body');
+    if(upBody) {
+        upBody.innerHTML = "";
+        if(upcomingList.length === 0) {
+            upBody.innerHTML = `<tr><td colspan="5" style="text-align:center;">No Upcoming Functions</td></tr>`;
+        } else {
+            upcomingList.slice(0, 10).forEach(ev => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td style="color:#4F46E5; font-weight:700;">${window.formatDateIndian(ev.funcDate)}</td>
+                    <td>${ev.funcShift || '-'}</td>
+                    <td>${ev.funcName || '-'}</td>
+                    <td>${ev.name || '-'}</td>
+                    <td>${ev.mobile || '-'}</td>
+                `;
+                upBody.appendChild(tr);
+            });
+        }
+    }
 };
 
 // --- PRINT LOGIC ---
@@ -410,7 +483,7 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Description:</span> ${data.desc || '-'}</div>
                 <div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType}</div>
                 <div class="print-row"><span class="print-label">Pay Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
-                <div class="print-row"><span class="print-label">Ref Number:</span> ${data.ref || '-'}</div>
+                <div class="print-row"><span class="print-label">Cheque No/Ref:</span> ${data.ref || '-'}</div>
                 <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
                 <div class="print-row" style="grid-column: span 2; font-size: 1.1em;"><span class="print-label">Amount:</span> <strong>₹ ${parseFloat(data.amount || 0).toFixed(2)}</strong></div>
             </div>`;
@@ -424,12 +497,12 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Address:</span> <span style="word-break: break-word;">${data.address || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Native:</span> ${data.native || '-'}</div>
                 <div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div>
-                <div class="print-row"><span class="print-label">Function Name:</span> ${data.funcName || '-'}</div>
+                <div class="print-row"><span class="print-label">Function Type:</span> ${data.funcName || '-'}</div>
                 <div class="print-row"><span class="print-label">Function Date:</span> ${window.formatDateIndian(data.funcDate) || '-'}</div>
                 <div class="print-row"><span class="print-label">Function Shift:</span> ${data.funcShift || '-'}</div>
                 <div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType}</div>
                 <div class="print-row"><span class="print-label">Pay Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
-                <div class="print-row"><span class="print-label">Ref Number:</span> ${data.ref || '-'}</div>
+                <div class="print-row"><span class="print-label">Cheque No/Ref:</span> ${data.ref || '-'}</div>
                 <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
                 <div class="print-row" style="grid-column: span 2; font-size: 1.1em;"><span class="print-label">Amount:</span> <strong>₹ ${parseFloat(data.amount || 0).toFixed(2)}</strong></div>
             </div>`;
@@ -453,8 +526,8 @@ const printRecord = (data, type) => {
                 </div>`;
         }
 
-        // Exact khali space ensure kiya gaya hai signature se pehle
-        let signatureMargin = '40px'; // Signature ke theek upar 40px ka khali area rahega
+        // Deposit slip ke liye Revenue Stamp chipkane ka khasa space 75px
+        let signatureMargin = type === 'deposit' ? '75px' : '40px'; 
 
         contentHtml += `
             <div class="print-copy" style="box-sizing: border-box; width: 100%; border:2px solid #000; padding:5px 12px; position:relative; overflow: hidden; page-break-inside: avoid;">
