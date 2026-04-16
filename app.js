@@ -444,15 +444,15 @@ const printRecord = (data, type) => {
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
-    // LETTER SIZE CSS: "size: letter" and specific margins
+    // एकदम पक्का Letter Size 1 Page Fitting CSS (Height fix ki gai hai)
     contentHtml += `
     <style>
         @media print {
             @page { size: letter portrait; margin: 4mm; }
-            body { margin: 0; padding: 0; }
-            .print-grid { gap: 3px 10px !important; margin-bottom: 4px !important; line-height: 1.15; }
-            .print-row { padding-bottom: 2px !important; border-bottom: 1px dotted #ccc; font-size: 11px !important; }
-            .print-label { font-size: 11px !important; font-weight: bold; }
+            body, html { margin: 0; padding: 0; }
+            .print-grid { gap: 2px 8px !important; margin-bottom: 3px !important; line-height: 1.1; }
+            .print-row { padding-bottom: 2px !important; border-bottom: 1px dotted #ccc; font-size: 10.5px !important; }
+            .print-label { font-size: 10.5px !important; font-weight: bold; }
         }
     </style>
     `;
@@ -473,7 +473,7 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Pay Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
                 <div class="print-row"><span class="print-label">Cheque & Ref No.:</span> ${data.ref || '-'}</div>
                 <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
-                <div style="grid-column: span 2; margin-top: 2px; border-top: 1px dotted #ccc; padding-top: 2px;"></div>
+                <div style="grid-column: span 2; margin-top: 1px; border-top: 1px dotted #ccc; padding-top: 1px;"></div>
                 <div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${parseFloat(data.basic || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">CGST (0.9%):</span> ₹ ${parseFloat(data.cgst || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">SGST (0.9%):</span> ₹ ${parseFloat(data.sgst || 0).toFixed(2)}</div>
@@ -518,15 +518,15 @@ const printRecord = (data, type) => {
 
         let footerNoteHtml = '';
         if(type === 'deposit') {
-            footerNoteHtml = `<div style="margin-top:3px; width:100%;"><table style="width:100%; border-collapse: collapse; font-size: 9px; font-family: Arial, sans-serif; text-align: left;"><tbody>
-                <tr><td colspan="2" style="border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold; font-size: 9.5px; text-transform: uppercase;">Instructions</td></tr>
+            footerNoteHtml = `<div style="margin-top:2px; width:100%;"><table style="width:100%; border-collapse: collapse; font-size: 8.5px; font-family: Arial, sans-serif; text-align: left;"><tbody>
+                <tr><td colspan="2" style="border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold; font-size: 9px; text-transform: uppercase;">Instructions</td></tr>
                 <tr><td style="border: 1px solid #000; padding: 1px 3px; width: 10px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 1px 3px;">The entire responsibility for vehicle management and parking shall lie solely with the host/booking organization. The Sanstha assumes no liability for parking-related issues.</td></tr>
                 <tr><td style="border: 1px solid #000; padding: 1px 3px; text-align: center; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 1px 3px;">For the final settlement and processing of refunds, it is mandatory to produce and submit the Original Deposit Receipt. No settlement will be processed without this document.</td></tr>
                 <tr><td style="border: 1px solid #000; padding: 1px 3px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 1px 3px;">As a mandatory requirement, the venue must be identified on all invitations exactly as: “Sheth Shri Hiralal Hargovandas Batrisi Hall.” Please note that the Sanstha reserves the right to levy a penalty for any non-compliance.</td></tr>
                 </tbody></table></div>`;
         } else if (type === 'donation') {
             footerNoteHtml = `
-                <div style="margin-top: 5px; border: 1px solid #000; padding: 5px; font-family: Arial, sans-serif; text-align: center; font-size: 9.5px; line-height: 1.3;">
+                <div style="margin-top: 4px; border: 1px solid #000; padding: 4px; font-family: Arial, sans-serif; text-align: center; font-size: 9px; line-height: 1.3;">
                     <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
                     DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOME TAX ACT 1961 (RENEWAL)<br>
                     <strong style="display:block; margin-top: 3px;">Thank you for your generous donation. Your support is sincerely appreciated.</strong>
@@ -534,51 +534,52 @@ const printRecord = (data, type) => {
         }
 
         /* 
-         यहाँ हमने "height: 130mm" (Letter पेज का आधा) और "display: flex" लगाया है।
-         इससे पूरा बॉक्स आधी जगह लेगा और "justify-content: space-between" सिग्नेचर को 
-         बॉक्स के एकदम नीचे धकेल देगा। साथ ही "padding-top: 35px;" से सिग्नेचर के लिए
-         परफेक्ट स्पेस बन जाएगा।
+         Height को एकदम सटीक 125mm कर दिया है। 
+         125mm + 125mm = 250mm जो Letter Paper (279.4mm) में 100% एक पेज पर फिट होगा ही होगा।
+         Flexbox और margin-top: auto से सिग्नेचर हमेशा नीचे ही सेट होंगे और खाली जगह पक्की बचेगी।
         */
         contentHtml += `
-            <div class="print-copy" style="box-sizing: border-box; width: 100%; height: 130mm; border:2px solid #000; padding:10px 15px; position:relative; overflow: hidden; page-break-inside: avoid; display: flex; flex-direction: column; justify-content: space-between;">
+            <div class="print-copy" style="box-sizing: border-box; width: 100%; height: 125mm; border:2px solid #000; padding:8px 12px; position:relative; overflow: hidden; display: flex; flex-direction: column;">
                 
                 <!-- HEADER SECTION -->
                 <div>
-                    <div style="position:absolute; top:6px; right:10px; border:1px solid #000; padding:2px 5px; font-weight: bold; font-size:11px;">${copy}</div>
-                    <div style="position:relative; margin-bottom:4px;">
-                        <img src="logo.png" style="width:45px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:6px;">
-                        <div style="padding-left: 55px; text-align:center; border-bottom:1px solid #000; padding-bottom:3px;">
-                            <h2 style="margin:0; font-size:16px; line-height: 1.1;">${orgName}</h2>
-                            <p style="margin:2px 0; font-size:10px; font-weight: bold;">${orgAddress}</p>
-                            <p style="margin:0; font-size:9.5px;">${orgDetailsLine1}</p>
-                            <p style="margin:0; font-size:9.5px;">${orgDetailsLine2}</p>
+                    <div style="position:absolute; top:6px; right:10px; border:1px solid #000; padding:1px 5px; font-weight: bold; font-size:10.5px;">${copy}</div>
+                    <div style="position:relative; margin-bottom:3px;">
+                        <img src="logo.png" style="width:40px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:5px;">
+                        <div style="padding-left: 50px; text-align:center; border-bottom:1px solid #000; padding-bottom:2px;">
+                            <h2 style="margin:0; font-size:15.5px; line-height: 1.1;">${orgName}</h2>
+                            <p style="margin:1px 0; font-size:9.5px; font-weight: bold;">${orgAddress}</p>
+                            <p style="margin:0; font-size:9px;">${orgDetailsLine1}</p>
+                            <p style="margin:0; font-size:9px;">${orgDetailsLine2}</p>
                         </div>
                     </div>
-                    <h3 style="text-align:center; text-decoration:underline; margin: 3px 0 5px 0; font-size: 13.5px; font-weight:bold;">${title}</h3>
+                    <h3 style="text-align:center; text-decoration:underline; margin: 2px 0 4px 0; font-size: 13px; font-weight:bold;">${title}</h3>
                 </div>
 
                 <!-- MIDDLE CONTENT SECTION -->
-                <div style="flex-grow: 1;">
+                <div>
                     ${detailsHtml}
-                    <div style="font-style:italic; font-size: 11px; margin-top: 2px; font-weight: 600;">In Words: ${data.words || '-'}</div>
+                    <div style="font-style:italic; font-size: 10.5px; margin-top: 2px; font-weight: 600;">In Words: ${data.words || '-'}</div>
                     ${footerNoteHtml}
                 </div>
 
-                <!-- SIGNATURE SECTION (Always at the bottom with proper space) -->
-                <div style="display:flex; justify-content:space-between; align-items: flex-end; padding-top: 35px; padding-bottom: 2px;">
-                    <div style="border-top:1px solid #000; width:170px; text-align:center; padding-top: 3px; font-weight: bold; font-size: 11px;">Payer Signature</div>
-                    <div style="border-top:1px solid #000; width:170px; text-align:center; padding-top: 3px; font-weight: bold; font-size: 11px;">Receiver Signature</div>
+                <!-- SIGNATURE SECTION (Push to bottom, guaranteed minimum space) -->
+                <div style="margin-top: auto; display:flex; justify-content:space-between; align-items: flex-end; padding-top: 25px; padding-bottom: 2px;">
+                    <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 2px; font-weight: bold; font-size: 10.5px;">Payer Signature</div>
+                    <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 2px; font-weight: bold; font-size: 10.5px;">Receiver Signature</div>
                 </div>
                 
             </div>`;
 
-        // Cut Here Line (बीच में परफेक्ट जगह)
+        // Cut Here Line (मार्जिन कम किया गया है ताकि 2 पेज न बनें)
         if (index === 0) {
-            contentHtml += `<div style="border-top: 1.5px dashed #666; margin: 5mm 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -8px; font-size: 10px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
+            contentHtml += `<div style="border-top: 1.5px dashed #666; margin: 4mm 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -7.5px; font-size: 9px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
         }
     });
     
     container.innerHTML = contentHtml;
+    
+    // Printing Action
     setTimeout(() => { window.print(); }, 500);
 };
 
