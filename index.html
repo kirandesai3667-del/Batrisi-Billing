@@ -104,7 +104,7 @@
                             <div class="input-group"><label>Reference Number</label><input type="text" id="dep-ref"></div>
                             <div class="input-group"><label>Bank Name</label><input type="text" id="dep-bank"></div>
                             <div class="input-group"><label>Amount (₹)</label><input type="number" id="dep-amount" required oninput="numToWords(this.value, 'dep-words')"></div>
-                            <div class="input-group"><label>Amount in Words</label><input type="text" id="dep-words" readonly class="highlight-input"></div>
+                            <div class="input-group"><label>In Words</label><input type="text" id="dep-words" readonly class="highlight-input"></div>
                         </div>
                         <div class="form-actions"><button type="submit" class="btn-submit" id="btn-submit-dep"><i class="ri-printer-line"></i> Save & Print</button></div>
                     </form>
@@ -136,7 +136,7 @@
                             <div class="input-group"><label>Reference Number</label><input type="text" id="don-ref"></div>
                             <div class="input-group"><label>Bank Name</label><input type="text" id="don-bank"></div>
                             <div class="input-group"><label>Amount (₹)</label><input type="number" id="don-amount" required oninput="numToWords(this.value, 'don-words')"></div>
-                            <div class="input-group"><label>Amount in Words</label><input type="text" id="don-words" readonly class="highlight-input"></div>
+                            <div class="input-group"><label>In Words</label><input type="text" id="don-words" readonly class="highlight-input"></div>
                         </div>
                         <div class="form-actions"><button type="submit" class="btn-submit" id="btn-submit-don"><i class="ri-printer-line"></i> Save & Print</button></div>
                     </form>
@@ -182,7 +182,7 @@
                             <div class="input-group"><label>SGST (0.9%)</label><input type="number" id="inv-sgst" readonly class="tax-input"></div>
                             <div class="input-group"><label>Round Off</label><input type="number" step="0.01" id="inv-round" readonly></div>
                             <div class="input-group"><label>Total Amount (₹)</label><input type="number" id="inv-total" readonly class="highlight-input total-input"></div>
-                            <div class="input-group"><label>Amount in Words</label><input type="text" id="inv-words" readonly></div>
+                            <div class="input-group"><label>In Words</label><input type="text" id="inv-words" readonly></div>
                             <div class="input-group"><label>Payment Type</label><select id="inv-pay-type" required><option value="Cheque">Cheque</option><option value="Online">Online</option></select></div>
                             <div class="input-group"><label>Payment Date</label><input type="date" id="inv-pay-date"></div>
                             <div class="input-group"><label>Reference Number</label><input type="text" id="inv-ref"></div>
