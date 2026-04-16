@@ -236,7 +236,9 @@ window.handleFormSubmit = async (e, type) => {
     finally { if(btn) { btn.innerHTML = `<i class="ri-printer-line"></i> Save & Print`; btn.disabled = false; } }
 };
 
-// --- LOAD RECORDS ---
+// --- LOAD, EDIT & DELETE RECORDS LOGIC ---
+window.allRecords = {};
+
 window.loadRecords = async () => {
     const type = document.getElementById('record-filter').value;
     const tbody = document.getElementById('records-body');
@@ -245,12 +247,113 @@ window.loadRecords = async () => {
     const qs = await getDocs(q);
     tbody.innerHTML = "";
     if(qs.empty) { tbody.innerHTML = "<tr><td colspan='5' style='text-align:center;'>No Data</td></tr>"; return; }
+    
+    window.allRecords = {};
     qs.forEach((docSnap) => {
         let d = docSnap.data(); d.id = docSnap.id;
+        window.allRecords[d.id] = d;
         let tr = document.createElement('tr');
-        tr.innerHTML = `<td><strong>${d.slipNo}</strong></td><td>${window.formatDateIndian(d.date)}</td><td>${d.name}</td><td style="color:#10B981; font-weight:600;">₹${parseFloat(d.amount || d.total).toFixed(2)}</td><td><button class="btn-action btn-edit" onclick='editRec(${JSON.stringify(d)}, "${type}")'><i class="ri-edit-line"></i></button><button class="btn-action btn-print" onclick='rePrint(${JSON.stringify(d)}, "${type}")'><i class="ri-printer-line"></i></button><button class="btn-action btn-del" onclick='deleteRec("${d.id}", "${type}")'><i class="ri-delete-bin-line"></i></button></td>`;
+        tr.innerHTML = `<td><strong>${d.slipNo}</strong></td><td>${window.formatDateIndian(d.date)}</td><td>${d.name}</td><td style="color:#10B981; font-weight:600;">₹${parseFloat(d.amount || d.total).toFixed(2)}</td><td><button class="btn-action btn-edit" onclick='editRec("${d.id}", "${type}")'><i class="ri-edit-line"></i></button><button class="btn-action btn-print" onclick='rePrint("${d.id}", "${type}")'><i class="ri-printer-line"></i></button><button class="btn-action btn-del" onclick='deleteRec("${d.id}", "${type}")'><i class="ri-delete-bin-line"></i></button></td>`;
         tbody.appendChild(tr);
     });
+};
+
+window.editRec = (id, type) => {
+    let data = window.allRecords[id];
+    if(!data) return;
+
+    if (window.switchTab) window.switchTab(type);
+
+    let prefix = type.substring(0, 3);
+    if(document.getElementById(`${prefix}-edit-id`)) {
+        document.getElementById(`${prefix}-edit-id`).value = data.id;
+    }
+
+    if(type === 'deposit') {
+        document.getElementById('dep-slip').value = data.slipNo || '';
+        document.getElementById('dep-date').value = data.date || '';
+        document.getElementById('dep-member').value = data.member || '';
+        document.getElementById('dep-name').value = data.name || '';
+        document.getElementById('dep-mobile').value = data.mobile || '';
+        document.getElementById('dep-address').value = data.address || '';
+        document.getElementById('dep-native').value = data.native || '';
+        document.getElementById('dep-func-name').value = data.funcName || '';
+        document.getElementById('dep-func-date').value = data.funcDate || '';
+        document.getElementById('dep-func-shift').value = data.funcShift || 'Morning (08:00 AM – 02:00 PM)';
+        document.getElementById('dep-pay-type').value = data.payType || 'Cheque';
+        document.getElementById('dep-pay-date').value = data.payDate || '';
+        document.getElementById('dep-ref').value = data.ref || '';
+        document.getElementById('dep-bank').value = data.bank || '';
+        document.getElementById('dep-amount').value = data.amount || '';
+        document.getElementById('dep-words').value = data.words || '';
+    } else if(type === 'donation') {
+        document.getElementById('don-slip').value = data.slipNo || '';
+        document.getElementById('don-date').value = data.date || '';
+        document.getElementById('don-member').value = data.member || '';
+        document.getElementById('don-name').value = data.name || '';
+        document.getElementById('don-address').value = data.address || '';
+        document.getElementById('don-native').value = data.native || '';
+        document.getElementById('don-pan').value = data.pan || '';
+        
+        let descSelect = document.getElementById('don-desc');
+        let knownOptions = ["Dattak Yojna", "General Sahay", "Education Sahay", "Inaam Vitran", "Custom"];
+        if(knownOptions.includes(data.desc)) {
+            descSelect.value = data.desc;
+            if(document.getElementById('don-custom-desc')) document.getElementById('don-custom-desc').style.display = 'none';
+        } else {
+            descSelect.value = "Custom";
+            if(document.getElementById('don-custom-desc')) {
+                document.getElementById('don-custom-desc').style.display = 'block';
+                document.getElementById('don-custom-desc').value = data.desc || '';
+            }
+        }
+
+        document.getElementById('don-pay-type').value = data.payType || 'Cheque';
+        document.getElementById('don-pay-date').value = data.payDate || '';
+        document.getElementById('don-ref').value = data.ref || '';
+        document.getElementById('don-bank').value = data.bank || '';
+        document.getElementById('don-amount').value = data.amount || '';
+        document.getElementById('don-words').value = data.words || '';
+    } else if(type === 'invoice') {
+        document.getElementById('inv-slip').value = data.slipNo || '';
+        document.getElementById('inv-date').value = data.date || '';
+        
+        document.getElementById('inv-is-member').value = data.isMember || 'No';
+        if(window.toggleInvMember) window.toggleInvMember();
+        document.getElementById('inv-member').value = data.member || '';
+        
+        document.getElementById('inv-name').value = data.name || '';
+        document.getElementById('inv-address').value = data.address || '';
+        document.getElementById('inv-gst').value = data.gst || '';
+        
+        let descSelect = document.getElementById('inv-desc-select');
+        if(data.desc === 'Maintenance') {
+            descSelect.value = data.desc;
+            if(document.getElementById('inv-desc-custom')) document.getElementById('inv-desc-custom').style.display = 'none';
+        } else {
+            descSelect.value = "Other";
+            if(document.getElementById('inv-desc-custom')) {
+                document.getElementById('inv-desc-custom').style.display = 'block';
+                document.getElementById('inv-desc-custom').value = data.desc || '';
+            }
+        }
+        
+        document.getElementById('inv-dep-ref').value = data.depRef || '';
+        document.getElementById('inv-dep-date').value = data.depDate || '';
+        document.getElementById('inv-basic').value = data.basic || '';
+        document.getElementById('inv-cgst').value = data.cgst || '';
+        document.getElementById('inv-sgst').value = data.sgst || '';
+        document.getElementById('inv-round').value = data.round || '';
+        document.getElementById('inv-total').value = data.total || '';
+        document.getElementById('inv-words').value = data.words || '';
+        document.getElementById('inv-pay-type').value = data.payType || 'Cheque';
+        document.getElementById('inv-pay-date').value = data.payDate || '';
+        document.getElementById('inv-ref').value = data.ref || '';
+        document.getElementById('inv-bank').value = data.bank || '';
+    }
+
+    const btn = document.getElementById(`btn-submit-${prefix}`);
+    if(btn) { btn.innerHTML = "<i class='ri-edit-box-line'></i> Update Record"; }
 };
 
 window.deleteRec = async (id, type) => { if(confirm("Confirm Delete?")) { await deleteDoc(doc(db, type, id)); loadRecords(); updateDashboardCounts(); } };
@@ -263,7 +366,11 @@ const updateDashboardCounts = async () => {
 };
 
 // --- PRINT LOGIC ---
-window.rePrint = (data, type) => { printRecord(data, type); };
+window.rePrint = (idOrData, type) => { 
+    let data = typeof idOrData === 'string' && window.allRecords[idOrData] ? window.allRecords[idOrData] : idOrData;
+    printRecord(data, type); 
+};
+
 const printRecord = (data, type) => {
     const container = document.getElementById('print-container');
     let title = type === 'invoice' ? 'TAX INVOICE' : type.toUpperCase() + ' SLIP';
@@ -361,7 +468,7 @@ const printRecord = (data, type) => {
                 <h3 style="text-align:center; text-decoration:underline; margin: 3px 0 6px 0; font-size: 13px;">${title}</h3>
                 ${detailsHtml}
                 
-                <div style="font-style:italic; font-size: 10px; margin-top: 3px; font-weight: 600;">Words: ${data.words || '-'}</div>
+                <div style="font-style:italic; font-size: 10px; margin-top: 3px; font-weight: 600;">In Words: ${data.words || '-'}</div>
                 
                 ${footerNoteHtml}
                 
