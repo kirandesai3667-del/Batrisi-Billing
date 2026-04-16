@@ -444,42 +444,50 @@ const printRecord = (data, type) => {
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
-    /* 
-       यहाँ सुधार किया गया है:
-       1. @page margin 10mm रखा है ताकि किसी भी प्रिंटर में साइड बॉर्डर न कटे।
-       2. width 96% और margin 0 auto रखा है ताकि बॉक्स बिलकुल बीच में रहे।
-       3. fixed height हटा दी गई है, अब स्पेसिंग नेचुरल रहेगी।
-       4. गैप (gap) और पैडिंग (padding) बढ़ा दी है ताकि टेक्स्ट सिकुड़ा हुआ न लगे।
-    */
+    // --- 100% PERFECT LETTER PAGE CSS ---
     contentHtml += `
     <style>
         @media print {
-            @page { margin: 10mm; } 
+            @page { size: letter portrait; margin: 5mm; } 
             body, html { margin: 0; padding: 0; }
+            
             .print-copy {
-                width: 96%;
-                margin: 0 auto;
+                width: 100%;
+                height: 128mm; /* Fixed Height to guarantee exactly 1 Page fit */
+                box-sizing: border-box;
                 border: 2px solid #000;
                 padding: 12px 18px;
-                box-sizing: border-box;
+                display: flex;
+                flex-direction: column;
                 page-break-inside: avoid;
             }
             .print-grid { 
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 5px 15px !important; 
-                margin-bottom: 6px !important; 
+                gap: 4px 15px !important; 
+                margin-bottom: 5px !important; 
             }
             .print-row { 
-                padding-bottom: 3px !important; 
+                padding-bottom: 2px !important; 
                 border-bottom: 1px dotted #ccc; 
-                font-size: 11.5px !important; 
+                font-size: 11px !important; 
             }
             .print-label { 
-                font-size: 11.5px !important; 
+                font-size: 11px !important; 
                 font-weight: bold; 
             }
             .full-span { grid-column: span 2; }
+            
+            /* Magic Spacer - This dynamically pushes the signature down, leaving an un-squished perfect gap */
+            .spacer { flex-grow: 1; }
+            
+            .signature-row {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-end;
+                padding-top: 15px; /* Minimum space safety */
+                padding-bottom: 3px;
+            }
         }
     </style>
     `;
@@ -560,42 +568,40 @@ const printRecord = (data, type) => {
                 </div>`;
         }
 
-        /* 
-           सिग्नेचर सेक्शन में margin-top: 35px; दिया गया है, 
-           इससे हमेशा इंस्ट्रक्शन और सिग्नेचर के बीच 35px की फिक्स (परफेक्ट) खाली जगह बचेगी 
-           और बॉक्स बहुत ज्यादा बड़ा या खाली-खाली नहीं लगेगा।
-        */
         contentHtml += `
             <div class="print-copy">
                 <!-- HEADER SECTION -->
-                <div style="position:relative; margin-bottom:8px;">
+                <div style="position:relative; margin-bottom:6px;">
                     <div style="position:absolute; top:0px; right:0px; border:1px solid #000; padding:2px 6px; font-weight: bold; font-size:11px;">${copy}</div>
                     <img src="logo.png" style="width:50px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:8px;">
-                    <div style="padding-left: 60px; text-align:center; border-bottom:1px solid #000; padding-bottom:5px;">
-                        <h2 style="margin:0; font-size:17px; line-height: 1.2;">${orgName}</h2>
+                    <div style="padding-left: 60px; text-align:center; border-bottom:1px solid #000; padding-bottom:4px;">
+                        <h2 style="margin:0; font-size:16.5px; line-height: 1.2;">${orgName}</h2>
                         <p style="margin:2px 0; font-size:10px; font-weight: bold;">${orgAddress}</p>
                         <p style="margin:0; font-size:9.5px;">${orgDetailsLine1}</p>
                         <p style="margin:0; font-size:9.5px;">${orgDetailsLine2}</p>
                     </div>
                 </div>
 
-                <h3 style="text-align:center; text-decoration:underline; margin: 0 0 8px 0; font-size: 14px; font-weight:bold;">${title}</h3>
+                <h3 style="text-align:center; text-decoration:underline; margin: 0 0 6px 0; font-size: 14px; font-weight:bold;">${title}</h3>
 
-                <!-- MIDDLE CONTENT SECTION -->
+                <!-- MIDDLE CONTENT SECTION (No compression applied here, text stays readable) -->
                 ${detailsHtml}
                 <div style="font-style:italic; font-size: 11px; margin-top: 3px; font-weight: 600;">In Words: ${data.words || '-'}</div>
                 ${footerNoteHtml}
 
-                <!-- SIGNATURE SECTION (Fixed comfortable space of 35px above) -->
-                <div style="display:flex; justify-content:space-between; margin-top: 35px; padding-bottom: 5px;">
+                <!-- MAGIC SPACER (Absorbs empty space and gives it to Signature) -->
+                <div class="spacer"></div>
+
+                <!-- SIGNATURE SECTION -->
+                <div class="signature-row">
                     <div style="border-top:1px solid #000; width:180px; text-align:center; padding-top: 4px; font-weight: bold; font-size: 11px;">Payer Signature</div>
                     <div style="border-top:1px solid #000; width:180px; text-align:center; padding-top: 4px; font-weight: bold; font-size: 11px;">Receiver Signature</div>
                 </div>
             </div>`;
 
-        // Cut Here Line (बीच में परफेक्ट मार्जिन के साथ)
+        // Cut Here Line (बीच का स्पेस)
         if (index === 0) {
-            contentHtml += `<div style="border-top: 1.5px dashed #666; margin: 15px 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -8px; font-size: 10px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
+            contentHtml += `<div style="border-top: 1.5px dashed #666; margin: 4mm 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -8px; font-size: 10px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
         }
     });
     
