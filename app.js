@@ -448,6 +448,18 @@ const printRecord = (data, type) => {
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
+    // Yahan maine print hone wale section ki height ko compress karne ke liye ek internal CSS joda hai.
+    // Isse lines ke beech ka gap kam ho jayega aur ek page me aaram se fit ho jayega.
+    contentHtml += `
+    <style>
+        @media print {
+            .print-grid { gap: 3px 8px !important; }
+            .print-row { padding-bottom: 1px !important; border-bottom: 1px dotted #ccc; font-size: 9.5px !important; }
+            .print-label { font-size: 9.5px !important; }
+        }
+    </style>
+    `;
+
     copiesArray.forEach((copy, index) => {
         let detailsHtml = "";
         if(type === 'invoice') {
@@ -526,8 +538,8 @@ const printRecord = (data, type) => {
                 </div>`;
         }
 
-        // TIGHT MARGINS FOR SIGNATURE TO ENSURE 1-PAGE FIT (30px gap for all)
-        let signatureMargin = '30px'; 
+        // BADA SIGNATURE SPACE (55px)
+        let signatureMargin = '55px'; 
 
         contentHtml += `
             <div class="print-copy" style="box-sizing: border-box; width: 100%; border:2px solid #000; padding:4px 10px; position:relative; overflow: hidden; page-break-inside: avoid;">
