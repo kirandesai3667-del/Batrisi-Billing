@@ -444,19 +444,27 @@ const printRecord = (data, type) => {
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
-    // --- 1 PAGE GUARANTEE CSS ---
+    // --- BORDER CUT FIX & 1 PAGE GUARANTEE CSS ---
+    // width: 96% and margin: 0 auto saves the border from getting cut
     contentHtml += `
     <style>
         @media print {
-            @page { size: letter portrait; margin: 4mm; } 
-            body, html { margin: 0; padding: 0; }
+            @page { size: letter portrait; margin: 8mm; } 
+            body, html { margin: 0; padding: 0; width: 100%; }
             
-            .print-copy {
+            #print-container {
                 width: 100%;
-                height: 118mm; /* Reduced Height to 1000% Fit in 1 Page with Browser Margins */
+                display: flex;
+                flex-direction: column;
+                align-items: center; /* Center the slips horizontally */
+            }
+
+            .print-copy {
+                width: 96%; /* Shrink width slightly so side borders won't cut */
+                height: 120mm; /* Safe height for Letter Page */
                 box-sizing: border-box;
                 border: 2px solid #000;
-                padding: 6px 12px;
+                padding: 6px 15px;
                 display: flex;
                 flex-direction: column;
                 page-break-inside: avoid;
@@ -478,7 +486,7 @@ const printRecord = (data, type) => {
             }
             .full-span { grid-column: span 2; }
             
-            /* Magic Spacer - Absorbs all empty vertical space so Signature doesn't stick to instructions */
+            /* Magic Spacer - Absorbs empty space so Signature gets space */
             .spacer { flex-grow: 1; }
             
             .signature-row {
@@ -553,11 +561,12 @@ const printRecord = (data, type) => {
 
         let footerNoteHtml = '';
         if(type === 'deposit') {
+            // Yaha par Point No. 3 mein aapka text <strong> tag ke saath BOLD kar diya gaya hai.
             footerNoteHtml = `<div style="margin-top:2px; width:100%;"><table style="width:100%; border-collapse: collapse; font-size: 9px; font-family: Arial, sans-serif; text-align: left;"><tbody>
                 <tr><td colspan="2" style="border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold; font-size: 9px; text-transform: uppercase;">Instructions</td></tr>
                 <tr><td style="border: 1px solid #000; padding: 1px 3px; width: 10px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 1px 3px;">The entire responsibility for vehicle management and parking shall lie solely with the host/booking organization. The Sanstha assumes no liability for parking-related issues.</td></tr>
                 <tr><td style="border: 1px solid #000; padding: 1px 3px; text-align: center; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 1px 3px;">For the final settlement and processing of refunds, it is mandatory to produce and submit the Original Deposit Receipt. No settlement will be processed without this document.</td></tr>
-                <tr><td style="border: 1px solid #000; padding: 1px 3px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 1px 3px;">As a mandatory requirement, the venue must be identified on all invitations exactly as: “Sheth Shri Hiralal Hargovandas Batrisi Hall.” Please note that the Sanstha reserves the right to levy a penalty for any non-compliance.</td></tr>
+                <tr><td style="border: 1px solid #000; padding: 1px 3px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 1px 3px;">As a mandatory requirement, the venue must be identified on all invitations exactly as: <strong>“Sheth Shri Hiralal Hargovandas Batrisi Hall.”</strong> Please note that the Sanstha reserves the right to levy a penalty for any non-compliance.</td></tr>
                 </tbody></table></div>`;
         } else if (type === 'donation') {
             footerNoteHtml = `
@@ -589,7 +598,7 @@ const printRecord = (data, type) => {
                 <div style="font-style:italic; font-size: 10.5px; margin-top: 1px; font-weight: 600;">In Words: ${data.words || '-'}</div>
                 ${footerNoteHtml}
 
-                <!-- MAGIC SPACER (Bina space bigade signature ko base par le aayega) -->
+                <!-- MAGIC SPACER -->
                 <div class="spacer"></div>
 
                 <!-- SIGNATURE SECTION -->
@@ -599,9 +608,9 @@ const printRecord = (data, type) => {
                 </div>
             </div>`;
 
-        // Cut Here Line (बीच का स्पेस)
+        // Cut Here Line
         if (index === 0) {
-            contentHtml += `<div style="border-top: 1.5px dashed #666; margin: 3mm 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -7px; font-size: 9px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
+            contentHtml += `<div style="width: 96%; border-top: 1.5px dashed #666; margin: 4mm auto; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -7px; font-size: 9px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
         }
     });
     
