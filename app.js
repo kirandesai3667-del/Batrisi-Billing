@@ -444,19 +444,19 @@ const printRecord = (data, type) => {
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
-    // --- 100% PERFECT LETTER PAGE CSS ---
+    // --- 1 PAGE GUARANTEE CSS ---
     contentHtml += `
     <style>
         @media print {
-            @page { size: letter portrait; margin: 5mm; } 
+            @page { size: letter portrait; margin: 4mm; } 
             body, html { margin: 0; padding: 0; }
             
             .print-copy {
                 width: 100%;
-                height: 128mm; /* Fixed Height to guarantee exactly 1 Page fit */
+                height: 118mm; /* Reduced Height to 1000% Fit in 1 Page with Browser Margins */
                 box-sizing: border-box;
                 border: 2px solid #000;
-                padding: 12px 18px;
+                padding: 6px 12px;
                 display: flex;
                 flex-direction: column;
                 page-break-inside: avoid;
@@ -464,29 +464,29 @@ const printRecord = (data, type) => {
             .print-grid { 
                 display: grid;
                 grid-template-columns: 1fr 1fr;
-                gap: 4px 15px !important; 
-                margin-bottom: 5px !important; 
+                gap: 2px 10px !important; 
+                margin-bottom: 2px !important; 
             }
             .print-row { 
-                padding-bottom: 2px !important; 
+                padding-bottom: 1px !important; 
                 border-bottom: 1px dotted #ccc; 
-                font-size: 11px !important; 
+                font-size: 10.5px !important; 
             }
             .print-label { 
-                font-size: 11px !important; 
+                font-size: 10.5px !important; 
                 font-weight: bold; 
             }
             .full-span { grid-column: span 2; }
             
-            /* Magic Spacer - This dynamically pushes the signature down, leaving an un-squished perfect gap */
+            /* Magic Spacer - Absorbs all empty vertical space so Signature doesn't stick to instructions */
             .spacer { flex-grow: 1; }
             
             .signature-row {
                 display: flex;
                 justify-content: space-between;
                 align-items: flex-end;
-                padding-top: 15px; /* Minimum space safety */
-                padding-bottom: 3px;
+                padding-top: 10px; 
+                padding-bottom: 2px;
             }
         }
     </style>
@@ -508,7 +508,7 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Pay Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
                 <div class="print-row"><span class="print-label">Cheque & Ref No.:</span> ${data.ref || '-'}</div>
                 <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
-                <div class="full-span" style="margin-top: 2px; border-top: 1px dotted #ccc; padding-top: 2px;"></div>
+                <div class="full-span" style="margin-top: 1px; border-top: 1px dotted #ccc; padding-top: 1px;"></div>
                 <div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${parseFloat(data.basic || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">CGST (0.9%):</span> ₹ ${parseFloat(data.cgst || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">SGST (0.9%):</span> ₹ ${parseFloat(data.sgst || 0).toFixed(2)}</div>
@@ -553,55 +553,55 @@ const printRecord = (data, type) => {
 
         let footerNoteHtml = '';
         if(type === 'deposit') {
-            footerNoteHtml = `<div style="margin-top:4px; width:100%;"><table style="width:100%; border-collapse: collapse; font-size: 9.5px; font-family: Arial, sans-serif; text-align: left;"><tbody>
-                <tr><td colspan="2" style="border: 1px solid #000; padding: 2px; text-align: center; font-weight: bold; font-size: 10px; text-transform: uppercase;">Instructions</td></tr>
-                <tr><td style="border: 1px solid #000; padding: 2px 4px; width: 12px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 2px 4px;">The entire responsibility for vehicle management and parking shall lie solely with the host/booking organization. The Sanstha assumes no liability for parking-related issues.</td></tr>
-                <tr><td style="border: 1px solid #000; padding: 2px 4px; text-align: center; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 2px 4px;">For the final settlement and processing of refunds, it is mandatory to produce and submit the Original Deposit Receipt. No settlement will be processed without this document.</td></tr>
-                <tr><td style="border: 1px solid #000; padding: 2px 4px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 2px 4px;">As a mandatory requirement, the venue must be identified on all invitations exactly as: “Sheth Shri Hiralal Hargovandas Batrisi Hall.” Please note that the Sanstha reserves the right to levy a penalty for any non-compliance.</td></tr>
+            footerNoteHtml = `<div style="margin-top:2px; width:100%;"><table style="width:100%; border-collapse: collapse; font-size: 9px; font-family: Arial, sans-serif; text-align: left;"><tbody>
+                <tr><td colspan="2" style="border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold; font-size: 9px; text-transform: uppercase;">Instructions</td></tr>
+                <tr><td style="border: 1px solid #000; padding: 1px 3px; width: 10px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 1px 3px;">The entire responsibility for vehicle management and parking shall lie solely with the host/booking organization. The Sanstha assumes no liability for parking-related issues.</td></tr>
+                <tr><td style="border: 1px solid #000; padding: 1px 3px; text-align: center; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 1px 3px;">For the final settlement and processing of refunds, it is mandatory to produce and submit the Original Deposit Receipt. No settlement will be processed without this document.</td></tr>
+                <tr><td style="border: 1px solid #000; padding: 1px 3px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 1px 3px;">As a mandatory requirement, the venue must be identified on all invitations exactly as: “Sheth Shri Hiralal Hargovandas Batrisi Hall.” Please note that the Sanstha reserves the right to levy a penalty for any non-compliance.</td></tr>
                 </tbody></table></div>`;
         } else if (type === 'donation') {
             footerNoteHtml = `
-                <div style="margin-top: 6px; border: 1px solid #000; padding: 6px; font-family: Arial, sans-serif; text-align: center; font-size: 10px; line-height: 1.3;">
+                <div style="margin-top: 4px; border: 1px solid #000; padding: 4px; font-family: Arial, sans-serif; text-align: center; font-size: 9px; line-height: 1.2;">
                     <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
                     DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOME TAX ACT 1961 (RENEWAL)<br>
-                    <strong style="display:block; margin-top: 4px;">Thank you for your generous donation. Your support is sincerely appreciated.</strong>
+                    <strong style="display:block; margin-top: 2px;">Thank you for your generous donation. Your support is sincerely appreciated.</strong>
                 </div>`;
         }
 
         contentHtml += `
             <div class="print-copy">
                 <!-- HEADER SECTION -->
-                <div style="position:relative; margin-bottom:6px;">
-                    <div style="position:absolute; top:0px; right:0px; border:1px solid #000; padding:2px 6px; font-weight: bold; font-size:11px;">${copy}</div>
-                    <img src="logo.png" style="width:50px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:8px;">
-                    <div style="padding-left: 60px; text-align:center; border-bottom:1px solid #000; padding-bottom:4px;">
-                        <h2 style="margin:0; font-size:16.5px; line-height: 1.2;">${orgName}</h2>
-                        <p style="margin:2px 0; font-size:10px; font-weight: bold;">${orgAddress}</p>
-                        <p style="margin:0; font-size:9.5px;">${orgDetailsLine1}</p>
-                        <p style="margin:0; font-size:9.5px;">${orgDetailsLine2}</p>
+                <div style="position:relative; margin-bottom:4px;">
+                    <div style="position:absolute; top:0px; right:0px; border:1px solid #000; padding:1px 5px; font-weight: bold; font-size:10.5px;">${copy}</div>
+                    <img src="logo.png" style="width:45px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:5px;">
+                    <div style="padding-left: 55px; text-align:center; border-bottom:1px solid #000; padding-bottom:2px;">
+                        <h2 style="margin:0; font-size:15.5px; line-height: 1.1;">${orgName}</h2>
+                        <p style="margin:1px 0; font-size:9.5px; font-weight: bold;">${orgAddress}</p>
+                        <p style="margin:0; font-size:9px;">${orgDetailsLine1}</p>
+                        <p style="margin:0; font-size:9px;">${orgDetailsLine2}</p>
                     </div>
                 </div>
 
-                <h3 style="text-align:center; text-decoration:underline; margin: 0 0 6px 0; font-size: 14px; font-weight:bold;">${title}</h3>
+                <h3 style="text-align:center; text-decoration:underline; margin: 0 0 4px 0; font-size: 13.5px; font-weight:bold;">${title}</h3>
 
-                <!-- MIDDLE CONTENT SECTION (No compression applied here, text stays readable) -->
+                <!-- MIDDLE CONTENT SECTION -->
                 ${detailsHtml}
-                <div style="font-style:italic; font-size: 11px; margin-top: 3px; font-weight: 600;">In Words: ${data.words || '-'}</div>
+                <div style="font-style:italic; font-size: 10.5px; margin-top: 1px; font-weight: 600;">In Words: ${data.words || '-'}</div>
                 ${footerNoteHtml}
 
-                <!-- MAGIC SPACER (Absorbs empty space and gives it to Signature) -->
+                <!-- MAGIC SPACER (Bina space bigade signature ko base par le aayega) -->
                 <div class="spacer"></div>
 
                 <!-- SIGNATURE SECTION -->
                 <div class="signature-row">
-                    <div style="border-top:1px solid #000; width:180px; text-align:center; padding-top: 4px; font-weight: bold; font-size: 11px;">Payer Signature</div>
-                    <div style="border-top:1px solid #000; width:180px; text-align:center; padding-top: 4px; font-weight: bold; font-size: 11px;">Receiver Signature</div>
+                    <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 3px; font-weight: bold; font-size: 11px;">Payer Signature</div>
+                    <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 3px; font-weight: bold; font-size: 11px;">Receiver Signature</div>
                 </div>
             </div>`;
 
         // Cut Here Line (बीच का स्पेस)
         if (index === 0) {
-            contentHtml += `<div style="border-top: 1.5px dashed #666; margin: 4mm 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -8px; font-size: 10px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
+            contentHtml += `<div style="border-top: 1.5px dashed #666; margin: 3mm 0; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -7px; font-size: 9px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
         }
     });
     
