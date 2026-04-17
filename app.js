@@ -82,9 +82,11 @@ window.fetchDepositForInvoice = async (nameVal) => {
             const d = docsList[0];
             if(document.getElementById('inv-dep-ref')) document.getElementById('inv-dep-ref').value = d.slipNo || '';
             if(document.getElementById('inv-dep-date')) document.getElementById('inv-dep-date').value = d.date || '';
+            if(document.getElementById('inv-dep-amount')) document.getElementById('inv-dep-amount').value = d.amount || '';
         } else {
             if(document.getElementById('inv-dep-ref')) document.getElementById('inv-dep-ref').value = '';
             if(document.getElementById('inv-dep-date')) document.getElementById('inv-dep-date').value = '';
+            if(document.getElementById('inv-dep-amount')) document.getElementById('inv-dep-amount').value = '';
         }
     } catch(err) { console.error("Error fetching deposit", err); }
 };
@@ -211,7 +213,11 @@ window.handleFormSubmit = async (e, type) => {
             data = { ...data, 
                 isMember: document.getElementById('inv-is-member') ? document.getElementById('inv-is-member').value : 'No',
                 member: document.getElementById('inv-member') ? document.getElementById('inv-member').value : '',
-                slipNo: document.getElementById('inv-slip').value, date: document.getElementById('inv-date').value, name: document.getElementById('inv-name').value, address: document.getElementById('inv-address').value, gst: document.getElementById('inv-gst').value, desc: document.getElementById('inv-desc-select').value === 'Other' ? document.getElementById('inv-desc-custom').value : document.getElementById('inv-desc-select').value, depRef: document.getElementById('inv-dep-ref').value, depDate: document.getElementById('inv-dep-date').value, basic: document.getElementById('inv-basic').value, cgst: document.getElementById('inv-cgst').value, sgst: document.getElementById('inv-sgst').value, round: document.getElementById('inv-round').value, total: document.getElementById('inv-total').value, words: document.getElementById('inv-words').value, payType: document.getElementById('inv-pay-type').value, payDate: document.getElementById('inv-pay-date').value, ref: document.getElementById('inv-ref').value, bank: document.getElementById('inv-bank').value,
+                slipNo: document.getElementById('inv-slip').value, date: document.getElementById('inv-date').value, name: document.getElementById('inv-name').value, address: document.getElementById('inv-address').value, gst: document.getElementById('inv-gst').value, desc: document.getElementById('inv-desc-select').value === 'Other' ? document.getElementById('inv-desc-custom').value : document.getElementById('inv-desc-select').value, 
+                depRef: document.getElementById('inv-dep-ref').value, 
+                depDate: document.getElementById('inv-dep-date').value, 
+                depAmount: document.getElementById('inv-dep-amount').value,
+                basic: document.getElementById('inv-basic').value, cgst: document.getElementById('inv-cgst').value, sgst: document.getElementById('inv-sgst').value, round: document.getElementById('inv-round').value, total: document.getElementById('inv-total').value, words: document.getElementById('inv-words').value, payType: document.getElementById('inv-pay-type').value, payDate: document.getElementById('inv-pay-date').value, ref: document.getElementById('inv-ref').value, bank: document.getElementById('inv-bank').value,
                 refundAmt: document.getElementById('inv-refund-amount').value, refundWords: document.getElementById('inv-refund-words').value };
         }
 
@@ -374,6 +380,7 @@ window.editRec = (id, type) => {
         
         document.getElementById('inv-dep-ref').value = data.depRef || '';
         document.getElementById('inv-dep-date').value = data.depDate || '';
+        document.getElementById('inv-dep-amount').value = data.depAmount || '';
         document.getElementById('inv-basic').value = data.basic || '';
         document.getElementById('inv-cgst').value = data.cgst || '';
         document.getElementById('inv-sgst').value = data.sgst || '';
@@ -513,23 +520,21 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Deposit Ref No:</span> ${data.depRef || '-'}</div>
                 <div class="print-row"><span class="print-label">Deposit Date:</span> ${window.formatDateIndian(data.depDate) || '-'}</div>
                 
+                <div class="print-row full-span"><span class="print-label">Deposit Amount:</span> <strong>₹ ${data.depAmount ? parseFloat(data.depAmount).toFixed(2) : '-'}</strong></div>
+                
                 <div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${parseFloat(data.basic || 0).toFixed(2)}</div>
-                <!-- UPDATED 9.0% TEXT BELOW -->
                 <div class="print-row"><span class="print-label">CGST (9.0%):</span> ₹ ${parseFloat(data.cgst || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">SGST (9.0%):</span> ₹ ${parseFloat(data.sgst || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">Round Off:</span> ₹ ${parseFloat(data.round || 0).toFixed(2)}</div>
                 <div class="print-row full-span" style="font-size: 1.15em;"><span class="print-label">Total Amount:</span> <strong>₹ ${parseFloat(data.total || 0).toFixed(2)}</strong></div>
-                <!-- FIRST IN WORDS: For Tax Total -->
                 <div class="print-row full-span" style="font-style:italic; font-size: 10.5px; font-weight: 600; border-bottom: none;">In Words: ${data.words || '-'}</div>
                 
-                <!-- NEW REFUND DETAILS SECTION -->
                 <div class="full-span" style="margin-top: 4px; font-weight: bold; font-size: 11.5px; border-bottom: 1px solid #000; padding-bottom: 2px; text-transform: uppercase;">Refund Details</div>
                 <div class="print-row"><span class="print-label">Payment Type:</span> ${data.payType || '-'}</div>
                 <div class="print-row"><span class="print-label">Payment Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
                 <div class="print-row"><span class="print-label">Cheque/Ref No.:</span> ${data.ref || '-'}</div>
                 <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
                 <div class="print-row full-span" style="font-size: 1.15em;"><span class="print-label">Refund Amount:</span> <strong>₹ ${parseFloat(data.refundAmt || 0).toFixed(2)}</strong></div>
-                <!-- SECOND IN WORDS: For Refund Amount -->
                 <div class="print-row full-span" style="font-style:italic; font-size: 10.5px; font-weight: 600; border-bottom: none;">In Words: ${data.refundWords || '-'}</div>
             </div>`;
         } else if (type === 'donation') {
