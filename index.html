@@ -286,15 +286,23 @@
             words += (str[5] != 0) ? ((words != '') ? 'and ' : '') + (a[Number(str[5])] || b[str[5][0]] + ' ' + a[str[5][1]]) : '';
             document.getElementById(targetId).value = words.trim() + " Rupees Only";
         }
+        
         function calcInvoice() {
             let basic = parseFloat(document.getElementById('inv-basic').value) || 0;
-            // UPDATE: Changed from 0.009 to 0.09 for accurate 9% calculation
-            let cgst = basic * 0.09; 
-            let sgst = basic * 0.09; 
-            let exactTotal = basic + cgst + sgst; let roundedTotal = Math.round(exactTotal);
-            document.getElementById('inv-cgst').value = cgst.toFixed(2); document.getElementById('inv-sgst').value = sgst.toFixed(2);
+            
+            // Fixed JS Decimal Math (Prevents values like 544.89999999)
+            let cgst = parseFloat((basic * 0.09).toFixed(2)); 
+            let sgst = parseFloat((basic * 0.09).toFixed(2)); 
+            
+            let exactTotal = basic + cgst + sgst; 
+            // Standard Rounding (0.50 & above rounds up to +1)
+            let roundedTotal = Math.round(exactTotal);
+            
+            document.getElementById('inv-cgst').value = cgst.toFixed(2); 
+            document.getElementById('inv-sgst').value = sgst.toFixed(2);
             document.getElementById('inv-total').value = roundedTotal.toFixed(2); 
             document.getElementById('inv-round').value = (roundedTotal - exactTotal).toFixed(2);
+            
             numToWords(roundedTotal, 'inv-words');
         }
 
