@@ -217,8 +217,11 @@ window.handleFormSubmit = async (e, type) => {
                 depRef: document.getElementById('inv-dep-ref').value, 
                 depDate: document.getElementById('inv-dep-date').value, 
                 depAmount: document.getElementById('inv-dep-amount').value,
-                basic: document.getElementById('inv-basic').value, cgst: document.getElementById('inv-cgst').value, sgst: document.getElementById('inv-sgst').value, round: document.getElementById('inv-round').value, total: document.getElementById('inv-total').value, words: document.getElementById('inv-words').value, payType: document.getElementById('inv-pay-type').value, payDate: document.getElementById('inv-pay-date').value, ref: document.getElementById('inv-ref').value, bank: document.getElementById('inv-bank').value,
-                refundAmt: document.getElementById('inv-refund-amount').value, refundWords: document.getElementById('inv-refund-words').value };
+                basic: document.getElementById('inv-basic').value, cgst: document.getElementById('inv-cgst').value, sgst: document.getElementById('inv-sgst').value, round: document.getElementById('inv-round').value, total: document.getElementById('inv-total').value, words: document.getElementById('inv-words').value, 
+                settlementType: document.getElementById('inv-settlement-type') ? document.getElementById('inv-settlement-type').value : 'Refund',
+                payType: document.getElementById('inv-pay-type').value, payDate: document.getElementById('inv-pay-date').value, ref: document.getElementById('inv-ref').value, bank: document.getElementById('inv-bank').value,
+                refundAmt: document.getElementById('inv-refund-amount').value, refundWords: document.getElementById('inv-refund-words').value,
+                recDepNo: document.getElementById('inv-rec-dep-no').value, recDepDate: document.getElementById('inv-rec-dep-date').value };
         }
 
         if(editId) { await updateDoc(doc(db, type, editId), data); document.getElementById(`${prefix}-edit-id`).value = ""; }
@@ -230,6 +233,7 @@ window.handleFormSubmit = async (e, type) => {
         if (type === 'invoice') {
             document.getElementById('inv-desc-custom').style.display = 'none';
             if(document.getElementById('inv-member-group')) document.getElementById('inv-member-group').style.display = 'none';
+            if(window.toggleInvSettlement) window.toggleInvSettlement();
         }
         
         setToday();
@@ -241,13 +245,15 @@ window.handleFormSubmit = async (e, type) => {
     finally { if(btn) { btn.innerHTML = `<i class="ri-printer-line"></i> Save & Print`; btn.disabled = false; } }
 };
 
-// --- LOAD, EDIT & DELETE RECORDS LOGIC ---
+// --- GLOBALS FOR FAST RENDERING & SEARCH ---
 window.allRecords = {};
+window.allRecordsList = [];
 
+// --- LOAD, SORT, & RENDER RECORDS LOGIC ---
 window.loadRecords = async () => {
     const type = document.getElementById('record-filter').value;
-    const thead = document.getElementById('records-head');
     const tbody = document.getElementById('records-body');
+    const thead = document.getElementById('records-head');
     
     if(type === 'deposit') {
         thead.innerHTML = `<tr><th>Slip No.</th><th>Name</th><th>Func. Date</th><th>Description</th><th>Shift</th><th>Amount</th><th>Actions</th></tr>`;
@@ -257,22 +263,43 @@ window.loadRecords = async () => {
 
     tbody.innerHTML = `<tr><td colspan='${type==='deposit'? 7 : 5}' style='text-align:center;'>Fetching...</td></tr>`;
     
-    const q = query(collection(db, type), orderBy("timestamp", "desc"));
+    const q = query(collection(db, type));
     const qs = await getDocs(q);
-    tbody.innerHTML = "";
     
-    if(qs.empty) { tbody.innerHTML = `<tr><td colspan='${type==='deposit'? 7 : 5}' style='text-align:center;'>No Data</td></tr>`; return; }
+    if(qs.empty) { tbody.innerHTML = `<tr><td colspan='${type==='deposit'? 7 : 5}' style='text-align:center;'>No Data</td></tr>`; window.allRecordsList = []; return; }
     
     window.allRecords = {};
+    window.allRecordsList = [];
+    
     qs.forEach((docSnap) => {
         let d = docSnap.data(); d.id = docSnap.id;
         window.allRecords[d.id] = d;
+        window.allRecordsList.push(d);
+    });
+    
+    // Sort Date-Wise Latest First
+    window.allRecordsList.sort((a, b) => {
+        let dateA = new Date(a.date || a.timestamp);
+        let dateB = new Date(b.date || b.timestamp);
+        return dateB - dateA;
+    });
+
+    window.renderTable(window.allRecordsList, type);
+};
+
+window.renderTable = (dataList, type) => {
+    const tbody = document.getElementById('records-body');
+    tbody.innerHTML = "";
+    if(!dataList || dataList.length === 0) {
+        tbody.innerHTML = `<tr><td colspan='${type==='deposit'? 7 : 5}' style='text-align:center;'>No Matching Data</td></tr>`; return;
+    }
+    
+    dataList.forEach(d => {
         let tr = document.createElement('tr');
-        
         if(type === 'deposit') {
             tr.innerHTML = `
-                <td><strong>${d.slipNo}</strong></td>
-                <td>${d.name}</td>
+                <td><strong>${d.slipNo || '-'}</strong></td>
+                <td>${d.name || '-'}</td>
                 <td style="color:#4F46E5; font-weight:600;">${window.formatDateIndian(d.funcDate) || '-'}</td>
                 <td>${d.funcName || '-'}</td>
                 <td>${d.funcShift || '-'}</td>
@@ -284,10 +311,10 @@ window.loadRecords = async () => {
                 </td>`;
         } else {
             tr.innerHTML = `
-                <td><strong>${d.slipNo}</strong></td>
-                <td>${window.formatDateIndian(d.date)}</td>
-                <td>${d.name}</td>
-                <td style="color:#10B981; font-weight:600;">₹${parseFloat(d.amount || d.total).toFixed(2)}</td>
+                <td><strong>${d.slipNo || '-'}</strong></td>
+                <td>${window.formatDateIndian(d.date) || '-'}</td>
+                <td>${d.name || '-'}</td>
+                <td style="color:#10B981; font-weight:600;">₹${parseFloat(d.amount || d.total || 0).toFixed(2)}</td>
                 <td>
                     <button class="btn-action btn-edit" onclick='editRec("${d.id}", "${type}")'><i class="ri-edit-line"></i></button>
                     <button class="btn-action btn-print" onclick='rePrint("${d.id}", "${type}")'><i class="ri-printer-line"></i></button>
@@ -296,6 +323,27 @@ window.loadRecords = async () => {
         }
         tbody.appendChild(tr);
     });
+};
+
+window.searchTable = () => {
+    let searchVal = document.getElementById('search-bar').value.toLowerCase().trim();
+    let type = document.getElementById('record-filter').value;
+    
+    if(!searchVal) {
+        window.renderTable(window.allRecordsList, type);
+        return;
+    }
+    
+    // Smart Search matching Name, Member No, Mobile, or Slip No
+    let filteredData = window.allRecordsList.filter(d => {
+        let nameMatch = (d.name || '').toLowerCase().includes(searchVal);
+        let memMatch = (d.member || '').toLowerCase().includes(searchVal);
+        let mobMatch = (d.mobile || '').toLowerCase().includes(searchVal);
+        let slipMatch = (d.slipNo || '').toLowerCase().includes(searchVal);
+        return nameMatch || memMatch || mobMatch || slipMatch;
+    });
+    
+    window.renderTable(filteredData, type);
 };
 
 window.editRec = (id, type) => {
@@ -387,12 +435,20 @@ window.editRec = (id, type) => {
         document.getElementById('inv-round').value = data.round || '';
         document.getElementById('inv-total').value = data.total || '';
         document.getElementById('inv-words').value = data.words || '';
+        
+        if(document.getElementById('inv-settlement-type')) {
+            document.getElementById('inv-settlement-type').value = data.settlementType || 'Refund';
+            if(window.toggleInvSettlement) window.toggleInvSettlement();
+        }
+        
         document.getElementById('inv-pay-type').value = data.payType || 'Cheque';
         document.getElementById('inv-pay-date').value = data.payDate || '';
         document.getElementById('inv-ref').value = data.ref || '';
         document.getElementById('inv-bank').value = data.bank || '';
         document.getElementById('inv-refund-amount').value = data.refundAmt || '';
         document.getElementById('inv-refund-words').value = data.refundWords || '';
+        document.getElementById('inv-rec-dep-no').value = data.recDepNo || '';
+        document.getElementById('inv-rec-dep-date').value = data.recDepDate || '';
     }
 
     const btn = document.getElementById(`btn-submit-${prefix}`);
@@ -510,6 +566,8 @@ const printRecord = (data, type) => {
         let detailsHtml = "";
         
         if(type === 'invoice') {
+            let isReceived = (data.settlementType === 'Received');
+            
             detailsHtml = `<div class="print-grid">
                 <div class="print-row"><span class="print-label">Invoice No:</span> ${data.slipNo}</div>
                 <div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div>
@@ -519,7 +577,6 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Description:</span> ${data.desc || '-'}</div>
                 <div class="print-row"><span class="print-label">Deposit Ref No:</span> ${data.depRef || '-'}</div>
                 <div class="print-row"><span class="print-label">Deposit Date:</span> ${window.formatDateIndian(data.depDate) || '-'}</div>
-                
                 <div class="print-row full-span"><span class="print-label">Deposit Amount:</span> <strong>₹ ${data.depAmount ? parseFloat(data.depAmount).toFixed(2) : '-'}</strong></div>
                 
                 <div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${parseFloat(data.basic || 0).toFixed(2)}</div>
@@ -529,14 +586,25 @@ const printRecord = (data, type) => {
                 <div class="print-row full-span" style="font-size: 1.15em;"><span class="print-label">Total Amount:</span> <strong>₹ ${parseFloat(data.total || 0).toFixed(2)}</strong></div>
                 <div class="print-row full-span" style="font-style:italic; font-size: 10.5px; font-weight: 600; border-bottom: none;">In Words: ${data.words || '-'}</div>
                 
-                <div class="full-span" style="margin-top: 4px; font-weight: bold; font-size: 11.5px; border-bottom: 1px solid #000; padding-bottom: 2px; text-transform: uppercase;">Refund Details</div>
+                <div class="full-span" style="margin-top: 4px; font-weight: bold; font-size: 11.5px; border-bottom: 1px solid #000; padding-bottom: 2px; text-transform: uppercase;">${isReceived ? 'RECEIVED DETAILS' : 'REFUND DETAILS'}</div>`;
+
+            if (isReceived) {
+                detailsHtml += `
+                <div class="print-row"><span class="print-label">Deposit Slip Number:</span> ${data.recDepNo || '-'}</div>
+                <div class="print-row"><span class="print-label">Deposit Date:</span> ${window.formatDateIndian(data.recDepDate) || '-'}</div>
+                `;
+            } else {
+                detailsHtml += `
                 <div class="print-row"><span class="print-label">Payment Type:</span> ${data.payType || '-'}</div>
                 <div class="print-row"><span class="print-label">Payment Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
                 <div class="print-row"><span class="print-label">Cheque/Ref No.:</span> ${data.ref || '-'}</div>
                 <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
-                <div class="print-row full-span" style="font-size: 1.15em;"><span class="print-label">Refund Amount:</span> <strong>₹ ${parseFloat(data.refundAmt || 0).toFixed(2)}</strong></div>
+                <div class="print-row full-span" style="font-size: 1.15em;"><span class="print-label">Refund Amount:</span> <strong>₹ ${data.refundAmt ? parseFloat(data.refundAmt).toFixed(2) : '-'}</strong></div>
                 <div class="print-row full-span" style="font-style:italic; font-size: 10.5px; font-weight: 600; border-bottom: none;">In Words: ${data.refundWords || '-'}</div>
-            </div>`;
+                `;
+            }
+            detailsHtml += `</div>`;
+            
         } else if (type === 'donation') {
             detailsHtml = `<div class="print-grid">
                 <div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div>
@@ -573,7 +641,6 @@ const printRecord = (data, type) => {
             </div>`;
         }
 
-        // Global "In Words" bottom placement for non-invoice slips only
         let globalInWordsHtml = '';
         if(type !== 'invoice') {
             globalInWordsHtml = `<div style="font-style:italic; font-size: 10.5px; margin-top: 1px; font-weight: 600;">In Words: ${data.words || '-'}</div>`;
@@ -598,7 +665,6 @@ const printRecord = (data, type) => {
 
         contentHtml += `
             <div class="print-copy">
-                <!-- HEADER SECTION -->
                 <div style="position:relative; margin-bottom:4px;">
                     <div style="position:absolute; top:0px; right:0px; border:1px solid #000; padding:1px 5px; font-weight: bold; font-size:10.5px;">${copy}</div>
                     <img src="logo.png" style="width:45px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:5px;">
@@ -612,30 +678,24 @@ const printRecord = (data, type) => {
 
                 <h3 style="text-align:center; text-decoration:underline; margin: 0 0 4px 0; font-size: 13.5px; font-weight:bold;">${title}</h3>
 
-                <!-- MIDDLE CONTENT SECTION -->
                 ${detailsHtml}
                 ${globalInWordsHtml}
                 ${footerNoteHtml}
 
-                <!-- MAGIC SPACER -->
                 <div class="spacer"></div>
 
-                <!-- SIGNATURE SECTION -->
                 <div class="signature-row">
                     <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 3px; font-weight: bold; font-size: 11px;">Payer Signature</div>
                     <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 3px; font-weight: bold; font-size: 11px;">Receiver Signature</div>
                 </div>
             </div>`;
 
-        // Cut Here Line
         if (index === 0) {
             contentHtml += `<div style="width: 96%; border-top: 1.5px dashed #666; margin: 4mm auto; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -7px; font-size: 9px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
         }
     });
     
     container.innerHTML = contentHtml;
-    
-    // Printing Action
     setTimeout(() => { window.print(); }, 500);
 };
 
