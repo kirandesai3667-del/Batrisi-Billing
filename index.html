@@ -187,6 +187,10 @@
                             </div>
                             <div class="input-group"><label>Deposit Slip Ref No.</label><input type="text" id="inv-dep-ref"></div>
                             <div class="input-group"><label>Deposit Slip Date</label><input type="date" id="inv-dep-date"></div>
+                            
+                            <!-- NEW DEPOSIT AMOUNT OPTION -->
+                            <div class="input-group"><label>Deposit Amount (₹)</label><input type="number" id="inv-dep-amount"></div>
+                            
                             <div class="input-group"><label>Basic Amount (₹)</label><input type="number" id="inv-basic" required oninput="calcInvoice()"></div>
                             <div class="input-group"><label>CGST (9.0%)</label><input type="number" id="inv-cgst" readonly class="tax-input"></div>
                             <div class="input-group"><label>SGST (9.0%)</label><input type="number" id="inv-sgst" readonly class="tax-input"></div>
@@ -290,12 +294,10 @@
         function calcInvoice() {
             let basic = parseFloat(document.getElementById('inv-basic').value) || 0;
             
-            // Fixed JS Decimal Math (Prevents values like 544.89999999)
             let cgst = parseFloat((basic * 0.09).toFixed(2)); 
             let sgst = parseFloat((basic * 0.09).toFixed(2)); 
             
             let exactTotal = basic + cgst + sgst; 
-            // Standard Rounding (0.50 & above rounds up to +1)
             let roundedTotal = Math.round(exactTotal);
             
             document.getElementById('inv-cgst').value = cgst.toFixed(2); 
