@@ -192,7 +192,7 @@
                             <div class="input-group"><label>SGST (0.9%)</label><input type="number" id="inv-sgst" readonly class="tax-input"></div>
                             <div class="input-group"><label>Round Off</label><input type="number" step="0.01" id="inv-round" readonly></div>
                             <div class="input-group"><label>Total Amount (₹)</label><input type="number" id="inv-total" readonly class="highlight-input total-input"></div>
-                            <div class="input-group"><label>In Words</label><input type="text" id="inv-words" readonly></div>
+                            <div class="input-group"><label>Tax In Words</label><input type="text" id="inv-words" readonly></div>
                             
                             <!-- REFUND DETAILS SECTION -->
                             <div class="section-title" style="grid-column: 1 / -1; font-size: 15px; font-weight: 700; color: #111827; margin-top: 10px; border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">Refund Details</div>
@@ -200,6 +200,8 @@
                             <div class="input-group"><label>Payment Date</label><input type="date" id="inv-pay-date"></div>
                             <div class="input-group"><label>Cheque No/Ref Number</label><input type="text" id="inv-ref"></div>
                             <div class="input-group"><label>Bank Name</label><input type="text" id="inv-bank"></div>
+                            <div class="input-group"><label>Refund Amount (₹)</label><input type="number" id="inv-refund-amount" required oninput="numToWords(this.value, 'inv-refund-words')"></div>
+                            <div class="input-group"><label>Refund In Words</label><input type="text" id="inv-refund-words" readonly class="highlight-input"></div>
                         </div>
                         <div class="form-actions"><button type="submit" class="btn-submit" id="btn-submit-inv"><i class="ri-printer-line"></i> Save & Print</button></div>
                     </form>
