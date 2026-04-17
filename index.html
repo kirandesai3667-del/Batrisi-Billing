@@ -185,10 +185,9 @@
                                 </select>
                                 <input type="text" id="inv-desc-custom" style="display:none; margin-top:8px;" placeholder="Custom description">
                             </div>
+                            
                             <div class="input-group"><label>Deposit Slip Ref No.</label><input type="text" id="inv-dep-ref"></div>
                             <div class="input-group"><label>Deposit Slip Date</label><input type="date" id="inv-dep-date"></div>
-                            
-                            <!-- NEW DEPOSIT AMOUNT OPTION -->
                             <div class="input-group"><label>Deposit Amount (₹)</label><input type="number" id="inv-dep-amount"></div>
                             
                             <div class="input-group"><label>Basic Amount (₹)</label><input type="number" id="inv-basic" required oninput="calcInvoice()"></div>
@@ -198,14 +197,26 @@
                             <div class="input-group"><label>Total Amount (₹)</label><input type="number" id="inv-total" readonly class="highlight-input total-input"></div>
                             <div class="input-group"><label>Tax In Words</label><input type="text" id="inv-words" readonly></div>
                             
-                            <!-- REFUND DETAILS SECTION -->
-                            <div class="section-title" style="grid-column: 1 / -1; font-size: 15px; font-weight: 700; color: #111827; margin-top: 10px; border-bottom: 2px solid var(--border-color); padding-bottom: 5px;">Refund Details</div>
-                            <div class="input-group"><label>Payment Type</label><select id="inv-pay-type" required><option value="Cheque">Cheque</option><option value="Online">Online</option></select></div>
-                            <div class="input-group"><label>Payment Date</label><input type="date" id="inv-pay-date"></div>
-                            <div class="input-group"><label>Cheque No/Ref Number</label><input type="text" id="inv-ref"></div>
-                            <div class="input-group"><label>Bank Name</label><input type="text" id="inv-bank"></div>
-                            <div class="input-group"><label>Refund Amount (₹)</label><input type="number" id="inv-refund-amount" required oninput="numToWords(this.value, 'inv-refund-words')"></div>
-                            <div class="input-group"><label>Refund In Words</label><input type="text" id="inv-refund-words" readonly class="highlight-input"></div>
+                            <!-- DYNAMIC SETTLEMENT DETAILS SECTION -->
+                            <div class="section-title" style="grid-column: 1 / -1; margin-top: 10px; border-bottom: 2px solid var(--border-color); padding-bottom: 5px; display: flex; align-items: center; gap: 15px;">
+                                <span style="font-size: 15px; font-weight: 700; color: #111827;">Settlement Details:</span>
+                                <select id="inv-settlement-type" onchange="toggleInvSettlement()" style="padding: 6px 12px; font-size: 13px; border-radius: 6px; border: 1px solid #D1D5DB; font-weight: 600; outline: none; cursor: pointer; background: #F9FAFB;">
+                                    <option value="Refund">Refund Details</option>
+                                    <option value="Received">Received Details</option>
+                                </select>
+                            </div>
+                            
+                            <!-- Refund Fields -->
+                            <div class="input-group refund-field"><label>Payment Type</label><select id="inv-pay-type" required><option value="Cheque">Cheque</option><option value="Online">Online</option></select></div>
+                            <div class="input-group refund-field"><label>Payment Date</label><input type="date" id="inv-pay-date"></div>
+                            <div class="input-group refund-field"><label>Cheque No/Ref Number</label><input type="text" id="inv-ref"></div>
+                            <div class="input-group refund-field"><label>Bank Name</label><input type="text" id="inv-bank"></div>
+                            <div class="input-group refund-field"><label>Refund Amount (₹)</label><input type="number" id="inv-refund-amount" required oninput="numToWords(this.value, 'inv-refund-words')"></div>
+                            <div class="input-group refund-field"><label>Refund In Words</label><input type="text" id="inv-refund-words" readonly class="highlight-input"></div>
+                            
+                            <!-- Received Fields -->
+                            <div class="input-group received-field" style="display:none;"><label>Deposit Slip Number</label><input type="text" id="inv-rec-dep-no"></div>
+                            <div class="input-group received-field" style="display:none;"><label>Deposit Date</label><input type="date" id="inv-rec-dep-date"></div>
                         </div>
                         <div class="form-actions"><button type="submit" class="btn-submit" id="btn-submit-inv"><i class="ri-printer-line"></i> Save & Print</button></div>
                     </form>
@@ -224,7 +235,7 @@
                                 <option value="invoice">Tax Invoices</option>
                             </select>
                             <button onclick="if(window.exportData) window.exportData()" class="btn-submit" style="padding: 10px 15px; font-size: 13px; margin: 0; background: #10B981;"><i class="ri-file-excel-2-line"></i> Download Data</button>
-                            <div class="search-box"><i class="ri-search-line"></i><input type="text" id="search-bar" placeholder="Search by name..." onkeyup="searchTable()"></div>
+                            <div class="search-box"><i class="ri-search-line"></i><input type="text" id="search-bar" placeholder="Search any Name, Slip, Mobile..." onkeyup="if(window.searchTable) window.searchTable()"></div>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -265,6 +276,19 @@
                 document.getElementById('inv-member').value = '';
             }
         }
+        
+        // --- NEW TOGGLE REFUND/RECEIVED LOGIC ---
+        function toggleInvSettlement() {
+            let type = document.getElementById('inv-settlement-type').value;
+            let isRefund = (type === 'Refund');
+            
+            document.querySelectorAll('.refund-field').forEach(el => el.style.display = isRefund ? 'flex' : 'none');
+            document.querySelectorAll('.received-field').forEach(el => el.style.display = !isRefund ? 'flex' : 'none');
+            
+            // Validation requirements toggle handle
+            document.getElementById('inv-pay-type').required = isRefund;
+            document.getElementById('inv-refund-amount').required = isRefund;
+        }
 
         async function fetchMemberForInvoice() {
             if(window.fetchMember) {
@@ -293,10 +317,8 @@
         
         function calcInvoice() {
             let basic = parseFloat(document.getElementById('inv-basic').value) || 0;
-            
             let cgst = parseFloat((basic * 0.09).toFixed(2)); 
             let sgst = parseFloat((basic * 0.09).toFixed(2)); 
-            
             let exactTotal = basic + cgst + sgst; 
             let roundedTotal = Math.round(exactTotal);
             
@@ -304,10 +326,10 @@
             document.getElementById('inv-sgst').value = sgst.toFixed(2);
             document.getElementById('inv-total').value = roundedTotal.toFixed(2); 
             document.getElementById('inv-round').value = (roundedTotal - exactTotal).toFixed(2);
-            
             numToWords(roundedTotal, 'inv-words');
         }
 
+        // AUTO-CAPITALIZE TEXT INPUTS
         document.addEventListener('input', function(e) {
             if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'text') {
                 if (e.target.id === 'login-user' || e.target.id === 'login-pass') return; 
