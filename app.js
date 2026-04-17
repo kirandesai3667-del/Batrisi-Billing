@@ -63,7 +63,6 @@ const generateSlipNo = async (type, targetId) => {
             if (docFy === fy && num > lastNum) lastNum = num;
         });
         const newNum = String(lastNum + 1).padStart(3, '0');
-        // UPDATE: Tax invoice now uses 'T/001/24-25' format
         const finalSlip = type === 'donation' ? `D/${newNum}/${fy}` : type === 'invoice' ? `T/${newNum}/${fy}` : `${newNum}/${fy}`;
         if(document.getElementById(targetId)) document.getElementById(targetId).value = finalSlip;
     } catch(err) { console.error("Slip Gen Error:", err); }
@@ -212,7 +211,8 @@ window.handleFormSubmit = async (e, type) => {
             data = { ...data, 
                 isMember: document.getElementById('inv-is-member') ? document.getElementById('inv-is-member').value : 'No',
                 member: document.getElementById('inv-member') ? document.getElementById('inv-member').value : '',
-                slipNo: document.getElementById('inv-slip').value, date: document.getElementById('inv-date').value, name: document.getElementById('inv-name').value, address: document.getElementById('inv-address').value, gst: document.getElementById('inv-gst').value, desc: document.getElementById('inv-desc-select').value === 'Other' ? document.getElementById('inv-desc-custom').value : document.getElementById('inv-desc-select').value, depRef: document.getElementById('inv-dep-ref').value, depDate: document.getElementById('inv-dep-date').value, basic: document.getElementById('inv-basic').value, cgst: document.getElementById('inv-cgst').value, sgst: document.getElementById('inv-sgst').value, round: document.getElementById('inv-round').value, total: document.getElementById('inv-total').value, words: document.getElementById('inv-words').value, payType: document.getElementById('inv-pay-type').value, payDate: document.getElementById('inv-pay-date').value, ref: document.getElementById('inv-ref').value, bank: document.getElementById('inv-bank').value };
+                slipNo: document.getElementById('inv-slip').value, date: document.getElementById('inv-date').value, name: document.getElementById('inv-name').value, address: document.getElementById('inv-address').value, gst: document.getElementById('inv-gst').value, desc: document.getElementById('inv-desc-select').value === 'Other' ? document.getElementById('inv-desc-custom').value : document.getElementById('inv-desc-select').value, depRef: document.getElementById('inv-dep-ref').value, depDate: document.getElementById('inv-dep-date').value, basic: document.getElementById('inv-basic').value, cgst: document.getElementById('inv-cgst').value, sgst: document.getElementById('inv-sgst').value, round: document.getElementById('inv-round').value, total: document.getElementById('inv-total').value, words: document.getElementById('inv-words').value, payType: document.getElementById('inv-pay-type').value, payDate: document.getElementById('inv-pay-date').value, ref: document.getElementById('inv-ref').value, bank: document.getElementById('inv-bank').value,
+                refundAmt: document.getElementById('inv-refund-amount').value, refundWords: document.getElementById('inv-refund-words').value };
         }
 
         if(editId) { await updateDoc(doc(db, type, editId), data); document.getElementById(`${prefix}-edit-id`).value = ""; }
@@ -243,7 +243,6 @@ window.loadRecords = async () => {
     const thead = document.getElementById('records-head');
     const tbody = document.getElementById('records-body');
     
-    // Dynamic Table Header based on Selection (Updated Function Type to Description)
     if(type === 'deposit') {
         thead.innerHTML = `<tr><th>Slip No.</th><th>Name</th><th>Func. Date</th><th>Description</th><th>Shift</th><th>Amount</th><th>Actions</th></tr>`;
     } else {
@@ -385,6 +384,8 @@ window.editRec = (id, type) => {
         document.getElementById('inv-pay-date').value = data.payDate || '';
         document.getElementById('inv-ref').value = data.ref || '';
         document.getElementById('inv-bank').value = data.bank || '';
+        document.getElementById('inv-refund-amount').value = data.refundAmt || '';
+        document.getElementById('inv-refund-words').value = data.refundWords || '';
     }
 
     const btn = document.getElementById(`btn-submit-${prefix}`);
@@ -500,6 +501,7 @@ const printRecord = (data, type) => {
 
     copiesArray.forEach((copy, index) => {
         let detailsHtml = "";
+        
         if(type === 'invoice') {
             detailsHtml = `<div class="print-grid">
                 <div class="print-row"><span class="print-label">Invoice No:</span> ${data.slipNo}</div>
@@ -511,12 +513,13 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Deposit Ref No:</span> ${data.depRef || '-'}</div>
                 <div class="print-row"><span class="print-label">Deposit Date:</span> ${window.formatDateIndian(data.depDate) || '-'}</div>
                 
-                <div class="full-span" style="margin-top: 1px; border-top: 1px dotted #ccc; padding-top: 1px;"></div>
                 <div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${parseFloat(data.basic || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">CGST (0.9%):</span> ₹ ${parseFloat(data.cgst || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">SGST (0.9%):</span> ₹ ${parseFloat(data.sgst || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">Round Off:</span> ₹ ${parseFloat(data.round || 0).toFixed(2)}</div>
                 <div class="print-row full-span" style="font-size: 1.15em;"><span class="print-label">Total Amount:</span> <strong>₹ ${parseFloat(data.total || 0).toFixed(2)}</strong></div>
+                <!-- FIRST IN WORDS: For Tax Total -->
+                <div class="print-row full-span" style="font-style:italic; font-size: 10.5px; font-weight: 600; border-bottom: none;">In Words: ${data.words || '-'}</div>
                 
                 <!-- NEW REFUND DETAILS SECTION -->
                 <div class="full-span" style="margin-top: 4px; font-weight: bold; font-size: 11.5px; border-bottom: 1px solid #000; padding-bottom: 2px; text-transform: uppercase;">Refund Details</div>
@@ -524,6 +527,9 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Payment Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
                 <div class="print-row"><span class="print-label">Cheque/Ref No.:</span> ${data.ref || '-'}</div>
                 <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
+                <div class="print-row full-span" style="font-size: 1.15em;"><span class="print-label">Refund Amount:</span> <strong>₹ ${parseFloat(data.refundAmt || 0).toFixed(2)}</strong></div>
+                <!-- SECOND IN WORDS: For Refund Amount -->
+                <div class="print-row full-span" style="font-style:italic; font-size: 10.5px; font-weight: 600; border-bottom: none;">In Words: ${data.refundWords || '-'}</div>
             </div>`;
         } else if (type === 'donation') {
             detailsHtml = `<div class="print-grid">
@@ -550,7 +556,6 @@ const printRecord = (data, type) => {
                 <div class="print-row full-span"><span class="print-label">Address:</span> <span style="word-break: break-word;">${data.address || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div>
                 <div class="print-row"><span class="print-label">Native:</span> ${data.native || '-'}</div>
-                <!-- Updated label to Description -->
                 <div class="print-row"><span class="print-label">Description:</span> ${data.funcName || '-'}</div>
                 <div class="print-row"><span class="print-label">Function Date:</span> ${window.formatDateIndian(data.funcDate) || '-'}</div>
                 <div class="print-row"><span class="print-label">Function Shift:</span> ${data.funcShift || '-'}</div>
@@ -560,6 +565,12 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
                 <div class="print-row full-span" style="font-size: 1.15em;"><span class="print-label">Amount:</span> <strong>₹ ${parseFloat(data.amount || 0).toFixed(2)}</strong></div>
             </div>`;
+        }
+
+        // Global "In Words" bottom placement for non-invoice slips only
+        let globalInWordsHtml = '';
+        if(type !== 'invoice') {
+            globalInWordsHtml = `<div style="font-style:italic; font-size: 10.5px; margin-top: 1px; font-weight: 600;">In Words: ${data.words || '-'}</div>`;
         }
 
         let footerNoteHtml = '';
@@ -597,7 +608,7 @@ const printRecord = (data, type) => {
 
                 <!-- MIDDLE CONTENT SECTION -->
                 ${detailsHtml}
-                <div style="font-style:italic; font-size: 10.5px; margin-top: 1px; font-weight: 600;">In Words: ${data.words || '-'}</div>
+                ${globalInWordsHtml}
                 ${footerNoteHtml}
 
                 <!-- MAGIC SPACER -->
