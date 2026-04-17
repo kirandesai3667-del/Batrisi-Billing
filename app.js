@@ -514,8 +514,9 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Deposit Date:</span> ${window.formatDateIndian(data.depDate) || '-'}</div>
                 
                 <div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${parseFloat(data.basic || 0).toFixed(2)}</div>
-                <div class="print-row"><span class="print-label">CGST (0.9%):</span> ₹ ${parseFloat(data.cgst || 0).toFixed(2)}</div>
-                <div class="print-row"><span class="print-label">SGST (0.9%):</span> ₹ ${parseFloat(data.sgst || 0).toFixed(2)}</div>
+                <!-- UPDATED 9.0% TEXT BELOW -->
+                <div class="print-row"><span class="print-label">CGST (9.0%):</span> ₹ ${parseFloat(data.cgst || 0).toFixed(2)}</div>
+                <div class="print-row"><span class="print-label">SGST (9.0%):</span> ₹ ${parseFloat(data.sgst || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">Round Off:</span> ₹ ${parseFloat(data.round || 0).toFixed(2)}</div>
                 <div class="print-row full-span" style="font-size: 1.15em;"><span class="print-label">Total Amount:</span> <strong>₹ ${parseFloat(data.total || 0).toFixed(2)}</strong></div>
                 <!-- FIRST IN WORDS: For Tax Total -->
