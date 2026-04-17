@@ -206,17 +206,21 @@
                                 </select>
                             </div>
                             
-                            <!-- Refund Fields -->
-                            <div class="input-group refund-field"><label>Payment Type</label><select id="inv-pay-type" required><option value="Cheque">Cheque</option><option value="Online">Online</option></select></div>
-                            <div class="input-group refund-field"><label>Payment Date</label><input type="date" id="inv-pay-date"></div>
-                            <div class="input-group refund-field"><label>Cheque No/Ref Number</label><input type="text" id="inv-ref"></div>
-                            <div class="input-group refund-field"><label>Bank Name</label><input type="text" id="inv-bank"></div>
+                            <!-- Shared Payment Info for both Refund & Received -->
+                            <div class="input-group"><label>Payment Type</label><select id="inv-pay-type" required><option value="Cheque">Cheque</option><option value="Online">Online</option></select></div>
+                            <div class="input-group"><label>Payment Date</label><input type="date" id="inv-pay-date"></div>
+                            <div class="input-group"><label>Cheque No/Ref Number</label><input type="text" id="inv-ref"></div>
+                            <div class="input-group"><label>Bank Name</label><input type="text" id="inv-bank"></div>
+                            
+                            <!-- Refund Amount Fields -->
                             <div class="input-group refund-field"><label>Refund Amount (₹)</label><input type="number" id="inv-refund-amount" required oninput="numToWords(this.value, 'inv-refund-words')"></div>
                             <div class="input-group refund-field"><label>Refund In Words</label><input type="text" id="inv-refund-words" readonly class="highlight-input"></div>
                             
                             <!-- Received Fields -->
                             <div class="input-group received-field" style="display:none;"><label>Deposit Slip Number</label><input type="text" id="inv-rec-dep-no"></div>
                             <div class="input-group received-field" style="display:none;"><label>Deposit Date</label><input type="date" id="inv-rec-dep-date"></div>
+                            <div class="input-group received-field" style="display:none;"><label>Received Amount (₹)</label><input type="number" id="inv-received-amount" oninput="numToWords(this.value, 'inv-received-words')"></div>
+                            <div class="input-group received-field" style="display:none;"><label>Received In Words</label><input type="text" id="inv-received-words" readonly class="highlight-input"></div>
                         </div>
                         <div class="form-actions"><button type="submit" class="btn-submit" id="btn-submit-inv"><i class="ri-printer-line"></i> Save & Print</button></div>
                     </form>
@@ -277,7 +281,7 @@
             }
         }
         
-        // --- NEW TOGGLE REFUND/RECEIVED LOGIC ---
+        // Toggle Refund vs Received inputs and validations
         function toggleInvSettlement() {
             let type = document.getElementById('inv-settlement-type').value;
             let isRefund = (type === 'Refund');
@@ -285,9 +289,8 @@
             document.querySelectorAll('.refund-field').forEach(el => el.style.display = isRefund ? 'flex' : 'none');
             document.querySelectorAll('.received-field').forEach(el => el.style.display = !isRefund ? 'flex' : 'none');
             
-            // Validation requirements toggle handle
-            document.getElementById('inv-pay-type').required = isRefund;
             document.getElementById('inv-refund-amount').required = isRefund;
+            document.getElementById('inv-received-amount').required = !isRefund;
         }
 
         async function fetchMemberForInvoice() {
@@ -329,7 +332,6 @@
             numToWords(roundedTotal, 'inv-words');
         }
 
-        // AUTO-CAPITALIZE TEXT INPUTS
         document.addEventListener('input', function(e) {
             if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'text') {
                 if (e.target.id === 'login-user' || e.target.id === 'login-pass') return; 
