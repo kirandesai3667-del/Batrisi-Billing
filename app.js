@@ -221,7 +221,8 @@ window.handleFormSubmit = async (e, type) => {
                 settlementType: document.getElementById('inv-settlement-type') ? document.getElementById('inv-settlement-type').value : 'Refund',
                 payType: document.getElementById('inv-pay-type').value, payDate: document.getElementById('inv-pay-date').value, ref: document.getElementById('inv-ref').value, bank: document.getElementById('inv-bank').value,
                 refundAmt: document.getElementById('inv-refund-amount').value, refundWords: document.getElementById('inv-refund-words').value,
-                recDepNo: document.getElementById('inv-rec-dep-no').value, recDepDate: document.getElementById('inv-rec-dep-date').value };
+                recDepNo: document.getElementById('inv-rec-dep-no').value, recDepDate: document.getElementById('inv-rec-dep-date').value,
+                receivedAmt: document.getElementById('inv-received-amount').value, receivedWords: document.getElementById('inv-received-words').value };
         }
 
         if(editId) { await updateDoc(doc(db, type, editId), data); document.getElementById(`${prefix}-edit-id`).value = ""; }
@@ -334,7 +335,6 @@ window.searchTable = () => {
         return;
     }
     
-    // Smart Search matching Name, Member No, Mobile, or Slip No
     let filteredData = window.allRecordsList.filter(d => {
         let nameMatch = (d.name || '').toLowerCase().includes(searchVal);
         let memMatch = (d.member || '').toLowerCase().includes(searchVal);
@@ -449,6 +449,8 @@ window.editRec = (id, type) => {
         document.getElementById('inv-refund-words').value = data.refundWords || '';
         document.getElementById('inv-rec-dep-no').value = data.recDepNo || '';
         document.getElementById('inv-rec-dep-date').value = data.recDepDate || '';
+        document.getElementById('inv-received-amount').value = data.receivedAmt || '';
+        document.getElementById('inv-received-words').value = data.receivedWords || '';
     }
 
     const btn = document.getElementById(`btn-submit-${prefix}`);
@@ -592,6 +594,12 @@ const printRecord = (data, type) => {
                 detailsHtml += `
                 <div class="print-row"><span class="print-label">Deposit Slip Number:</span> ${data.recDepNo || '-'}</div>
                 <div class="print-row"><span class="print-label">Deposit Date:</span> ${window.formatDateIndian(data.recDepDate) || '-'}</div>
+                <div class="print-row"><span class="print-label">Payment Type:</span> ${data.payType || '-'}</div>
+                <div class="print-row"><span class="print-label">Payment Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
+                <div class="print-row"><span class="print-label">Cheque/Ref No.:</span> ${data.ref || '-'}</div>
+                <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
+                <div class="print-row full-span" style="font-size: 1.15em;"><span class="print-label">Received Amount:</span> <strong>₹ ${data.receivedAmt ? parseFloat(data.receivedAmt).toFixed(2) : '-'}</strong></div>
+                <div class="print-row full-span" style="font-style:italic; font-size: 10.5px; font-weight: 600; border-bottom: none;">In Words: ${data.receivedWords || '-'}</div>
                 `;
             } else {
                 detailsHtml += `
