@@ -188,8 +188,8 @@
                             <div class="input-group"><label>Deposit Slip Ref No.</label><input type="text" id="inv-dep-ref"></div>
                             <div class="input-group"><label>Deposit Slip Date</label><input type="date" id="inv-dep-date"></div>
                             <div class="input-group"><label>Basic Amount (₹)</label><input type="number" id="inv-basic" required oninput="calcInvoice()"></div>
-                            <div class="input-group"><label>CGST (0.9%)</label><input type="number" id="inv-cgst" readonly class="tax-input"></div>
-                            <div class="input-group"><label>SGST (0.9%)</label><input type="number" id="inv-sgst" readonly class="tax-input"></div>
+                            <div class="input-group"><label>CGST (9.0%)</label><input type="number" id="inv-cgst" readonly class="tax-input"></div>
+                            <div class="input-group"><label>SGST (9.0%)</label><input type="number" id="inv-sgst" readonly class="tax-input"></div>
                             <div class="input-group"><label>Round Off</label><input type="number" step="0.01" id="inv-round" readonly></div>
                             <div class="input-group"><label>Total Amount (₹)</label><input type="number" id="inv-total" readonly class="highlight-input total-input"></div>
                             <div class="input-group"><label>Tax In Words</label><input type="text" id="inv-words" readonly></div>
@@ -288,7 +288,9 @@
         }
         function calcInvoice() {
             let basic = parseFloat(document.getElementById('inv-basic').value) || 0;
-            let cgst = basic * 0.009; let sgst = basic * 0.009; 
+            // UPDATE: Changed from 0.009 to 0.09 for accurate 9% calculation
+            let cgst = basic * 0.09; 
+            let sgst = basic * 0.09; 
             let exactTotal = basic + cgst + sgst; let roundedTotal = Math.round(exactTotal);
             document.getElementById('inv-cgst').value = cgst.toFixed(2); document.getElementById('inv-sgst').value = sgst.toFixed(2);
             document.getElementById('inv-total').value = roundedTotal.toFixed(2); 
