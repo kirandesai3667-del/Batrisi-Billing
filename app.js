@@ -445,7 +445,6 @@ const printRecord = (data, type) => {
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
     // --- BORDER CUT FIX & 1 PAGE GUARANTEE CSS ---
-    // width: 96% and margin: 0 auto saves the border from getting cut
     contentHtml += `
     <style>
         @media print {
@@ -456,12 +455,12 @@ const printRecord = (data, type) => {
                 width: 100%;
                 display: flex;
                 flex-direction: column;
-                align-items: center; /* Center the slips horizontally */
+                align-items: center;
             }
 
             .print-copy {
-                width: 96%; /* Shrink width slightly so side borders won't cut */
-                height: 120mm; /* Safe height for Letter Page */
+                width: 96%;
+                height: 120mm;
                 box-sizing: border-box;
                 border: 2px solid #000;
                 padding: 6px 15px;
@@ -485,8 +484,6 @@ const printRecord = (data, type) => {
                 font-weight: bold; 
             }
             .full-span { grid-column: span 2; }
-            
-            /* Magic Spacer - Absorbs empty space so Signature gets space */
             .spacer { flex-grow: 1; }
             
             .signature-row {
@@ -516,7 +513,7 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Pay Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
                 <div class="print-row"><span class="print-label">Cheque & Ref No.:</span> ${data.ref || '-'}</div>
                 <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
-                <div class="full-span" style="margin-top: 1px; border-top: 1px dotted #ccc; padding-top: 1px;"></div>
+                
                 <div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${parseFloat(data.basic || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">CGST (9.0%):</span> ₹ ${parseFloat(data.cgst || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">SGST (9.0%):</span> ₹ ${parseFloat(data.sgst || 0).toFixed(2)}</div>
@@ -561,7 +558,6 @@ const printRecord = (data, type) => {
 
         let footerNoteHtml = '';
         if(type === 'deposit') {
-            // Yaha par Point No. 3 mein aapka text <strong> tag ke saath BOLD kar diya gaya hai.
             footerNoteHtml = `<div style="margin-top:2px; width:100%;"><table style="width:100%; border-collapse: collapse; font-size: 9px; font-family: Arial, sans-serif; text-align: left;"><tbody>
                 <tr><td colspan="2" style="border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold; font-size: 9px; text-transform: uppercase;">Instructions</td></tr>
                 <tr><td style="border: 1px solid #000; padding: 1px 3px; width: 10px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 1px 3px;">The entire responsibility for vehicle management and parking shall lie solely with the host/booking organization. The Sanstha assumes no liability for parking-related issues.</td></tr>
@@ -598,7 +594,6 @@ const printRecord = (data, type) => {
                 <div style="font-style:italic; font-size: 10.5px; margin-top: 1px; font-weight: 600;">In Words: ${data.words || '-'}</div>
                 ${footerNoteHtml}
 
-                <!-- MAGIC SPACER -->
                 <div class="spacer"></div>
 
                 <!-- SIGNATURE SECTION -->
@@ -608,7 +603,6 @@ const printRecord = (data, type) => {
                 </div>
             </div>`;
 
-        // Cut Here Line
         if (index === 0) {
             contentHtml += `<div style="width: 96%; border-top: 1.5px dashed #666; margin: 4mm auto; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -7px; font-size: 9px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
         }
@@ -616,7 +610,6 @@ const printRecord = (data, type) => {
     
     container.innerHTML = contentHtml;
     
-    // Printing Action
     setTimeout(() => { window.print(); }, 500);
 };
 
