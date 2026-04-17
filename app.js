@@ -63,7 +63,8 @@ const generateSlipNo = async (type, targetId) => {
             if (docFy === fy && num > lastNum) lastNum = num;
         });
         const newNum = String(lastNum + 1).padStart(3, '0');
-        const finalSlip = type === 'donation' ? `D/${newNum}/${fy}` : `${newNum}/${fy}`;
+        // UPDATE: Tax invoice now uses 'T/001/24-25' format
+        const finalSlip = type === 'donation' ? `D/${newNum}/${fy}` : type === 'invoice' ? `T/${newNum}/${fy}` : `${newNum}/${fy}`;
         if(document.getElementById(targetId)) document.getElementById(targetId).value = finalSlip;
     } catch(err) { console.error("Slip Gen Error:", err); }
 };
@@ -242,9 +243,9 @@ window.loadRecords = async () => {
     const thead = document.getElementById('records-head');
     const tbody = document.getElementById('records-body');
     
-    // Dynamic Table Header based on Selection
+    // Dynamic Table Header based on Selection (Updated Function Type to Description)
     if(type === 'deposit') {
-        thead.innerHTML = `<tr><th>Slip No.</th><th>Name</th><th>Func. Date</th><th>Func. Type</th><th>Shift</th><th>Amount</th><th>Actions</th></tr>`;
+        thead.innerHTML = `<tr><th>Slip No.</th><th>Name</th><th>Func. Date</th><th>Description</th><th>Shift</th><th>Amount</th><th>Actions</th></tr>`;
     } else {
         thead.innerHTML = `<tr><th>Slip No.</th><th>Date</th><th>Name</th><th>Amount</th><th>Actions</th></tr>`;
     }
@@ -444,7 +445,6 @@ const printRecord = (data, type) => {
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
-    // --- BORDER CUT FIX & 1 PAGE GUARANTEE CSS ---
     contentHtml += `
     <style>
         @media print {
@@ -459,8 +459,8 @@ const printRecord = (data, type) => {
             }
 
             .print-copy {
-                width: 96%;
-                height: 120mm;
+                width: 96%; 
+                height: 120mm; 
                 box-sizing: border-box;
                 border: 2px solid #000;
                 padding: 6px 15px;
@@ -484,6 +484,7 @@ const printRecord = (data, type) => {
                 font-weight: bold; 
             }
             .full-span { grid-column: span 2; }
+            
             .spacer { flex-grow: 1; }
             
             .signature-row {
@@ -509,16 +510,20 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Description:</span> ${data.desc || '-'}</div>
                 <div class="print-row"><span class="print-label">Deposit Ref No:</span> ${data.depRef || '-'}</div>
                 <div class="print-row"><span class="print-label">Deposit Date:</span> ${window.formatDateIndian(data.depDate) || '-'}</div>
-                <div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType || '-'}</div>
-                <div class="print-row"><span class="print-label">Pay Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
-                <div class="print-row"><span class="print-label">Cheque & Ref No.:</span> ${data.ref || '-'}</div>
-                <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
                 
+                <div class="full-span" style="margin-top: 1px; border-top: 1px dotted #ccc; padding-top: 1px;"></div>
                 <div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${parseFloat(data.basic || 0).toFixed(2)}</div>
-                <div class="print-row"><span class="print-label">CGST (9.0%):</span> ₹ ${parseFloat(data.cgst || 0).toFixed(2)}</div>
-                <div class="print-row"><span class="print-label">SGST (9.0%):</span> ₹ ${parseFloat(data.sgst || 0).toFixed(2)}</div>
+                <div class="print-row"><span class="print-label">CGST (0.9%):</span> ₹ ${parseFloat(data.cgst || 0).toFixed(2)}</div>
+                <div class="print-row"><span class="print-label">SGST (0.9%):</span> ₹ ${parseFloat(data.sgst || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">Round Off:</span> ₹ ${parseFloat(data.round || 0).toFixed(2)}</div>
                 <div class="print-row full-span" style="font-size: 1.15em;"><span class="print-label">Total Amount:</span> <strong>₹ ${parseFloat(data.total || 0).toFixed(2)}</strong></div>
+                
+                <!-- NEW REFUND DETAILS SECTION -->
+                <div class="full-span" style="margin-top: 4px; font-weight: bold; font-size: 11.5px; border-bottom: 1px solid #000; padding-bottom: 2px; text-transform: uppercase;">Refund Details</div>
+                <div class="print-row"><span class="print-label">Payment Type:</span> ${data.payType || '-'}</div>
+                <div class="print-row"><span class="print-label">Payment Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
+                <div class="print-row"><span class="print-label">Cheque/Ref No.:</span> ${data.ref || '-'}</div>
+                <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
             </div>`;
         } else if (type === 'donation') {
             detailsHtml = `<div class="print-grid">
@@ -545,7 +550,8 @@ const printRecord = (data, type) => {
                 <div class="print-row full-span"><span class="print-label">Address:</span> <span style="word-break: break-word;">${data.address || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div>
                 <div class="print-row"><span class="print-label">Native:</span> ${data.native || '-'}</div>
-                <div class="print-row"><span class="print-label">Function Type:</span> ${data.funcName || '-'}</div>
+                <!-- Updated label to Description -->
+                <div class="print-row"><span class="print-label">Description:</span> ${data.funcName || '-'}</div>
                 <div class="print-row"><span class="print-label">Function Date:</span> ${window.formatDateIndian(data.funcDate) || '-'}</div>
                 <div class="print-row"><span class="print-label">Function Shift:</span> ${data.funcShift || '-'}</div>
                 <div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType}</div>
@@ -594,6 +600,7 @@ const printRecord = (data, type) => {
                 <div style="font-style:italic; font-size: 10.5px; margin-top: 1px; font-weight: 600;">In Words: ${data.words || '-'}</div>
                 ${footerNoteHtml}
 
+                <!-- MAGIC SPACER -->
                 <div class="spacer"></div>
 
                 <!-- SIGNATURE SECTION -->
@@ -603,6 +610,7 @@ const printRecord = (data, type) => {
                 </div>
             </div>`;
 
+        // Cut Here Line
         if (index === 0) {
             contentHtml += `<div style="width: 96%; border-top: 1.5px dashed #666; margin: 4mm auto; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -7px; font-size: 9px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
         }
@@ -610,6 +618,7 @@ const printRecord = (data, type) => {
     
     container.innerHTML = contentHtml;
     
+    // Printing Action
     setTimeout(() => { window.print(); }, 500);
 };
 
