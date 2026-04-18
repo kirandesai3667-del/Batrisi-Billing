@@ -3,252 +3,394 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shree Batrisi Jain Co-Op Education Society Ltd</title>
-    <link rel="stylesheet" href="style.css">
+    <title>Shree Batrisi Jain Society - Admin Panel</title>
+    <!-- Tailwind CSS for Modern Styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Remix Icons for UI Icons -->
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* CSS to Hide App UI and only show Print Container during Printing */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #print-container, #print-container * {
+                visibility: visible;
+            }
+            #print-container {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+            }
+            .no-print {
+                display: none !important;
+            }
+        }
+        @media screen {
+            #print-container {
+                display: none;
+            }
+            .tab-content {
+                display: none;
+            }
+            .tab-content.active {
+                display: block;
+            }
+        }
+        /* Custom Table Styling */
+        table th, table td { border: 1px solid #e5e7eb; padding: 12px; text-align: left; }
+        table th { background-color: #f9fafb; font-weight: 600; color: #374151; }
+        .input-field { width: 100%; padding: 8px 12px; border: 1px solid #d1d5db; border-radius: 6px; outline: none; transition: 0.2s; }
+        .input-field:focus { border-color: #4f46e5; box-shadow: 0 0 0 2px rgba(79, 70, 229, 0.2); }
+        .form-label { display: block; font-size: 0.875rem; font-weight: 500; color: #374151; margin-bottom: 4px; }
+    </style>
 </head>
-<body>
+<body class="bg-gray-50 flex h-screen overflow-hidden text-gray-800">
 
-    <!-- LOGIN SCREEN -->
-    <div id="login-overlay" class="login-overlay">
-        <div class="login-box card">
-            <img src="logo.png" alt="Logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3031/3031293.png'" class="login-logo">
-            <h2>Admin Login</h2>
-            <div class="input-group"><input type="text" id="login-user" placeholder="Enter Admin ID"></div>
-            <div class="input-group" style="margin-top: 15px;"><input type="password" id="login-pass" placeholder="Enter Password"></div>
-            <button onclick="checkLogin()" class="btn-submit" style="margin-top: 20px; width: 100%; justify-content: center;">Login Securely</button>
-        </div>
-    </div>
+    <!-- Print Container (Visible only on Print) -->
+    <div id="print-container"></div>
 
-    <!-- Sidebar -->
-    <nav class="sidebar no-print">
-        <div class="logo-area">
-            <img src="logo.png" alt="Batrisi Logo" class="custom-brand-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/3031/3031293.png'">
-            <h3>Batrisi Jain Society</h3>
+    <!-- Sidebar (No Print) -->
+    <aside class="w-64 bg-indigo-900 text-white flex flex-col h-full no-print shadow-xl relative z-10">
+        <div class="p-6 text-center border-b border-indigo-800">
+            <h1 class="text-xl font-bold tracking-wider">BATRISI JAIN</h1>
+            <p class="text-xs text-indigo-300 mt-1">Management Portal</p>
         </div>
-        <ul class="nav-links">
-            <li onclick="switchTab('dashboard')" class="active" id="tab-dashboard"><i class="ri-dashboard-line"></i> Dashboard</li>
-            <li onclick="switchTab('settlement')" id="tab-settlement"><i class="ri-calculator-line"></i> Settlement Calc</li>
-            <li onclick="switchTab('deposit')" id="tab-deposit"><i class="ri-wallet-3-line"></i> Deposit Slip</li>
-            <li onclick="switchTab('donation')" id="tab-donation"><i class="ri-hand-heart-line"></i> Donation Slip</li>
-            <li onclick="switchTab('invoice')" id="tab-invoice"><i class="ri-file-list-3-line"></i> Tax Invoice</li>
-            <li onclick="switchTab('records')" id="tab-records"><i class="ri-database-2-line"></i> Records</li>
-            <li onclick="switchTab('admin')" id="tab-admin"><i class="ri-settings-4-line"></i> Admin Panel</li>
-        </ul>
-        <button onclick="logout()" class="btn-logout"><i class="ri-logout-box-r-line"></i> Logout</button>
-    </nav>
+        <nav class="flex-1 p-4 space-y-2">
+            <button onclick="switchTab('dashboard')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg bg-indigo-800 text-white transition-colors hover:bg-indigo-700">
+                <i class="ri-dashboard-line text-lg"></i> Dashboard
+            </button>
+            <button onclick="switchTab('deposit')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-indigo-100 transition-colors hover:bg-indigo-700 hover:text-white">
+                <i class="ri-bank-card-line text-lg"></i> Deposit Slip
+            </button>
+            <button onclick="switchTab('donation')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-indigo-100 transition-colors hover:bg-indigo-700 hover:text-white">
+                <i class="ri-hand-coin-line text-lg"></i> Donation Slip
+            </button>
+            <button onclick="switchTab('invoice')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-indigo-100 transition-colors hover:bg-indigo-700 hover:text-white">
+                <i class="ri-file-list-3-line text-lg"></i> Tax Invoice
+            </button>
+            <button onclick="switchTab('records')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-indigo-100 transition-colors hover:bg-indigo-700 hover:text-white">
+                <i class="ri-database-2-line text-lg"></i> All Records
+            </button>
+            <button onclick="switchTab('members')" class="nav-btn w-full flex items-center gap-3 px-4 py-3 rounded-lg text-indigo-100 transition-colors hover:bg-indigo-700 hover:text-white">
+                <i class="ri-group-line text-lg"></i> Members (CSV)
+            </button>
+        </nav>
+    </aside>
 
     <!-- Main Content -->
-    <main class="main-content no-print">
-        <header>
-            <div class="header-left">
-                <div class="menu-toggle" onclick="toggleMenu()"><i class="ri-menu-2-line"></i></div>
-                <h2>Billing & Management</h2>
-            </div>
-            <div class="header-right"><div class="user-profile"><i class="ri-user-star-line"></i> <span>Super Admin</span></div></div>
-        </header>
-
-        <div class="content-wrapper">
+    <main class="flex-1 h-full overflow-y-auto p-8 no-print relative">
+        
+        <!-- DASHBOARD TAB -->
+        <div id="tab-dashboard" class="tab-content active">
+            <h2 class="text-3xl font-bold mb-6 text-gray-800 border-b pb-2">Overview Dashboard</h2>
             
-            <!-- Dashboard Section -->
-            <section id="sec-dashboard" class="page-section active">
-                <div class="card header-card">
-                    <div class="header-card-bg"></div>
-                    <h2>Shree Batrisi Jain Co-Op Education Society Ltd</h2>
-                    <p>Ahmedabad - 380027</p>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-14 h-14 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center text-2xl"><i class="ri-bank-card-fill"></i></div>
+                    <div><p class="text-gray-500 text-sm font-medium">Total Deposits</p><h3 id="stat-dep" class="text-2xl font-bold">0</h3></div>
                 </div>
-                <div class="dashboard-stats">
-                    <div class="stat-card blue-gradient"><div class="stat-icon"><i class="ri-wallet-3-fill"></i></div><div class="stat-info"><h3>Total Deposits</h3><p id="stat-dep">0</p></div></div>
-                    <div class="stat-card green-gradient"><div class="stat-icon"><i class="ri-hand-heart-fill"></i></div><div class="stat-info"><h3>Total Donations</h3><p id="stat-don">0</p></div></div>
-                    <div class="stat-card modern-white"><div class="stat-icon" style="color: #4F46E5;"><i class="ri-file-list-3-fill"></i></div><div class="stat-info"><h3>Total Invoices</h3><p id="stat-inv">0</p></div></div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-14 h-14 bg-emerald-100 text-emerald-600 rounded-full flex items-center justify-center text-2xl"><i class="ri-hand-coin-fill"></i></div>
+                    <div><p class="text-gray-500 text-sm font-medium">Total Donations</p><h3 id="stat-don" class="text-2xl font-bold">0</h3></div>
                 </div>
-                <div class="card" style="margin-top:25px;">
-                   <div class="card-header"><div class="icon-box" style="background:#F59E0B;"><i class="ri-calendar-event-line"></i></div><h3>Upcoming Functions</h3></div>
-                   <div class="table-responsive"><table class="modern-table"><thead><tr><th>Date</th><th>Shift</th><th>Type</th><th>Name</th><th>Mobile</th></tr></thead><tbody id="upcoming-functions-body"></tbody></table></div>
+                <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 flex items-center gap-4">
+                    <div class="w-14 h-14 bg-purple-100 text-purple-600 rounded-full flex items-center justify-center text-2xl"><i class="ri-file-list-3-fill"></i></div>
+                    <div><p class="text-gray-500 text-sm font-medium">Total Invoices</p><h3 id="stat-inv" class="text-2xl font-bold">0</h3></div>
                 </div>
-            </section>
+            </div>
 
-            <!-- Settlement Calc Section -->
-            <section id="sec-settlement" class="page-section">
-                <div class="card">
-                    <div class="card-header"><div class="icon-box" style="background:#8B5CF6;"><i class="ri-calculator-line"></i></div><h3>Settlement Calculation Sheet</h3></div>
-                    <div class="table-responsive">
-                        <table class="modern-table settlement-table">
-                            <thead><tr><th>Particulars</th><th>Opening</th><th>Closing</th><th>Units</th><th>Rate</th><th>Amount (₹)</th></tr></thead>
-                            <tbody>
-                                <tr class="group-title"><td colspan="6">Meter Readings</td></tr>
-                                <tr><td>Upper Hall L&F</td><td><input type="number" id="set-u-lf-o" oninput="doSetCalc()"></td><td><input type="number" id="set-u-lf-c" oninput="doSetCalc()"></td><td><input type="number" id="set-u-lf-u" readonly></td><td>25</td><td><input type="number" id="set-u-lf-a" readonly></td></tr>
-                                <tr><td>Upper Hall AC</td><td><input type="number" id="set-u-ac-o" oninput="doSetCalc()"></td><td><input type="number" id="set-u-ac-c" oninput="doSetCalc()"></td><td><input type="number" id="set-u-ac-u" readonly></td><td>40</td><td><input type="number" id="set-u-ac-a" readonly></td></tr>
-                                <tr><td>Lower Hall L&F</td><td><input type="number" id="set-l-lf-o" oninput="doSetCalc()"></td><td><input type="number" id="set-l-lf-c" oninput="doSetCalc()"></td><td><input type="number" id="set-l-lf-u" readonly></td><td>25</td><td><input type="number" id="set-l-lf-a" readonly></td></tr>
-                                <tr><td>Lower Hall AC</td><td><input type="number" id="set-l-ac-o" oninput="doSetCalc()"></td><td><input type="number" id="set-l-ac-c" oninput="doSetCalc()"></td><td><input type="number" id="set-l-ac-u" readonly></td><td>40</td><td><input type="number" id="set-l-ac-a" readonly></td></tr>
-                                <tr><td>Adani Gas Line</td><td><input type="number" id="set-gas-o" oninput="doSetCalc()"></td><td><input type="number" id="set-gas-c" oninput="doSetCalc()"></td><td><input type="number" id="set-gas-u" readonly></td><td>125</td><td><input type="number" id="set-gas-a" readonly></td></tr>
-                                <tr><td>Chula (Nos)</td><td colspan="2"></td><td><input type="number" id="set-chula-q" oninput="doSetCalc()"></td><td>50</td><td><input type="number" id="set-chula-a" readonly></td></tr>
-                                <tr><td>Cleaning</td><td colspan="3"><select id="set-clean-sel" onchange="doSetCalc()"><option value="0">None</option><option value="1000">1000</option><option value="1500">1500</option><option value="manual">Manual</option></select></td><td>-</td><td><input type="number" id="set-clean-a" oninput="doSetCalc()"></td></tr>
-                                <tr><td>Security</td><td colspan="3"><select id="set-sec-sel" onchange="doSetCalc()"><option value="0">None</option><option value="500">500</option><option value="750">750</option><option value="manual">Manual</option></select></td><td>-</td><td><input type="number" id="set-sec-a" oninput="doSetCalc()"></td></tr>
-                                <tr><td>Vahivati</td><td colspan="4" id="vahivati-note">Standard ₹300</td><td><input type="number" id="set-vahivati-a" readonly></td></tr>
-                                <tr style="background:#f3f4f6; font-weight:bold;"><td colspan="5" style="text-align:right;">Sub-Total:</td><td><input type="number" id="set-subtotal" readonly></td></tr>
-                                <tr><td colspan="5" style="text-align:right;">CGST (9.0%):</td><td><input type="number" id="set-cgst" readonly></td></tr>
-                                <tr><td colspan="5" style="text-align:right;">SGST (9.0%):</td><td><input type="number" id="set-sgst" readonly></td></tr>
-                                <tr style="font-size:18px; color:blue; font-weight:bold;"><td colspan="5" style="text-align:right;">TOTAL PAYABLE:</td><td>₹ <span id="set-final-total">0.00</span></td></tr>
-                            </tbody>
-                        </table>
-                    </div>
-                    <div class="form-actions"><button onclick="printSettlementSheet()" class="btn-submit"><i class="ri-printer-line"></i> Print Calc Sheet</button></div>
-                </div>
-            </section>
-
-            <!-- Deposit Form (Format unchanged) -->
-            <section id="sec-deposit" class="page-section">
-                <div class="card">
-                    <div class="card-header"><div class="icon-box blue"><i class="ri-wallet-3-line"></i></div><h3>Generate Deposit Slip</h3></div>
-                    <form id="form-deposit" onsubmit="event.preventDefault(); window.handleFormSubmit(event, 'deposit');">
-                        <input type="hidden" id="dep-edit-id">
-                        <div class="grid-2">
-                            <div class="input-group"><label>Slip Number</label><input type="text" id="dep-slip" readonly></div>
-                            <div class="input-group"><label>Date</label><input type="date" id="dep-date"></div>
-                            <div class="input-group"><label>Member No</label><input type="text" id="dep-member" onblur="window.fetchMember('dep-member', 'dep-name', 'dep-address', 'dep-native', 'dep-mobile')"></div>
-                            <div class="input-group"><label>Name</label><input type="text" id="dep-name" required></div>
-                            <div class="input-group"><label>Mobile</label><input type="text" id="dep-mobile"></div>
-                            <div class="input-group"><label>Address</label><input type="text" id="dep-address"></div>
-                            <div class="input-group"><label>Function Type</label><input type="text" id="dep-func-name"></div>
-                            <div class="input-group"><label>Function Date</label><input type="date" id="dep-func-date"></div>
-                            <div class="input-group"><label>Shift</label><select id="dep-func-shift"><option value="Morning">Morning</option><option value="Evening">Evening</option><option value="Full Day">Full Day</option></select></div>
-                            <div class="input-group"><label>Amount (₹)</label><input type="number" id="dep-amount" required oninput="numToWords(this.value, 'dep-words')"></div>
-                            <div class="input-group"><label>In Words</label><input type="text" id="dep-words" readonly class="highlight-input"></div>
-                            <div class="input-group"><label>Payment Type</label><select id="dep-pay-type"><option value="Cheque">Cheque</option><option value="Online">Online</option></select></div>
-                            <div class="input-group"><label>Ref/Cheque No</label><input type="text" id="dep-ref"></div>
-                            <div class="input-group"><label>Bank Name</label><input type="text" id="dep-bank"></div>
-                        </div>
-                        <div class="form-actions"><button type="submit" class="btn-submit">Save & Print</button></div>
-                    </form>
-                </div>
-            </section>
-
-            <!-- Donation Form (Format unchanged) -->
-            <section id="sec-donation" class="page-section">
-                <div class="card">
-                    <div class="card-header"><div class="icon-box green"><i class="ri-hand-heart-line"></i></div><h3>Generate Donation Slip</h3></div>
-                    <form id="form-donation" onsubmit="event.preventDefault(); window.handleFormSubmit(event, 'donation');">
-                        <input type="hidden" id="don-edit-id">
-                        <div class="grid-2">
-                            <div class="input-group"><label>Slip No</label><input type="text" id="don-slip" readonly></div>
-                            <div class="input-group"><label>Date</label><input type="date" id="don-date"></div>
-                            <div class="input-group"><label>Name</label><input type="text" id="don-name" required></div>
-                            <div class="input-group"><label>PAN No</label><input type="text" id="don-pan"></div>
-                            <div class="input-group"><label>Amount (₹)</label><input type="number" id="don-amount" required oninput="numToWords(this.value, 'don-words')"></div>
-                            <div class="input-group"><label>In Words</label><input type="text" id="don-words" readonly></div>
-                        </div>
-                        <div class="form-actions"><button type="submit" class="btn-submit">Save & Print</button></div>
-                    </form>
-                </div>
-            </section>
-
-            <!-- Tax Invoice Form (Portrait Layout logic) -->
-            <section id="sec-invoice" class="page-section">
-                <div class="card">
-                    <div class="card-header"><div class="icon-box purple"><i class="ri-file-list-3-line"></i></div><h3>Generate Tax Invoice</h3></div>
-                    <form id="form-invoice" onsubmit="event.preventDefault(); window.handleFormSubmit(event, 'invoice');">
-                        <input type="hidden" id="inv-edit-id">
-                        <div class="grid-2">
-                            <div class="input-group"><label>Invoice Number</label><input type="text" id="inv-slip" readonly></div>
-                            <div class="input-group"><label>Date</label><input type="date" id="inv-date" required></div>
-                            <div class="input-group"><label>Is Member?</label><select id="inv-is-member" onchange="toggleInvMember()"><option value="No">No</option><option value="Yes">Yes</option></select></div>
-                            <div class="input-group" id="inv-member-group" style="display:none;"><label>Member No</label><input type="text" id="inv-member" onblur="fetchMemberForInvoice()"></div>
-                            <div class="input-group"><label>Name</label><input type="text" id="inv-name" required onblur="window.fetchDepositForInvoice(this.value)"></div>
-                            <div class="input-group"><label>Address</label><input type="text" id="inv-address"></div>
-                            <div class="input-group"><label>GST No</label><input type="text" id="inv-gst"></div>
-                            <div class="input-group"><label>Description</label><select id="inv-desc-select" onchange="checkCustomInvoiceDesc()"><option value="Maintenance">Maintenance</option><option value="Other">Other</option></select><input type="text" id="inv-desc-custom" style="display:none; margin-top:5px;"></div>
-                            
-                            <div class="group-title" style="grid-column: span 2;">REFUND / ADJUSTMENT DETAILS</div>
-                            <div class="input-group"><label>Deposit Slip Ref No</label><input type="text" id="inv-dep-ref"></div>
-                            <div class="input-group"><label>Deposit Date</label><input type="date" id="inv-dep-date"></div>
-                            
-                            <div class="group-title" style="grid-column: span 2;">CALCULATION</div>
-                            <div class="input-group"><label>Basic Amount (₹)</label><input type="number" id="inv-basic" oninput="calcInvoice()"></div>
-                            <div class="input-group"><label>CGST (9.0%)</label><input type="number" id="inv-cgst" readonly></div>
-                            <div class="input-group"><label>SGST (9.0%)</label><input type="number" id="inv-sgst" readonly></div>
-                            <div class="input-group"><label>Round Off</label><input type="number" id="inv-round" readonly></div>
-                            <div class="input-group"><label>Total Amount (₹)</label><input type="number" id="inv-total" readonly class="highlight-input"></div>
-                            <div class="input-group"><label>In Words</label><input type="text" id="inv-words" readonly></div>
-                            
-                            <div class="group-title" style="grid-column: span 2;">RECEIVED PAYMENT DETAILS</div>
-                            <div class="input-group"><label>Payment Type</label><select id="inv-pay-type"><option value="Cheque">Cheque</option><option value="Online">Online</option></select></div>
-                            <div class="input-group"><label>Payment Date</label><input type="date" id="inv-pay-date"></div>
-                            <div class="input-group"><label>Ref / Cheque No</label><input type="text" id="inv-ref"></div>
-                            <div class="input-group"><label>Bank Name</label><input type="text" id="inv-bank"></div>
-                        </div>
-                        <div class="form-actions"><button type="submit" class="btn-submit">Save & Print Portrait Invoice</button></div>
-                    </form>
-                </div>
-            </section>
-
-            <!-- Records Section -->
-            <section id="sec-records" class="page-section">
-                <div class="card">
-                    <div class="records-header">
-                        <h3>Records</h3>
-                        <select id="record-filter" onchange="window.loadRecords()"><option value="deposit">Deposits</option><option value="donation">Donations</option><option value="invoice">Invoices</option></select>
-                    </div>
-                    <div class="table-responsive"><table class="modern-table"><thead id="records-head"></thead><tbody id="records-body"></tbody></table></div>
-                </div>
-            </section>
-
-            <!-- Admin -->
-            <section id="sec-admin" class="page-section">
-                <div class="card">
-                    <h3>Admin Panel</h3>
-                    <input type="file" id="csv-upload" accept=".csv">
-                    <button onclick="window.uploadCSV()" class="btn-submit">Upload CSV</button>
-                </div>
-            </section>
+            <h3 class="text-xl font-bold mb-4 text-gray-800">Upcoming Functions (Next 10)</h3>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-hidden">
+                <table class="w-full text-sm">
+                    <thead>
+                        <tr>
+                            <th>Function Date</th>
+                            <th>Shift</th>
+                            <th>Function Type</th>
+                            <th>Booking Name</th>
+                            <th>Mobile No.</th>
+                        </tr>
+                    </thead>
+                    <tbody id="upcoming-functions-body">
+                        <tr><td colspan="5" class="text-center py-4">Loading...</td></tr>
+                    </tbody>
+                </table>
+            </div>
         </div>
+
+        <!-- DEPOSIT TAB -->
+        <div id="tab-deposit" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Deposit Slip Form</h2>
+            <form id="form-deposit" onsubmit="handleFormSubmit(event, 'deposit')" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <input type="hidden" id="dep-edit-id">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div><label class="form-label">Slip No (Auto)</label><input type="text" id="dep-slip" class="input-field bg-gray-100" readonly></div>
+                    <div><label class="form-label">Date</label><input type="date" id="dep-date" class="input-field" required></div>
+                    <div><label class="form-label">Member No</label><input type="text" id="dep-member" class="input-field" placeholder="Enter & click outside" onblur="fetchMember('dep-member', 'dep-name', 'dep-address', 'dep-native', 'dep-mobile')"></div>
+                    <div><label class="form-label">Native</label><input type="text" id="dep-native" class="input-field"></div>
+                    
+                    <div class="md:col-span-2"><label class="form-label">Name</label><input type="text" id="dep-name" class="input-field" required></div>
+                    <div class="md:col-span-2"><label class="form-label">Mobile No</label><input type="text" id="dep-mobile" class="input-field"></div>
+                    <div class="md:col-span-4"><label class="form-label">Address</label><input type="text" id="dep-address" class="input-field"></div>
+                    
+                    <div class="md:col-span-2"><label class="form-label">Function Type</label><input type="text" id="dep-func-name" placeholder="E.g. Marriage, Birthday" class="input-field"></div>
+                    <div><label class="form-label">Function Date</label><input type="date" id="dep-func-date" class="input-field"></div>
+                    <div>
+                        <label class="form-label">Function Shift</label>
+                        <select id="dep-func-shift" class="input-field">
+                            <option>Morning (08:00 AM – 02:00 PM)</option>
+                            <option>Evening (04:00 PM – 10:00 PM)</option>
+                            <option>Full Day (08:00 AM - 10:00 PM)</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Payment Mode</label>
+                        <select id="dep-pay-type" class="input-field">
+                            <option>Cash</option><option>Cheque</option><option>Online/NEFT</option>
+                        </select>
+                    </div>
+                    <div><label class="form-label">Pay Date</label><input type="date" id="dep-pay-date" class="input-field"></div>
+                    <div><label class="form-label">Cheque/Ref No.</label><input type="text" id="dep-ref" class="input-field"></div>
+                    <div><label class="form-label">Bank Name</label><input type="text" id="dep-bank" class="input-field"></div>
+
+                    <div class="md:col-span-2"><label class="form-label">Amount (₹)</label><input type="number" step="0.01" id="dep-amount" oninput="document.getElementById('dep-words').value = numberToWords(this.value)" class="input-field font-bold text-emerald-600" required></div>
+                    <div class="md:col-span-2"><label class="form-label">Amount in Words</label><input type="text" id="dep-words" class="input-field bg-gray-50" readonly></div>
+                </div>
+                <div class="text-right">
+                    <button type="submit" id="btn-submit-dep" class="bg-indigo-600 text-white px-6 py-2 rounded shadow hover:bg-indigo-700 transition"><i class="ri-save-3-line"></i> Save & Print</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- DONATION TAB -->
+        <div id="tab-donation" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Donation Slip Form</h2>
+            <form id="form-donation" onsubmit="handleFormSubmit(event, 'donation')" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <input type="hidden" id="don-edit-id">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div><label class="form-label">Slip No (Auto)</label><input type="text" id="don-slip" class="input-field bg-gray-100" readonly></div>
+                    <div><label class="form-label">Date</label><input type="date" id="don-date" class="input-field" required></div>
+                    <div><label class="form-label">Member No</label><input type="text" id="don-member" class="input-field" onblur="fetchMember('don-member', 'don-name', 'don-address', 'don-native')"></div>
+                    <div><label class="form-label">Native</label><input type="text" id="don-native" class="input-field"></div>
+                    
+                    <div class="md:col-span-2"><label class="form-label">Name</label><input type="text" id="don-name" class="input-field" required></div>
+                    <div class="md:col-span-2"><label class="form-label">PAN No</label><input type="text" id="don-pan" class="input-field uppercase"></div>
+                    <div class="md:col-span-4"><label class="form-label">Address</label><input type="text" id="don-address" class="input-field"></div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="form-label">Description Type</label>
+                        <select id="don-desc" class="input-field" onchange="toggleCustom('don-desc', 'don-custom-desc', 'Custom')">
+                            <option>Dattak Yojna</option><option>General Sahay</option><option>Education Sahay</option><option>Inaam Vitran</option><option>Custom</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="form-label">&nbsp;</label>
+                        <input type="text" id="don-custom-desc" placeholder="Enter Custom Description" class="input-field hidden">
+                    </div>
+
+                    <div>
+                        <label class="form-label">Payment Mode</label>
+                        <select id="don-pay-type" class="input-field">
+                            <option>Cheque</option><option>Cash</option><option>Online/NEFT</option>
+                        </select>
+                    </div>
+                    <div><label class="form-label">Pay Date</label><input type="date" id="don-pay-date" class="input-field"></div>
+                    <div><label class="form-label">Cheque/Ref No.</label><input type="text" id="don-ref" class="input-field"></div>
+                    <div><label class="form-label">Bank Name</label><input type="text" id="don-bank" class="input-field"></div>
+
+                    <div class="md:col-span-2"><label class="form-label">Amount (₹)</label><input type="number" step="0.01" id="don-amount" oninput="document.getElementById('don-words').value = numberToWords(this.value)" class="input-field font-bold text-emerald-600" required></div>
+                    <div class="md:col-span-2"><label class="form-label">Amount in Words</label><input type="text" id="don-words" class="input-field bg-gray-50" readonly></div>
+                </div>
+                <div class="text-right">
+                    <button type="submit" id="btn-submit-don" class="bg-indigo-600 text-white px-6 py-2 rounded shadow hover:bg-indigo-700 transition"><i class="ri-save-3-line"></i> Save & Print</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- INVOICE TAB -->
+        <div id="tab-invoice" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Tax Invoice Form</h2>
+            <form id="form-invoice" onsubmit="handleFormSubmit(event, 'invoice')" class="bg-white p-6 rounded-xl shadow-sm border border-gray-100">
+                <input type="hidden" id="inv-edit-id">
+                <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+                    <div><label class="form-label">Invoice No (Auto)</label><input type="text" id="inv-slip" class="input-field bg-gray-100" readonly></div>
+                    <div><label class="form-label">Invoice Date</label><input type="date" id="inv-date" class="input-field" required></div>
+                    
+                    <div>
+                        <label class="form-label">Is Member?</label>
+                        <select id="inv-is-member" class="input-field" onchange="toggleInvMember()">
+                            <option>No</option><option>Yes</option>
+                        </select>
+                    </div>
+                    <div id="inv-member-group" class="hidden">
+                        <label class="form-label">Member No</label>
+                        <input type="text" id="inv-member" class="input-field" onblur="fetchMember('inv-member', 'inv-name', 'inv-address')">
+                    </div>
+
+                    <div class="md:col-span-2"><label class="form-label">Name (Billed To)</label><input type="text" id="inv-name" class="input-field" required onblur="fetchDepositForInvoice(this.value)"></div>
+                    <div class="md:col-span-2"><label class="form-label">GSTIN</label><input type="text" id="inv-gst" class="input-field uppercase"></div>
+                    <div class="md:col-span-4"><label class="form-label">Address</label><input type="text" id="inv-address" class="input-field"></div>
+                    
+                    <div class="md:col-span-2">
+                        <label class="form-label">Description of Service</label>
+                        <select id="inv-desc-select" class="input-field" onchange="toggleCustom('inv-desc-select', 'inv-desc-custom', 'Other')">
+                            <option>Maintenance</option><option>Other</option>
+                        </select>
+                    </div>
+                    <div class="md:col-span-2">
+                        <label class="form-label">&nbsp;</label>
+                        <input type="text" id="inv-desc-custom" placeholder="Custom Description" class="input-field hidden">
+                    </div>
+
+                    <div><label class="form-label">Deposit Ref No</label><input type="text" id="inv-dep-ref" class="input-field"></div>
+                    <div><label class="form-label">Deposit Date</label><input type="date" id="inv-dep-date" class="input-field"></div>
+                    
+                    <!-- CALCULATION AREA -->
+                    <div class="md:col-span-4 p-4 bg-gray-50 border rounded-lg grid grid-cols-1 md:grid-cols-5 gap-4">
+                        <div><label class="form-label">Basic Amount</label><input type="number" step="0.01" id="inv-basic" class="input-field" oninput="calculateInvoice()"></div>
+                        <div><label class="form-label">CGST (9%)</label><input type="number" step="0.01" id="inv-cgst" class="input-field bg-gray-200" readonly></div>
+                        <div><label class="form-label">SGST (9%)</label><input type="number" step="0.01" id="inv-sgst" class="input-field bg-gray-200" readonly></div>
+                        <div><label class="form-label">Round Off</label><input type="number" step="0.01" id="inv-round" class="input-field bg-gray-200" readonly></div>
+                        <div><label class="form-label">Total Amount</label><input type="number" step="0.01" id="inv-total" class="input-field bg-indigo-100 font-bold" readonly></div>
+                        <div class="md:col-span-5"><label class="form-label">Total in Words</label><input type="text" id="inv-words" class="input-field bg-gray-100" readonly></div>
+                    </div>
+
+                    <div>
+                        <label class="form-label">Payment Mode</label>
+                        <select id="inv-pay-type" class="input-field">
+                            <option>Cheque</option><option>Cash</option><option>Online/NEFT</option>
+                        </select>
+                    </div>
+                    <div><label class="form-label">Pay Date</label><input type="date" id="inv-pay-date" class="input-field"></div>
+                    <div><label class="form-label">Cheque/Ref No.</label><input type="text" id="inv-ref" class="input-field"></div>
+                    <div><label class="form-label">Bank Name</label><input type="text" id="inv-bank" class="input-field"></div>
+                </div>
+                <div class="text-right">
+                    <button type="submit" id="btn-submit-inv" class="bg-indigo-600 text-white px-6 py-2 rounded shadow hover:bg-indigo-700 transition"><i class="ri-save-3-line"></i> Save & Print</button>
+                </div>
+            </form>
+        </div>
+
+        <!-- RECORDS TAB -->
+        <div id="tab-records" class="tab-content">
+            <div class="flex justify-between items-center mb-6">
+                <h2 class="text-2xl font-bold text-gray-800">Database Records</h2>
+                <div class="flex gap-4">
+                    <select id="record-filter" class="input-field w-48" onchange="loadRecords()">
+                        <option value="deposit">Deposit Slips</option>
+                        <option value="donation">Donation Slips</option>
+                        <option value="invoice">Invoices</option>
+                    </select>
+                    <button onclick="exportData()" class="bg-green-600 text-white px-4 py-2 rounded shadow hover:bg-green-700"><i class="ri-file-excel-line"></i> Export</button>
+                </div>
+            </div>
+            <div class="bg-white rounded-xl shadow-sm border border-gray-100 overflow-x-auto">
+                <table class="w-full text-sm whitespace-nowrap">
+                    <thead id="records-head"></thead>
+                    <tbody id="records-body"></tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- MEMBERS TAB (CSV) -->
+        <div id="tab-members" class="tab-content">
+            <h2 class="text-2xl font-bold mb-6 text-gray-800">Manage Members Data</h2>
+            <div class="bg-white p-6 rounded-xl shadow-sm border border-gray-100 max-w-xl">
+                <p class="text-sm text-gray-600 mb-4">Upload a CSV file containing member data. Required columns: <strong>Member Number, Member Name, Address, Native Name, Mobile Number</strong>.</p>
+                <div class="flex items-center gap-4">
+                    <input type="file" id="csv-upload" accept=".csv" class="border p-2 rounded w-full text-sm">
+                    <button onclick="uploadCSV()" class="bg-indigo-600 text-white px-6 py-2 rounded shadow hover:bg-indigo-700 whitespace-nowrap"><i class="ri-upload-cloud-2-line"></i> Upload CSV</button>
+                </div>
+                <p id="csv-status" class="mt-4 text-sm font-bold text-emerald-600"></p>
+            </div>
+        </div>
+
     </main>
 
-    <div id="print-container" class="print-only"></div>
-
+    <!-- CORE JAVASCRIPT LOGIC FOR UI & CALCULATION -->
     <script>
-        function checkLogin() { if(document.getElementById('login-user').value === 'Batrisi' && document.getElementById('login-pass').value === 'Bat@3232') { document.getElementById('login-overlay').style.display = 'none'; sessionStorage.setItem('isAdmin', 'true'); } else alert('Access Denied'); }
-        function logout() { sessionStorage.clear(); location.reload(); }
-        function switchTab(tabId) { document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active')); document.querySelectorAll('.nav-links li').forEach(l => l.classList.remove('active')); document.getElementById(`sec-${tabId}`).classList.add('active'); document.getElementById(`tab-${tabId}`).classList.add('active'); if(tabId === 'records') window.loadRecords(); }
+        // Tab Switcher
+        window.switchTab = function(tabId) {
+            document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+            document.querySelectorAll('.nav-btn').forEach(el => {
+                el.classList.remove('bg-indigo-800', 'text-white');
+                el.classList.add('text-indigo-100');
+            });
+            document.getElementById('tab-' + tabId).classList.add('active');
+            event.currentTarget.classList.add('bg-indigo-800', 'text-white');
+            event.currentTarget.classList.remove('text-indigo-100');
 
-        function toggleInvMember() { document.getElementById('inv-member-group').style.display = document.getElementById('inv-is-member').value === 'Yes' ? 'flex' : 'none'; }
-        function checkCustomInvoiceDesc() { document.getElementById('inv-desc-custom').style.display = document.getElementById('inv-desc-select').value === 'Other' ? 'block' : 'none'; }
-        async function fetchMemberForInvoice() { if(window.fetchMember) { await window.fetchMember('inv-member', 'inv-name', 'inv-address'); if(document.getElementById('inv-name').value) window.fetchDepositForInvoice(document.getElementById('inv-name').value); } }
-        
-        function calcInvoice() {
-            let b = parseFloat(document.getElementById('inv-basic').value) || 0;
-            let g = b * 0.09; let ex = b + g + g; let r = Math.round(ex);
-            document.getElementById('inv-cgst').value = g.toFixed(2);
-            document.getElementById('inv-sgst').value = g.toFixed(2);
-            document.getElementById('inv-round').value = (r - ex).toFixed(2);
-            document.getElementById('inv-total').value = r.toFixed(2);
-            if(window.numToWords) window.numToWords(r, 'inv-words');
-        }
+            if(tabId === 'records') {
+                if(window.loadRecords) window.loadRecords();
+            }
+        };
 
-        function doSetCalc() {
-            const getV = (id) => parseFloat(document.getElementById(id).value) || 0;
-            const line = (pre, rate) => { 
-                let u = getV('set-'+pre+'-c') - getV('set-'+pre+'-o'); u = u > 0 ? u : 0;
-                document.getElementById('set-'+pre+'-u').value = u;
-                let a = u * rate; document.getElementById('set-'+pre+'-a').value = a.toFixed(2); return a;
-            };
-            let total = line('u-lf', 25) + line('u-ac', 40) + line('l-lf', 25) + line('l-ac', 40);
-            let gU = getV('set-gas-c') - getV('set-gas-o'); gU = gU > 0 ? gU : 0;
-            document.getElementById('set-gas-u').value = gU;
-            let gA = gU * 125; document.getElementById('set-gas-a').value = gA.toFixed(2); total += gA;
-            total += getV('set-chula-q') * 50; document.getElementById('set-chula-a').value = (getV('set-chula-q') * 50).toFixed(2);
-            if(document.getElementById('set-clean-sel').value !== 'manual') document.getElementById('set-clean-a').value = document.getElementById('set-clean-sel').value;
-            if(document.getElementById('set-sec-sel').value !== 'manual') document.getElementById('set-sec-a').value = document.getElementById('set-sec-sel').value;
-            total += getV('set-clean-a') + getV('set-sec-a');
-            let v = gU > 0 ? 0 : 300; document.getElementById('set-vahivati-a').value = v.toFixed(2); total += v;
-            document.getElementById('set-subtotal').value = total.toFixed(2);
-            let gst = total * 0.09; document.getElementById('set-cgst').value = gst.toFixed(2); document.getElementById('set-sgst').value = gst.toFixed(2);
-            document.getElementById('set-final-total').innerText = (total + gst + gst).toFixed(2);
-        }
+        // UI Toggles
+        window.toggleCustom = function(selectId, customId, targetValue) {
+            const select = document.getElementById(selectId);
+            const custom = document.getElementById(customId);
+            if(select.value === targetValue) {
+                custom.classList.remove('hidden');
+                custom.required = true;
+            } else {
+                custom.classList.add('hidden');
+                custom.required = false;
+                custom.value = '';
+            }
+        };
 
-        document.addEventListener('input', e => { if(e.target.type === 'text' && !e.target.id.includes('login')) e.target.value = e.target.value.toUpperCase(); });
+        window.toggleInvMember = function() {
+            const val = document.getElementById('inv-is-member').value;
+            const group = document.getElementById('inv-member-group');
+            if(val === 'Yes') {
+                group.classList.remove('hidden');
+            } else {
+                group.classList.add('hidden');
+                document.getElementById('inv-member').value = '';
+            }
+        };
+
+        // Invoice Tax Calculator
+        window.calculateInvoice = function() {
+            let basic = parseFloat(document.getElementById('inv-basic').value) || 0;
+            let cgst = basic * 0.09;
+            let sgst = basic * 0.09;
+            let subtotal = basic + cgst + sgst;
+            let total = Math.round(subtotal);
+            let roundOff = total - subtotal;
+
+            document.getElementById('inv-cgst').value = cgst.toFixed(2);
+            document.getElementById('inv-sgst').value = sgst.toFixed(2);
+            document.getElementById('inv-round').value = roundOff.toFixed(2);
+            document.getElementById('inv-total').value = total.toFixed(2);
+            
+            document.getElementById('inv-words').value = numberToWords(total);
+        };
+
+        // Number to Words Converter (Indian Formatting)
+        window.numberToWords = function(amount) {
+            if (!amount || amount == 0) return '';
+            let num = Math.floor(amount).toString();
+            const a = ['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
+            const b = ['', '', 'Twenty','Thirty','Forty','Fifty', 'Sixty','Seventy','Eighty','Ninety'];
+            if ((num = num.toString()).length > 9) return 'Overflow';
+            let n = ('000000000' + num).substr(-9).match(/^(\d{2})(\d{2})(\d{2})(\d{1})(\d{2})$/);
+            if (!n) return; let str = '';
+            str += (n[1] != 0) ? (a[Number(n[1])] || b[n[1][0]] + ' ' + a[n[1][1]]) + 'Crore ' : '';
+            str += (n[2] != 0) ? (a[Number(n[2])] || b[n[2][0]] + ' ' + a[n[2][1]]) + 'Lakh ' : '';
+            str += (n[3] != 0) ? (a[Number(n[3])] || b[n[3][0]] + ' ' + a[n[3][1]]) + 'Thousand ' : '';
+            str += (n[4] != 0) ? (a[Number(n[4])] || b[n[4][0]] + ' ' + a[n[4][1]]) + 'Hundred ' : '';
+            str += (n[5] != 0) ? ((str != '') ? 'and ' : '') + (a[Number(n[5])] || b[n[5][0]] + ' ' + a[n[5][1]]) + 'Rupees Only' : 'Rupees Only';
+            return str;
+        };
     </script>
+
+    <!-- Main Firebase / App Logic Script -->
     <script type="module" src="app.js"></script>
+
 </body>
 </html>
