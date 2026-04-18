@@ -311,7 +311,7 @@ window.loadRecords = async () => {
         window.allRecords[d.id] = d;
     });
 
-    // SORTING LOGIC BY SLIP NO DESCENDING (Resolves the sequence issue)
+    // SORTING LOGIC BY SLIP NO DESCENDING
     recordsArray.sort((a, b) => {
         let parseSlip = (slip) => {
             if(!slip) return { num: 0, year: "" };
@@ -531,7 +531,7 @@ const printRecord = (data, type) => {
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
-    // CSS ensures Pure White Background and EXACT layout
+    // CSS Spaced out properly to fit the whole box and look beautiful
     contentHtml += `
     <style>
         @media print {
@@ -545,7 +545,7 @@ const printRecord = (data, type) => {
                 box-sizing: border-box; 
                 border: 2px solid #000; 
                 border-radius: 8px; 
-                padding: 10px 15px; 
+                padding: 15px 20px; /* Increased padding for more breathing room */
                 display: flex; 
                 flex-direction: column; 
                 page-break-inside: avoid; 
@@ -553,31 +553,31 @@ const printRecord = (data, type) => {
                 overflow: hidden;
             }
             
-            .header-section { position: relative; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 5px; text-align: center; }
-            .header-logo { position: absolute; left: 0; top: 0; height: 50px; background: #ffffff !important; }
-            .header-copy-type { position: absolute; right: 0; top: 0; border: 2px solid #000; padding: 2px 8px; font-weight: bold; font-size: 11px; background: #ffffff !important; }
-            .header-text { padding: 0 60px; }
-            .header-text h2 { margin: 0; font-size: 17px; line-height: 1.1; color: #000; }
-            .header-text p { margin: 2px 0; font-size: 9.5px; font-weight: bold; color: #000; }
-            .header-text p.sub-text { font-size: 8.5px; font-weight: normal; margin: 0; }
+            .header-section { position: relative; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 10px; text-align: center; } /* Spaced out */
+            .header-logo { position: absolute; left: 0; top: 0; height: 55px; background: #ffffff !important; }
+            .header-copy-type { position: absolute; right: 0; top: 0; border: 2px solid #000; padding: 3px 10px; font-weight: bold; font-size: 12px; background: #ffffff !important; }
+            .header-text { padding: 0 70px; }
+            .header-text h2 { margin: 0; font-size: 18px; line-height: 1.2; color: #000; }
+            .header-text p { margin: 3px 0; font-size: 10px; font-weight: bold; color: #000; }
+            .header-text p.sub-text { font-size: 9px; font-weight: normal; margin: 0; }
 
-            .print-title { text-align: center; text-decoration: underline; margin: 0 0 6px 0; font-size: 14px; font-weight: bold; color: #000; text-transform: uppercase;}
+            .print-title { text-align: center; text-decoration: underline; margin: 0 0 12px 0; font-size: 15px; font-weight: bold; color: #000; text-transform: uppercase;}
 
-            .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 15px; margin-bottom: 2px; }
-            .print-row { display: flex; align-items: flex-start; padding-bottom: 3px; border-bottom: 1px dashed #ccc; font-size: 10.5px; background: #ffffff !important; }
-            .print-row.no-border { border-bottom: none; padding-bottom: 0; }
-            .print-label { font-weight: bold; width: 130px; flex-shrink: 0; color: #000; }
+            .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 25px; margin-bottom: 5px; } /* Wider gaps */
+            .print-row { display: flex; align-items: flex-start; padding: 4px 0; border-bottom: 1px dashed #ccc; font-size: 11px; background: #ffffff !important; } /* Taller rows */
+            .print-row.no-border { border-bottom: none; padding-bottom: 0; padding-top: 6px; }
+            .print-label { font-weight: bold; width: 140px; flex-shrink: 0; color: #000; }
             .print-val { flex-grow: 1; color: #000; }
             .full-span { grid-column: span 2; }
             
-            .section-heading { font-weight: bold; font-size: 10.5px; margin-top: 6px; margin-bottom: 4px; text-transform: uppercase; color: #000; }
+            .section-heading { font-weight: bold; font-size: 11px; margin-top: 10px; margin-bottom: 6px; text-transform: uppercase; color: #000; } 
 
             .spacer { flex-grow: 1; }
             
-            .signature-row { display: flex; justify-content: space-between; align-items: flex-end; padding-top: 10px; }
-            .sign-box { border-top: 1.5px solid #000; width: 180px; text-align: center; padding-top: 5px; font-weight: bold; font-size: 11.5px; color: #000; }
+            .signature-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 15px; margin-bottom: 15px; } /* Added margin bottom to distance from footer */
+            .sign-box { border-top: 1.5px solid #000; width: 180px; text-align: center; padding-top: 6px; font-weight: bold; font-size: 12px; color: #000; }
             
-            .cut-wrapper { width: 100%; text-align: center; margin: 4mm 0; border-bottom: 1px dashed #000; line-height: 0.1em; }
+            .cut-wrapper { width: 100%; text-align: center; margin: 4.5mm 0; border-bottom: 1px dashed #000; line-height: 0.1em; }
             .cut-text { background: #ffffff !important; padding: 0 10px; font-size: 10px; color: #000; font-weight: bold; letter-spacing: 1px;}
         }
     </style>
@@ -674,7 +674,6 @@ const printRecord = (data, type) => {
                 <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.words || '-'}</div>
             </div>`;
 
-            // DONATION SLIP FOOTER (Niche shift kiya gaya hai)
             footerNoteHtml = `
                 <div style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 9px; line-height: 1.3; background: #ffffff !important;">
                     <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
@@ -711,7 +710,6 @@ const printRecord = (data, type) => {
                 <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.words || '-'}</div>
             </div>`;
 
-            // DEPOSIT SLIP FOOTER (Niche shift kiya gaya hai)
             footerNoteHtml = `
             <div style="width:100%; background: #ffffff !important;">
                 <table style="width:100%; border-collapse: collapse; font-size: 9px; text-align: left; background: #ffffff !important;">
@@ -725,7 +723,7 @@ const printRecord = (data, type) => {
             </div>`;
         }
 
-        // HTML STRUCTURE: Spacer -> Signatures -> Footer Box (Bottom placement successful)
+        // SPACING FIX: Details -> Spacer -> Signatures -> Footer 
         contentHtml += `
             <div class="print-copy">
                 <!-- HEADER SECTION -->
@@ -745,11 +743,11 @@ const printRecord = (data, type) => {
                 <!-- MIDDLE CONTENT SECTION -->
                 ${detailsHtml}
 
-                <!-- MAGIC SPACER TO PUSH EVERYTHING BELOW TO BOTTOM -->
+                <!-- MAGIC SPACER TO PUSH SIGNATURES AND FOOTER TO BOTTOM -->
                 <div class="spacer"></div>
 
                 <!-- SIGNATURE SECTION (UPAR) -->
-                <div class="signature-row" style="margin-bottom: ${type === 'invoice' ? '0' : '10px'};">
+                <div class="signature-row" style="${type === 'invoice' ? 'margin-bottom: 0;' : ''}">
                     <div class="sign-box">Payer Signature</div>
                     <div class="sign-box">Receiver Signature</div>
                 </div>
