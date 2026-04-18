@@ -286,7 +286,6 @@ window.loadRecords = async () => {
     const thead = document.getElementById('records-head');
     const tbody = document.getElementById('records-body');
     
-    // Dynamic Table Header based on Selection
     if(type === 'deposit') {
         thead.innerHTML = `<tr><th>Slip No.</th><th>Name</th><th>Func. Date</th><th>Func. Type</th><th>Shift</th><th>Amount</th><th>Actions</th></tr>`;
     } else {
@@ -311,7 +310,6 @@ window.loadRecords = async () => {
         window.allRecords[d.id] = d;
     });
 
-    // SORTING LOGIC BY SLIP NO DESCENDING
     recordsArray.sort((a, b) => {
         let parseSlip = (slip) => {
             if(!slip) return { num: 0, year: "" };
@@ -419,11 +417,9 @@ window.editRec = (id, type) => {
     } else if(type === 'invoice') {
         document.getElementById('inv-slip').value = data.slipNo || '';
         document.getElementById('inv-date').value = data.date || '';
-        
         document.getElementById('inv-is-member').value = data.isMember || 'No';
         if(window.toggleInvMember) window.toggleInvMember();
         document.getElementById('inv-member').value = data.member || '';
-        
         document.getElementById('inv-name').value = data.name || '';
         document.getElementById('inv-address').value = data.address || '';
         document.getElementById('inv-gst').value = data.gst || '';
@@ -470,7 +466,6 @@ window.editRec = (id, type) => {
     if(btn) { btn.innerHTML = "<i class='ri-edit-box-line'></i> Update Record"; }
 };
 
-// --- DELETE CONFIRMATION LOGIC UPDATED ---
 window.deleteRec = async (id, type) => { 
     if(confirm("Are you sure you want to delete this record?")) { 
         await deleteDoc(doc(db, type, id)); 
@@ -519,7 +514,6 @@ const updateDashboardCounts = async () => {
     }
 };
 
-// --- PRINT LOGIC ---
 window.rePrint = (idOrData, type) => { 
     let data = typeof idOrData === 'string' && window.allRecords[idOrData] ? window.allRecords[idOrData] : idOrData;
     printRecord(data, type); 
@@ -531,21 +525,27 @@ const printRecord = (data, type) => {
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
-    // CSS Spaced out properly to fit the whole box and look beautiful
     contentHtml += `
     <style>
         @media print {
-            @page { size: A4 portrait; margin: 6mm; } 
-            body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #ffffff !important; -webkit-print-color-adjust: exact; color: #000; font-family: Arial, sans-serif; }
+            @page { 
+                size: A4 portrait; 
+                margin: 5mm; 
+            } 
+            body, html { 
+                margin: 0; padding: 0; width: 100%; height: 100%; 
+                background: #ffffff !important; -webkit-print-color-adjust: exact; 
+                color: #000; font-family: Arial, sans-serif; 
+            }
             #print-container { width: 100%; display: block; background: #ffffff !important; }
             
             .print-copy { 
                 width: 100%; 
-                height: 138mm; 
+                height: 132mm; /* FIXED HEIGHT TO FIT 2 ON ONE PAGE */
                 box-sizing: border-box; 
                 border: 2px solid #000; 
                 border-radius: 8px; 
-                padding: 15px 20px; /* Increased padding for more breathing room */
+                padding: 10px 15px; 
                 display: flex; 
                 flex-direction: column; 
                 page-break-inside: avoid; 
@@ -553,32 +553,32 @@ const printRecord = (data, type) => {
                 overflow: hidden;
             }
             
-            .header-section { position: relative; border-bottom: 2px solid #000; padding-bottom: 8px; margin-bottom: 10px; text-align: center; } /* Spaced out */
-            .header-logo { position: absolute; left: 0; top: 0; height: 55px; background: #ffffff !important; }
-            .header-copy-type { position: absolute; right: 0; top: 0; border: 2px solid #000; padding: 3px 10px; font-weight: bold; font-size: 12px; background: #ffffff !important; }
-            .header-text { padding: 0 70px; }
-            .header-text h2 { margin: 0; font-size: 18px; line-height: 1.2; color: #000; }
-            .header-text p { margin: 3px 0; font-size: 10px; font-weight: bold; color: #000; }
-            .header-text p.sub-text { font-size: 9px; font-weight: normal; margin: 0; }
+            .header-section { position: relative; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 8px; text-align: center; }
+            .header-logo { position: absolute; left: 0; top: 0; height: 48px; background: #ffffff !important; }
+            .header-copy-type { position: absolute; right: 0; top: 0; border: 2px solid #000; padding: 2px 8px; font-weight: bold; font-size: 11px; background: #ffffff !important; }
+            .header-text { padding: 0 60px; }
+            .header-text h2 { margin: 0; font-size: 16px; line-height: 1.2; color: #000; }
+            .header-text p { margin: 2px 0; font-size: 9.5px; font-weight: bold; color: #000; }
+            .header-text p.sub-text { font-size: 8.5px; font-weight: normal; margin: 0; }
 
-            .print-title { text-align: center; text-decoration: underline; margin: 0 0 12px 0; font-size: 15px; font-weight: bold; color: #000; text-transform: uppercase;}
+            .print-title { text-align: center; text-decoration: underline; margin: 4px 0 8px 0; font-size: 13px; font-weight: bold; color: #000; text-transform: uppercase;}
 
-            .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 25px; margin-bottom: 5px; } /* Wider gaps */
-            .print-row { display: flex; align-items: flex-start; padding: 4px 0; border-bottom: 1px dashed #ccc; font-size: 11px; background: #ffffff !important; } /* Taller rows */
-            .print-row.no-border { border-bottom: none; padding-bottom: 0; padding-top: 6px; }
-            .print-label { font-weight: bold; width: 140px; flex-shrink: 0; color: #000; }
+            .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 15px; margin-bottom: 4px; } 
+            .print-row { display: flex; align-items: flex-start; padding: 2px 0; border-bottom: 1px dashed #ccc; font-size: 10.5px; background: #ffffff !important; } 
+            .print-row.no-border { border-bottom: none; padding-bottom: 0; padding-top: 3px; }
+            .print-label { font-weight: bold; width: 125px; flex-shrink: 0; color: #000; }
             .print-val { flex-grow: 1; color: #000; }
             .full-span { grid-column: span 2; }
             
-            .section-heading { font-weight: bold; font-size: 11px; margin-top: 10px; margin-bottom: 6px; text-transform: uppercase; color: #000; } 
+            .section-heading { font-weight: bold; font-size: 10px; margin-top: 6px; margin-bottom: 3px; text-transform: uppercase; color: #000; border-bottom: 1px solid #000; display: inline-block;} 
 
             .spacer { flex-grow: 1; }
             
-            .signature-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 15px; margin-bottom: 15px; } /* Added margin bottom to distance from footer */
-            .sign-box { border-top: 1.5px solid #000; width: 180px; text-align: center; padding-top: 6px; font-weight: bold; font-size: 12px; color: #000; }
+            .signature-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 8px; margin-bottom: 8px; } 
+            .sign-box { border-top: 1.5px solid #000; width: 160px; text-align: center; padding-top: 4px; font-weight: bold; font-size: 11px; color: #000; }
             
-            .cut-wrapper { width: 100%; text-align: center; margin: 4.5mm 0; border-bottom: 1px dashed #000; line-height: 0.1em; }
-            .cut-text { background: #ffffff !important; padding: 0 10px; font-size: 10px; color: #000; font-weight: bold; letter-spacing: 1px;}
+            .cut-wrapper { width: 100%; text-align: center; margin: 4mm 0; border-bottom: 1px dashed #000; line-height: 0.1em; }
+            .cut-text { background: #ffffff !important; padding: 0 10px; font-size: 9px; color: #000; font-weight: bold; letter-spacing: 1px;}
         }
     </style>
     `;
@@ -593,57 +593,29 @@ const printRecord = (data, type) => {
             <div class="print-grid">
                 <div class="print-row"><span class="print-label">Invoice No:</span> <span class="print-val">${data.slipNo}</span></div>
                 <div class="print-row"><span class="print-label">Date:</span> <span class="print-val">${window.formatDateIndian(data.date)}</span></div>
-                
-                <div class="print-row"><span class="print-label">Name:</span> <span class="print-val">${data.name}</span></div>
-                <div class="print-row"><span class="print-label">Address:</span> <span class="print-val" style="word-break: break-word;">${data.address || '-'}</span></div>
-                
+                <div class="print-row"><span class="print-label">Name:</span> <span class="print-val">${data.name} ${data.member ? '('+data.member+')' : ''}</span></div>
                 <div class="print-row"><span class="print-label">GSTIN:</span> <span class="print-val">${data.gst || '-'}</span></div>
+                <div class="print-row full-span"><span class="print-label">Address:</span> <span class="print-val">${data.address || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Description:</span> <span class="print-val">${data.desc || '-'}</span></div>
-                
-                <div class="print-row"><span class="print-label">Deposit Ref No:</span> <span class="print-val">${data.depRef || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Deposit Date:</span> <span class="print-val">${window.formatDateIndian(data.depDate) || '-'}</span></div>
-                
-                <div class="print-row"><span class="print-label">Deposit Amount:</span> <span class="print-val"><strong>₹ ${parseFloat(data.depAmount || 0).toFixed(2)}</strong></span></div>
-                <div></div> <!-- Empty space for grid -->
-                
+                <div class="print-row"><span class="print-label">Deposit Ref:</span> <span class="print-val">${data.depRef || '-'} (${window.formatDateIndian(data.depDate) || '-'})</span></div>
+                <div class="print-row"><span class="print-label">Deposit Amt:</span> <span class="print-val">₹ ${parseFloat(data.depAmount || 0).toFixed(2)}</span></div>
                 <div class="print-row"><span class="print-label">Basic Amount:</span> <span class="print-val">₹ ${parseFloat(data.basic || 0).toFixed(2)}</span></div>
-                <div class="print-row"><span class="print-label">CGST (9.0%):</span> <span class="print-val">₹ ${parseFloat(data.cgst || 0).toFixed(2)}</span></div>
-                
-                <div class="print-row"><span class="print-label">SGST (9.0%):</span> <span class="print-val">₹ ${parseFloat(data.sgst || 0).toFixed(2)}</span></div>
-                <div class="print-row"><span class="print-label">Round Off:</span> <span class="print-val">₹ ${parseFloat(data.round || 0).toFixed(2)}</span></div>
-                
+                <div class="print-row"><span class="print-label">CGST/SGST(9%):</span> <span class="print-val">₹ ${parseFloat(data.cgst || 0).toFixed(2)} / ₹ ${parseFloat(data.sgst || 0).toFixed(2)}</span></div>
                 <div class="print-row"><span class="print-label">Total Amount:</span> <span class="print-val"><strong>₹ ${parseFloat(data.total || 0).toFixed(2)}</strong></span></div>
-                <div></div> <!-- Empty space for grid -->
-                
-                <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.words || '-'}</div>
+                <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold; font-size:9.5px;">In Words: ${data.words || '-'}</div>
             </div>
-            
             <div class="section-heading">${isRefund ? 'REFUND DETAILS' : 'RECEIVED DETAILS'}</div>
-            
             <div class="print-grid">
                 ${isRefund ? `
-                    <div class="print-row"><span class="print-label">Payment Type:</span> <span class="print-val">${data.payType || '-'}</span></div>
-                    <div class="print-row"><span class="print-label">Payment Date:</span> <span class="print-val">${window.formatDateIndian(data.payDate) || '-'}</span></div>
-                    
-                    <div class="print-row"><span class="print-label">Cheque/Ref No.:</span> <span class="print-val">${data.ref || '-'}</span></div>
-                    <div class="print-row"><span class="print-label">Bank Name:</span> <span class="print-val">${data.bank || '-'}</span></div>
-                    
-                    <div class="print-row"><span class="print-label">Refund Amount:</span> <span class="print-val"><strong>₹ ${parseFloat(data.refundAmount || 0).toFixed(2)}</strong></span></div>
-                    <div></div> <!-- Empty space for grid -->
-                    <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.refundWords || '-'}</div>
+                    <div class="print-row"><span class="print-label">Pay Type/Date:</span> <span class="print-val">${data.payType || '-'} / ${window.formatDateIndian(data.payDate) || '-'}</span></div>
+                    <div class="print-row"><span class="print-label">Ref/Bank:</span> <span class="print-val">${data.ref || '-'} / ${data.bank || '-'}</span></div>
+                    <div class="print-row"><span class="print-label">Refund Amt:</span> <span class="print-val"><strong>₹ ${parseFloat(data.refundAmount || 0).toFixed(2)}</strong></span></div>
+                    <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold; font-size:9.5px;">In Words: ${data.refundWords || '-'}</div>
                 ` : `
-                    <div class="print-row"><span class="print-label">Deposit Slip Number:</span> <span class="print-val">${data.recDepNo || '-'}</span></div>
-                    <div class="print-row"><span class="print-label">Deposit Date:</span> <span class="print-val">${window.formatDateIndian(data.recDepDate) || '-'}</span></div>
-                    
-                    <div class="print-row"><span class="print-label">Payment Type:</span> <span class="print-val">${data.payType || '-'}</span></div>
-                    <div class="print-row"><span class="print-label">Payment Date:</span> <span class="print-val">${window.formatDateIndian(data.payDate) || '-'}</span></div>
-                    
-                    <div class="print-row"><span class="print-label">Cheque/Ref No.:</span> <span class="print-val">${data.ref || '-'}</span></div>
-                    <div class="print-row"><span class="print-label">Bank Name:</span> <span class="print-val">${data.bank || '-'}</span></div>
-                    
-                    <div class="print-row"><span class="print-label">Received Amount:</span> <span class="print-val"><strong>₹ ${parseFloat(data.recAmount || 0).toFixed(2)}</strong></span></div>
-                    <div></div> <!-- Empty space for grid -->
-                    <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.recWords || '-'}</div>
+                    <div class="print-row"><span class="print-label">Dep. Slip/Date:</span> <span class="print-val">${data.recDepNo || '-'} / ${window.formatDateIndian(data.recDepDate) || '-'}</span></div>
+                    <div class="print-row"><span class="print-label">Pay Type/Date:</span> <span class="print-val">${data.payType || '-'} / ${window.formatDateIndian(data.payDate) || '-'}</span></div>
+                    <div class="print-row"><span class="print-label">Rec. Amount:</span> <span class="print-val"><strong>₹ ${parseFloat(data.recAmount || 0).toFixed(2)}</strong></span></div>
+                    <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold; font-size:9.5px;">In Words: ${data.recWords || '-'}</div>
                 `}
             </div>`;
         } 
@@ -652,33 +624,20 @@ const printRecord = (data, type) => {
             <div class="print-grid">
                 <div class="print-row"><span class="print-label">Slip No:</span> <span class="print-val">${data.slipNo}</span></div>
                 <div class="print-row"><span class="print-label">Date:</span> <span class="print-val">${window.formatDateIndian(data.date)}</span></div>
-                
                 <div class="print-row"><span class="print-label">Name:</span> <span class="print-val">${data.name}</span></div>
-                <div class="print-row"><span class="print-label">Address:</span> <span class="print-val" style="word-break: break-word;">${data.address || '-'}</span></div>
-                
-                <div class="print-row"><span class="print-label">Member No:</span> <span class="print-val">${data.member || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Native:</span> <span class="print-val">${data.native || '-'}</span></div>
-                
                 <div class="print-row"><span class="print-label">PAN No:</span> <span class="print-val">${data.pan || '-'}</span></div>
+                <div class="print-row full-span"><span class="print-label">Address:</span> <span class="print-val">${data.address || '-'}</span></div>
+                <div class="print-row"><span class="print-label">Member/Native:</span> <span class="print-val">${data.member || '-'}/${data.native || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Description:</span> <span class="print-val">${data.desc || '-'}</span></div>
-                
-                <div class="print-row"><span class="print-label">Pay Type:</span> <span class="print-val">${data.payType}</span></div>
-                <div class="print-row"><span class="print-label">Pay Date:</span> <span class="print-val">${window.formatDateIndian(data.payDate) || '-'}</span></div>
-                
-                <div class="print-row"><span class="print-label">Cheque/Ref No.:</span> <span class="print-val">${data.ref || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Bank Name:</span> <span class="print-val">${data.bank || '-'}</span></div>
-                
+                <div class="print-row"><span class="print-label">Pay Type/Date:</span> <span class="print-val">${data.payType} / ${window.formatDateIndian(data.payDate) || '-'}</span></div>
+                <div class="print-row"><span class="print-label">Ref/Bank:</span> <span class="print-val">${data.ref || '-'} / ${data.bank || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Amount:</span> <span class="print-val"><strong>₹ ${parseFloat(data.amount || 0).toFixed(2)}</strong></span></div>
-                <div></div>
-                
-                <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.words || '-'}</div>
+                <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold; font-size:9.5px;">In Words: ${data.words || '-'}</div>
             </div>`;
-
             footerNoteHtml = `
-                <div style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 9px; line-height: 1.3; background: #ffffff !important;">
+                <div style="border: 1px solid #000; padding: 4px; text-align: center; font-size: 8.5px; line-height: 1.2; background: #ffffff !important;">
                     <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
-                    DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOME TAX ACT 1961<br>
-                    <strong style="display:block; margin-top: 4px;">Thank you for your generous donation. Your support is sincerely appreciated.</strong>
+                    DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOME TAX ACT 1961
                 </div>`;
         } 
         else {
@@ -686,47 +645,31 @@ const printRecord = (data, type) => {
             <div class="print-grid">
                 <div class="print-row"><span class="print-label">Slip No:</span> <span class="print-val">${data.slipNo}</span></div>
                 <div class="print-row"><span class="print-label">Date:</span> <span class="print-val">${window.formatDateIndian(data.date)}</span></div>
-                
                 <div class="print-row"><span class="print-label">Name:</span> <span class="print-val">${data.name}</span></div>
                 <div class="print-row"><span class="print-label">Mobile No:</span> <span class="print-val">${data.mobile || '-'}</span></div>
-                
-                <div class="print-row full-span"><span class="print-label">Address:</span> <span class="print-val" style="word-break: break-word;">${data.address || '-'}</span></div>
-                
-                <div class="print-row"><span class="print-label">Member No:</span> <span class="print-val">${data.member || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Native:</span> <span class="print-val">${data.native || '-'}</span></div>
-                
+                <div class="print-row full-span"><span class="print-label">Address:</span> <span class="print-val">${data.address || '-'}</span></div>
+                <div class="print-row"><span class="print-label">Member/Native:</span> <span class="print-val">${data.member || '-'}/${data.native || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Function Type:</span> <span class="print-val">${data.funcName || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Function Date:</span> <span class="print-val">${window.formatDateIndian(data.funcDate) || '-'}</span></div>
-                
-                <div class="print-row"><span class="print-label">Function Shift:</span> <span class="print-val">${data.funcShift || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Pay Type:</span> <span class="print-val">${data.payType}</span></div>
-                
-                <div class="print-row"><span class="print-label">Pay Date:</span> <span class="print-val">${window.formatDateIndian(data.payDate) || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Cheque/Ref No.:</span> <span class="print-val">${data.ref || '-'}</span></div>
-                
-                <div class="print-row"><span class="print-label">Bank Name:</span> <span class="print-val">${data.bank || '-'}</span></div>
+                <div class="print-row"><span class="print-label">Function Date:</span> <span class="print-val">${window.formatDateIndian(data.funcDate) || '-'} (${data.funcShift || '-'})</span></div>
+                <div class="print-row"><span class="print-label">Pay Type/Date:</span> <span class="print-val">${data.payType} / ${window.formatDateIndian(data.payDate) || '-'}</span></div>
+                <div class="print-row"><span class="print-label">Ref/Bank:</span> <span class="print-val">${data.ref || '-'} / ${data.bank || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Amount:</span> <span class="print-val"><strong>₹ ${parseFloat(data.amount || 0).toFixed(2)}</strong></span></div>
-                
-                <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.words || '-'}</div>
+                <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold; font-size:9.5px;">In Words: ${data.words || '-'}</div>
             </div>`;
-
             footerNoteHtml = `
             <div style="width:100%; background: #ffffff !important;">
-                <table style="width:100%; border-collapse: collapse; font-size: 9px; text-align: left; background: #ffffff !important;">
+                <table style="width:100%; border-collapse: collapse; font-size: 8.5px; text-align: left; background: #ffffff !important;">
                     <tbody>
-                        <tr><td colspan="2" style="border: 1px solid #000; padding: 2px; text-align: center; font-weight: bold; font-size: 9px; text-transform: uppercase; background: #ffffff !important;">Instructions</td></tr>
-                        <tr><td style="border: 1px solid #000; padding: 2px 4px; width: 15px; text-align: center; font-weight: bold; background: #ffffff !important;">1.</td><td style="border: 1px solid #000; padding: 2px 4px; background: #ffffff !important;">The entire responsibility for vehicle management and parking shall lie solely with the host/booking organization. The Sanstha assumes no liability for parking-related issues.</td></tr>
-                        <tr><td style="border: 1px solid #000; padding: 2px 4px; text-align: center; font-weight: bold; background: #ffffff !important;">2.</td><td style="border: 1px solid #000; padding: 2px 4px; background: #ffffff !important;">For the final settlement and processing of refunds, it is mandatory to produce and submit the Original Deposit Receipt. No settlement will be processed without this document.</td></tr>
-                        <tr><td style="border: 1px solid #000; padding: 2px 4px; text-align: center; font-weight: bold; background: #ffffff !important;">3.</td><td style="border: 1px solid #000; padding: 2px 4px; background: #ffffff !important;">As a mandatory requirement, the venue must be identified on all invitations exactly as: <strong>“Sheth Shri Hiralal Hargovandas Batrisi Hall.”</strong> Please note that the Sanstha reserves the right to levy a penalty for any non-compliance.</td></tr>
+                        <tr><td style="border: 1px solid #000; padding: 1px 3px; width: 12px; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 1px 3px;">Parking responsibility lies solely with the host.</td></tr>
+                        <tr><td style="border: 1px solid #000; padding: 1px 3px; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 1px 3px;">Original Receipt is mandatory for final settlement/refund.</td></tr>
+                        <tr><td style="border: 1px solid #000; padding: 1px 3px; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 1px 3px;">Venue name must be: <strong>“Sheth Shri Hiralal Hargovandas Batrisi Hall.”</strong></td></tr>
                     </tbody>
                 </table>
             </div>`;
         }
 
-        // SPACING FIX: Details -> Spacer -> Signatures -> Footer 
         contentHtml += `
             <div class="print-copy">
-                <!-- HEADER SECTION -->
                 <div class="header-section">
                     <img src="logo.png" class="header-logo">
                     <div class="header-text">
@@ -737,37 +680,22 @@ const printRecord = (data, type) => {
                     </div>
                     <div class="header-copy-type">${copy}</div>
                 </div>
-
                 <div class="print-title">${title}</div>
-
-                <!-- MIDDLE CONTENT SECTION -->
                 ${detailsHtml}
-
-                <!-- MAGIC SPACER TO PUSH SIGNATURES AND FOOTER TO BOTTOM -->
                 <div class="spacer"></div>
-
-                <!-- SIGNATURE SECTION (UPAR) -->
-                <div class="signature-row" style="${type === 'invoice' ? 'margin-bottom: 0;' : ''}">
+                <div class="signature-row">
                     <div class="sign-box">Payer Signature</div>
                     <div class="sign-box">Receiver Signature</div>
                 </div>
-
-                <!-- FOOTER INSTRUCTION / PAN BOX (SABSE NICHE) -->
                 ${footerNoteHtml}
             </div>`;
 
-        // Cut Here Line 
         if (index === 0) {
-            contentHtml += `
-            <div class="cut-wrapper">
-                <span class="cut-text">✂ - - - Cut Here - - - ✂</span>
-            </div>`;
+            contentHtml += `<div class="cut-wrapper"><span class="cut-text">✂ - - - Cut Here - - - ✂</span></div>`;
         }
     });
     
     container.innerHTML = contentHtml;
-    
-    // Printing Action
     setTimeout(() => { window.print(); }, 500);
 };
 
