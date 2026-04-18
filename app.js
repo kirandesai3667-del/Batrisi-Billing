@@ -482,7 +482,7 @@ const printRecord = (data, type) => {
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
-    // CSS ensures Pure White Background and EXACT layout from your screenshot
+    // CSS ensures Pure White Background and EXACT layout from screenshot
     // Height set precisely to fit 2 slips vertically on 1 A4 Page
     contentHtml += `
     <style>
@@ -629,11 +629,12 @@ const printRecord = (data, type) => {
                 <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.words || '-'}</div>
             </div>`;
 
+            // MODIFIED FOOTER BOX: Added margin-top: 15px to push it down. Kept text EXACTLY as requested.
             footerNoteHtml = `
-                <div style="margin-top: 4px; border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; line-height: 1.3; background: #ffffff !important;">
+                <div style="margin-top: 15px; border: 1px solid #000; padding: 6px; text-align: center; font-size: 9px; line-height: 1.3; background: #ffffff !important;">
                     <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
-                    DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOME TAX ACT 1961 (REমান্ত)<br>
-                    <strong style="display:block; margin-top: 2px;">Thank you for your generous donation. Your support is sincerely appreciated.</strong>
+                    DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOME TAX ACT 1961<br>
+                    <strong style="display:block; margin-top: 4px;">Thank you for your generous donation. Your support is sincerely appreciated.</strong>
                 </div>`;
         } 
         
