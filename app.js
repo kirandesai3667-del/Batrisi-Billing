@@ -211,7 +211,33 @@ window.handleFormSubmit = async (e, type) => {
             data = { ...data, 
                 isMember: document.getElementById('inv-is-member') ? document.getElementById('inv-is-member').value : 'No',
                 member: document.getElementById('inv-member') ? document.getElementById('inv-member').value : '',
-                slipNo: document.getElementById('inv-slip').value, date: document.getElementById('inv-date').value, name: document.getElementById('inv-name').value, address: document.getElementById('inv-address').value, gst: document.getElementById('inv-gst').value, desc: document.getElementById('inv-desc-select').value === 'Other' ? document.getElementById('inv-desc-custom').value : document.getElementById('inv-desc-select').value, depRef: document.getElementById('inv-dep-ref').value, depDate: document.getElementById('inv-dep-date').value, basic: document.getElementById('inv-basic').value, cgst: document.getElementById('inv-cgst').value, sgst: document.getElementById('inv-sgst').value, round: document.getElementById('inv-round').value, total: document.getElementById('inv-total').value, words: document.getElementById('inv-words').value, payType: document.getElementById('inv-pay-type').value, payDate: document.getElementById('inv-pay-date').value, ref: document.getElementById('inv-ref').value, bank: document.getElementById('inv-bank').value };
+                slipNo: document.getElementById('inv-slip').value, 
+                date: document.getElementById('inv-date').value, 
+                name: document.getElementById('inv-name').value, 
+                address: document.getElementById('inv-address').value, 
+                gst: document.getElementById('inv-gst').value, 
+                desc: document.getElementById('inv-desc-select').value === 'Other' ? document.getElementById('inv-desc-custom').value : document.getElementById('inv-desc-select').value, 
+                depRef: document.getElementById('inv-dep-ref').value, 
+                depDate: document.getElementById('inv-dep-date').value, 
+                depAmount: document.getElementById('inv-dep-amount') ? document.getElementById('inv-dep-amount').value : '',
+                basic: document.getElementById('inv-basic').value, 
+                cgst: document.getElementById('inv-cgst').value, 
+                sgst: document.getElementById('inv-sgst').value, 
+                round: document.getElementById('inv-round').value, 
+                total: document.getElementById('inv-total').value, 
+                words: document.getElementById('inv-words').value,
+                settlementType: document.getElementById('inv-settlement-type') ? document.getElementById('inv-settlement-type').value : 'Refund',
+                payType: document.getElementById('inv-pay-type').value, 
+                payDate: document.getElementById('inv-pay-date').value, 
+                ref: document.getElementById('inv-ref').value, 
+                bank: document.getElementById('inv-bank').value,
+                refundAmount: document.getElementById('inv-refund-amount') ? document.getElementById('inv-refund-amount').value : '',
+                refundWords: document.getElementById('inv-refund-words') ? document.getElementById('inv-refund-words').value : '',
+                recDepNo: document.getElementById('inv-rec-dep-no') ? document.getElementById('inv-rec-dep-no').value : '',
+                recDepDate: document.getElementById('inv-rec-dep-date') ? document.getElementById('inv-rec-dep-date').value : '',
+                recAmount: document.getElementById('inv-received-amount') ? document.getElementById('inv-received-amount').value : '',
+                recWords: document.getElementById('inv-received-words') ? document.getElementById('inv-received-words').value : ''
+            };
         }
 
         if(editId) { await updateDoc(doc(db, type, editId), data); document.getElementById(`${prefix}-edit-id`).value = ""; }
@@ -374,6 +400,7 @@ window.editRec = (id, type) => {
         
         document.getElementById('inv-dep-ref').value = data.depRef || '';
         document.getElementById('inv-dep-date').value = data.depDate || '';
+        if(document.getElementById('inv-dep-amount')) document.getElementById('inv-dep-amount').value = data.depAmount || '';
         document.getElementById('inv-basic').value = data.basic || '';
         document.getElementById('inv-cgst').value = data.cgst || '';
         document.getElementById('inv-sgst').value = data.sgst || '';
@@ -384,6 +411,18 @@ window.editRec = (id, type) => {
         document.getElementById('inv-pay-date').value = data.payDate || '';
         document.getElementById('inv-ref').value = data.ref || '';
         document.getElementById('inv-bank').value = data.bank || '';
+
+        // Load specific settlement fields
+        if(document.getElementById('inv-settlement-type')) {
+            document.getElementById('inv-settlement-type').value = data.settlementType || 'Refund';
+            if(window.toggleInvSettlement) window.toggleInvSettlement();
+        }
+        if(document.getElementById('inv-refund-amount')) document.getElementById('inv-refund-amount').value = data.refundAmount || '';
+        if(document.getElementById('inv-refund-words')) document.getElementById('inv-refund-words').value = data.refundWords || '';
+        if(document.getElementById('inv-rec-dep-no')) document.getElementById('inv-rec-dep-no').value = data.recDepNo || '';
+        if(document.getElementById('inv-rec-dep-date')) document.getElementById('inv-rec-dep-date').value = data.recDepDate || '';
+        if(document.getElementById('inv-received-amount')) document.getElementById('inv-received-amount').value = data.recAmount || '';
+        if(document.getElementById('inv-received-words')) document.getElementById('inv-received-words').value = data.recWords || '';
     }
 
     const btn = document.getElementById(`btn-submit-${prefix}`);
@@ -444,83 +483,99 @@ const printRecord = (data, type) => {
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
+    // Dynamic CSS injection based on type
     contentHtml += `
     <style>
         @media print {
-            @page { size: letter portrait; margin: 8mm; } 
-            body, html { margin: 0; padding: 0; width: 100%; }
-            
-            #print-container {
-                width: 100%;
-                display: flex;
-                flex-direction: column;
-                align-items: center; 
-            }
-
-            .print-copy {
-                width: 96%; 
-                height: 120mm; 
-                box-sizing: border-box;
-                border: 2px solid #000;
-                padding: 6px 15px;
-                display: flex;
-                flex-direction: column;
-                page-break-inside: avoid;
-            }
-            .print-grid { 
-                display: grid;
-                grid-template-columns: 1fr 1fr;
-                gap: 2px 10px !important; 
-                margin-bottom: 2px !important; 
-            }
-            .print-row { 
-                padding-bottom: 1px !important; 
-                border-bottom: 1px dotted #ccc; 
-                font-size: 10.5px !important; 
-            }
-            .print-label { 
-                font-size: 10.5px !important; 
-                font-weight: bold; 
-            }
-            .full-span { grid-column: span 2; }
-            
-            .spacer { flex-grow: 1; }
-            
-            .signature-row {
-                display: flex;
-                justify-content: space-between;
-                align-items: flex-end;
-                padding-top: 5px; 
-                padding-bottom: 2px;
-            }
+            ${type === 'invoice' ? `
+                @page { size: A4 portrait; margin: 10mm; }
+                body, html { margin: 0; padding: 0; width: 100%; }
+                #print-container { width: 100%; display: block; }
+                .print-copy {
+                    width: 100%; height: 275mm; box-sizing: border-box;
+                    border: 2px solid #000; padding: 15px 25px;
+                    display: flex; flex-direction: column;
+                    page-break-after: always;
+                }
+                .print-copy:last-child { page-break-after: auto; }
+                .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px 15px; margin-bottom: 10px; }
+                .print-row { padding-bottom: 4px; border-bottom: 1px dotted #ccc; font-size: 13px; }
+                .print-label { font-size: 13px; font-weight: bold; }
+                .full-span { grid-column: span 2; }
+                .section-title { font-size: 14px; font-weight: bold; background: #f0f0f0; padding: 4px 8px; margin-top: 15px; margin-bottom: 5px; grid-column: span 2; border: 1px solid #000; }
+                .spacer { flex-grow: 1; }
+                .signature-row { display: flex; justify-content: space-between; align-items: flex-end; padding-top: 20px; padding-bottom: 5px; }
+            ` : `
+                @page { size: letter portrait; margin: 8mm; }
+                body, html { margin: 0; padding: 0; width: 100%; }
+                #print-container { width: 100%; display: flex; flex-direction: column; align-items: center; }
+                .print-copy { width: 96%; height: 120mm; box-sizing: border-box; border: 2px solid #000; padding: 6px 15px; display: flex; flex-direction: column; page-break-inside: avoid; }
+                .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 2px 10px !important; margin-bottom: 2px !important; }
+                .print-row { padding-bottom: 1px !important; border-bottom: 1px dotted #ccc; font-size: 10.5px !important; }
+                .print-label { font-size: 10.5px !important; font-weight: bold; }
+                .full-span { grid-column: span 2; }
+                .spacer { flex-grow: 1; }
+                .signature-row { display: flex; justify-content: space-between; align-items: flex-end; padding-top: 5px; padding-bottom: 2px; }
+            `}
         }
     </style>
     `;
 
     copiesArray.forEach((copy, index) => {
         let detailsHtml = "";
+        let footerNoteHtml = "";
+
+        // PORTRAIT TAX INVOICE HTML
         if(type === 'invoice') {
-            detailsHtml = `<div class="print-grid">
+            let isRefund = data.settlementType === 'Refund';
+            let settlementHtml = isRefund ? `
+                <div class="print-row"><span class="print-label">Settlement Type:</span> Refund Details</div>
+                <div class="print-row"><span class="print-label">Refund Amount:</span> ₹ ${parseFloat(data.refundAmount || 0).toFixed(2)}</div>
+                <div class="print-row full-span"><span class="print-label">Refund In Words:</span> ${data.refundWords || '-'}</div>
+            ` : `
+                <div class="print-row"><span class="print-label">Settlement Type:</span> Received Details</div>
+                <div class="print-row"><span class="print-label">Received Dep Slip No:</span> ${data.recDepNo || '-'}</div>
+                <div class="print-row"><span class="print-label">Received Dep Date:</span> ${window.formatDateIndian(data.recDepDate) || '-'}</div>
+                <div class="print-row"><span class="print-label">Received Amount:</span> ₹ ${parseFloat(data.recAmount || 0).toFixed(2)}</div>
+                <div class="print-row full-span"><span class="print-label">Received In Words:</span> ${data.recWords || '-'}</div>
+            `;
+
+            detailsHtml = `
+            <div class="print-grid">
+                <div class="section-title">Invoice & Member Details</div>
                 <div class="print-row"><span class="print-label">Invoice No:</span> ${data.slipNo}</div>
                 <div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div>
+                <div class="print-row"><span class="print-label">Is Member?:</span> ${data.isMember || 'No'}</div>
+                <div class="print-row"><span class="print-label">Member No:</span> ${data.member || '-'}</div>
                 <div class="print-row"><span class="print-label">Name:</span> ${data.name}</div>
-                <div class="print-row"><span class="print-label">Address:</span> <span style="word-break: break-word;">${data.address || '-'}</span></div>
                 <div class="print-row"><span class="print-label">GSTIN:</span> ${data.gst || '-'}</div>
+                <div class="print-row full-span"><span class="print-label">Address:</span> <span style="word-break: break-word;">${data.address || '-'}</span></div>
+                
+                <div class="section-title">Description & Deposit Info</div>
                 <div class="print-row"><span class="print-label">Description:</span> ${data.desc || '-'}</div>
+                <div class="print-row"><span class="print-label">Deposit Amount:</span> ₹ ${parseFloat(data.depAmount || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">Deposit Ref No:</span> ${data.depRef || '-'}</div>
                 <div class="print-row"><span class="print-label">Deposit Date:</span> ${window.formatDateIndian(data.depDate) || '-'}</div>
-                <div class="print-row"><span class="print-label">Pay Type:</span> ${data.payType || '-'}</div>
-                <div class="print-row"><span class="print-label">Pay Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
-                <div class="print-row"><span class="print-label">Cheque & Ref No.:</span> ${data.ref || '-'}</div>
-                <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
-                <div class="full-span" style="margin-top: 1px; border-top: 1px dotted #ccc; padding-top: 1px;"></div>
+                
+                <div class="section-title">Tax Computation</div>
                 <div class="print-row"><span class="print-label">Basic Amount:</span> ₹ ${parseFloat(data.basic || 0).toFixed(2)}</div>
-                <div class="print-row"><span class="print-label">CGST (0.9%):</span> ₹ ${parseFloat(data.cgst || 0).toFixed(2)}</div>
-                <div class="print-row"><span class="print-label">SGST (0.9%):</span> ₹ ${parseFloat(data.sgst || 0).toFixed(2)}</div>
+                <div class="print-row"><span class="print-label">CGST (9.0%):</span> ₹ ${parseFloat(data.cgst || 0).toFixed(2)}</div>
+                <div class="print-row"><span class="print-label">SGST (9.0%):</span> ₹ ${parseFloat(data.sgst || 0).toFixed(2)}</div>
                 <div class="print-row"><span class="print-label">Round Off:</span> ₹ ${parseFloat(data.round || 0).toFixed(2)}</div>
-                <div class="print-row full-span" style="font-size: 1.15em;"><span class="print-label">Total Amount:</span> <strong>₹ ${parseFloat(data.total || 0).toFixed(2)}</strong></div>
+                <div class="print-row full-span" style="font-size: 1.15em; border-top: 1px dashed #999; padding-top: 4px;"><span class="print-label">Total Amount:</span> <strong>₹ ${parseFloat(data.total || 0).toFixed(2)}</strong></div>
+                <div class="print-row full-span" style="font-style:italic; font-weight: 600;"><span class="print-label">Tax In Words:</span> ${data.words || '-'}</div>
+
+                <div class="section-title">Settlement & Payment Details</div>
+                ${settlementHtml}
+                <div class="print-row"><span class="print-label">Payment Type:</span> ${data.payType || '-'}</div>
+                <div class="print-row"><span class="print-label">Payment Date:</span> ${window.formatDateIndian(data.payDate) || '-'}</div>
+                <div class="print-row"><span class="print-label">Cheque/Ref No.:</span> ${data.ref || '-'}</div>
+                <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
             </div>`;
-        } else if (type === 'donation') {
+        } 
+        
+        // LANDSCAPE DONATION SLIP HTML
+        else if (type === 'donation') {
             detailsHtml = `<div class="print-grid">
                 <div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div>
                 <div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div>
@@ -536,7 +591,17 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
                 <div class="print-row full-span" style="font-size: 1.15em;"><span class="print-label">Amount:</span> <strong>₹ ${parseFloat(data.amount || 0).toFixed(2)}</strong></div>
             </div>`;
-        } else {
+
+            footerNoteHtml = `
+                <div style="margin-top: 4px; border: 1px solid #000; padding: 4px; font-family: Arial, sans-serif; text-align: center; font-size: 9px; line-height: 1.2;">
+                    <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
+                    DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOME TAX ACT 1961 (RENEWAL)<br>
+                    <strong style="display:block; margin-top: 2px;">Thank you for your generous donation. Your support is sincerely appreciated.</strong>
+                </div>`;
+        } 
+        
+        // LANDSCAPE DEPOSIT SLIP HTML
+        else {
             detailsHtml = `<div class="print-grid">
                 <div class="print-row"><span class="print-label">Slip No:</span> ${data.slipNo}</div>
                 <div class="print-row"><span class="print-label">Date:</span> ${window.formatDateIndian(data.date)}</div>
@@ -554,62 +619,38 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Bank Name:</span> ${data.bank || '-'}</div>
                 <div class="print-row full-span" style="font-size: 1.15em;"><span class="print-label">Amount:</span> <strong>₹ ${parseFloat(data.amount || 0).toFixed(2)}</strong></div>
             </div>`;
-        }
 
-        let footerNoteHtml = '';
-        if(type === 'deposit') {
             footerNoteHtml = `<div style="margin-top:2px; width:100%;"><table style="width:100%; border-collapse: collapse; font-size: 9px; font-family: Arial, sans-serif; text-align: left;"><tbody>
                 <tr><td colspan="2" style="border: 1px solid #000; padding: 1px; text-align: center; font-weight: bold; font-size: 9px; text-transform: uppercase;">Instructions</td></tr>
                 <tr><td style="border: 1px solid #000; padding: 1px 3px; width: 10px; text-align: center; font-weight: bold;">1.</td><td style="border: 1px solid #000; padding: 1px 3px;">The entire responsibility for vehicle management and parking shall lie solely with the host/booking organization. The Sanstha assumes no liability for parking-related issues.</td></tr>
                 <tr><td style="border: 1px solid #000; padding: 1px 3px; text-align: center; font-weight: bold;">2.</td><td style="border: 1px solid #000; padding: 1px 3px;">For the final settlement and processing of refunds, it is mandatory to produce and submit the Original Deposit Receipt. No settlement will be processed without this document.</td></tr>
                 <tr><td style="border: 1px solid #000; padding: 1px 3px; text-align: center; font-weight: bold;">3.</td><td style="border: 1px solid #000; padding: 1px 3px;">As a mandatory requirement, the venue must be identified on all invitations exactly as: <strong>“Sheth Shri Hiralal Hargovandas Batrisi Hall.”</strong> Please note that the Sanstha reserves the right to levy a penalty for any non-compliance.</td></tr>
-                </tbody></table></div>`;
-            
-            // --- RECEIVED & REFUND DETAILS BOX (NEW) ---
-            footerNoteHtml += `
-            <div style="margin-top: 3px; border: 1px solid #000; font-size: 9.5px;">
-                <div style="border-bottom: 1px dotted #000; padding: 2px 4px; display: flex; justify-content: space-between;">
-                    <strong>RECEIVED DETAILS:</strong> 
-                    <span>Amount: _________________</span> 
-                    <span>Date: ____________</span> 
-                    <span>Sign: ____________</span>
-                </div>
-                <div style="padding: 2px 4px; display: flex; justify-content: space-between;">
-                    <strong>REFUND DETAILS:</strong> 
-                    <span>Amount: _________________</span> 
-                    <span>Date: ____________</span> 
-                    <span>Sign: ____________</span>
-                </div>
-            </div>`;
-
-        } else if (type === 'donation') {
-            footerNoteHtml = `
-                <div style="margin-top: 4px; border: 1px solid #000; padding: 4px; font-family: Arial, sans-serif; text-align: center; font-size: 9px; line-height: 1.2;">
-                    <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
-                    DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOME TAX ACT 1961 (RENEWAL)<br>
-                    <strong style="display:block; margin-top: 2px;">Thank you for your generous donation. Your support is sincerely appreciated.</strong>
+                </tbody></table></div>
+                <div style="margin-top: 3px; border: 1px solid #000; font-size: 9.5px;">
+                    <div style="border-bottom: 1px dotted #000; padding: 2px 4px; display: flex; justify-content: space-between;"><strong>RECEIVED DETAILS:</strong> <span>Amount: _________________</span> <span>Date: ____________</span> <span>Sign: ____________</span></div>
+                    <div style="padding: 2px 4px; display: flex; justify-content: space-between;"><strong>REFUND DETAILS:</strong> <span>Amount: _________________</span> <span>Date: ____________</span> <span>Sign: ____________</span></div>
                 </div>`;
         }
 
         contentHtml += `
             <div class="print-copy">
                 <!-- HEADER SECTION -->
-                <div style="position:relative; margin-bottom:4px;">
-                    <div style="position:absolute; top:0px; right:0px; border:1px solid #000; padding:1px 5px; font-weight: bold; font-size:10.5px;">${copy}</div>
-                    <img src="logo.png" style="width:45px; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:5px;">
-                    <div style="padding-left: 55px; text-align:center; border-bottom:1px solid #000; padding-bottom:2px;">
-                        <h2 style="margin:0; font-size:15.5px; line-height: 1.1;">${orgName}</h2>
-                        <p style="margin:1px 0; font-size:9.5px; font-weight: bold;">${orgAddress}</p>
-                        <p style="margin:0; font-size:9px;">${orgDetailsLine1}</p>
-                        <p style="margin:0; font-size:9px;">${orgDetailsLine2}</p>
+                <div style="position:relative; margin-bottom: ${type === 'invoice' ? '15px' : '4px'};">
+                    <div style="position:absolute; top:0px; right:0px; border:1px solid #000; padding: ${type === 'invoice' ? '4px 12px' : '1px 5px'}; font-weight: bold; font-size: ${type === 'invoice' ? '14px' : '10.5px'};">${copy}</div>
+                    <img src="logo.png" style="width: ${type === 'invoice' ? '70px' : '45px'}; position:absolute; left:0; top:0; z-index:1; background:#fff; padding-right:5px;">
+                    <div style="padding-left: ${type === 'invoice' ? '80px' : '55px'}; text-align:center; border-bottom: ${type === 'invoice' ? '2px' : '1px'} solid #000; padding-bottom: ${type === 'invoice' ? '8px' : '2px'};">
+                        <h2 style="margin:0; font-size: ${type === 'invoice' ? '22px' : '15.5px'}; line-height: 1.1;">${orgName}</h2>
+                        <p style="margin: ${type === 'invoice' ? '4px 0' : '1px 0'}; font-size: ${type === 'invoice' ? '12px' : '9.5px'}; font-weight: bold;">${orgAddress}</p>
+                        <p style="margin:0; font-size: ${type === 'invoice' ? '11px' : '9px'};">${orgDetailsLine1}</p>
+                        <p style="margin:0; font-size: ${type === 'invoice' ? '11px' : '9px'};">${orgDetailsLine2}</p>
                     </div>
                 </div>
 
-                <h3 style="text-align:center; text-decoration:underline; margin: 0 0 4px 0; font-size: 13.5px; font-weight:bold;">${title}</h3>
+                <h3 style="text-align:center; text-decoration:underline; margin: 0 0 ${type === 'invoice' ? '15px' : '4px'} 0; font-size: ${type === 'invoice' ? '18px' : '13.5px'}; font-weight:bold;">${title}</h3>
 
                 <!-- MIDDLE CONTENT SECTION -->
                 ${detailsHtml}
-                <div style="font-style:italic; font-size: 10.5px; margin-top: 1px; font-weight: 600;">In Words: ${data.words || '-'}</div>
+                ${type !== 'invoice' ? `<div style="font-style:italic; font-size: 10.5px; margin-top: 1px; font-weight: 600;">In Words: ${data.words || '-'}</div>` : ''}
                 ${footerNoteHtml}
 
                 <!-- MAGIC SPACER -->
@@ -617,13 +658,13 @@ const printRecord = (data, type) => {
 
                 <!-- SIGNATURE SECTION -->
                 <div class="signature-row">
-                    <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 3px; font-weight: bold; font-size: 11px;">Payer Signature</div>
-                    <div style="border-top:1px solid #000; width:160px; text-align:center; padding-top: 3px; font-weight: bold; font-size: 11px;">Receiver Signature</div>
+                    <div style="border-top:1px solid #000; width: ${type === 'invoice' ? '200px' : '160px'}; text-align:center; padding-top: 5px; font-weight: bold; font-size: ${type === 'invoice' ? '13px' : '11px'};">Payer Signature</div>
+                    <div style="border-top:1px solid #000; width: ${type === 'invoice' ? '200px' : '160px'}; text-align:center; padding-top: 5px; font-weight: bold; font-size: ${type === 'invoice' ? '13px' : '11px'};">Authorized Signatory</div>
                 </div>
             </div>`;
 
-        // Cut Here Line
-        if (index === 0) {
+        // Cut Here Line (ONLY FOR LANDSCAPE SLIPS)
+        if (index === 0 && type !== 'invoice') {
             contentHtml += `<div style="width: 96%; border-top: 1.5px dashed #666; margin: 3mm auto; position: relative; text-align: center;"><span style="background: #fff; padding: 0 10px; position: relative; top: -7px; font-size: 9px; color: #555; font-weight: bold; letter-spacing: 2px;">✂ - - - Cut Here - - - ✂</span></div>`;
         }
     });
