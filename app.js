@@ -192,6 +192,24 @@ window.exportData = async () => {
     document.body.removeChild(link);
 };
 
+// --- TABLE SEARCH LOGIC ---
+window.searchTable = () => {
+    const input = document.getElementById("search-bar");
+    if(!input) return;
+    const filter = input.value.toUpperCase();
+    const tbody = document.getElementById("records-body");
+    const tr = tbody.getElementsByTagName("tr");
+
+    for (let i = 0; i < tr.length; i++) {
+        let rowText = tr[i].textContent || tr[i].innerText;
+        if (rowText.toUpperCase().indexOf(filter) > -1) {
+            tr[i].style.display = "";
+        } else {
+            tr[i].style.display = "none";
+        }
+    }
+};
+
 // --- SAVE & UPDATE LOGIC ---
 window.handleFormSubmit = async (e, type) => {
     if(e) e.preventDefault();
