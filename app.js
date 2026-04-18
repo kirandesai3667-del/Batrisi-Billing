@@ -302,11 +302,35 @@ window.loadRecords = async () => {
     if(qs.empty) { tbody.innerHTML = `<tr><td colspan='${type==='deposit'? 7 : 5}' style='text-align:center;'>No Data</td></tr>`; return; }
     
     window.allRecords = {};
+    let recordsArray = [];
+    
     qs.forEach((docSnap) => {
-        let d = docSnap.data(); d.id = docSnap.id;
+        let d = docSnap.data(); 
+        d.id = docSnap.id;
+        recordsArray.push(d);
         window.allRecords[d.id] = d;
-        let tr = document.createElement('tr');
+    });
+
+    // SORTING LOGIC BY SLIP NO DESCENDING (Resolves the sequence issue)
+    recordsArray.sort((a, b) => {
+        let parseSlip = (slip) => {
+            if(!slip) return { num: 0, year: "" };
+            let parts = slip.split('/');
+            if(parts.length === 3) return { num: parseInt(parts[1]) || 0, year: parts[2] || "" };
+            if(parts.length === 2) return { num: parseInt(parts[0]) || 0, year: parts[1] || "" };
+            return { num: 0, year: "" };
+        };
+        let slipA = parseSlip(a.slipNo);
+        let slipB = parseSlip(b.slipNo);
         
+        if (slipA.year !== slipB.year) {
+            return slipB.year.localeCompare(slipA.year); 
+        }
+        return slipB.num - slipA.num; 
+    });
+
+    recordsArray.forEach((d) => {
+        let tr = document.createElement('tr');
         if(type === 'deposit') {
             tr.innerHTML = `
                 <td><strong>${d.slipNo}</strong></td>
@@ -446,7 +470,14 @@ window.editRec = (id, type) => {
     if(btn) { btn.innerHTML = "<i class='ri-edit-box-line'></i> Update Record"; }
 };
 
-window.deleteRec = async (id, type) => { if(confirm("Confirm Delete?")) { await deleteDoc(doc(db, type, id)); loadRecords(); updateDashboardCounts(); } };
+// --- DELETE CONFIRMATION LOGIC UPDATED ---
+window.deleteRec = async (id, type) => { 
+    if(confirm("Are you sure you want to delete this record?")) { 
+        await deleteDoc(doc(db, type, id)); 
+        loadRecords(); 
+        updateDashboardCounts(); 
+    } 
+};
 
 const updateDashboardCounts = async () => {
     const deps = await getDocs(collection(db, 'deposit')); 
@@ -500,8 +531,7 @@ const printRecord = (data, type) => {
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
-    // CSS ensures Pure White Background and EXACT layout from screenshot
-    // Height set precisely to fit 2 slips vertically on 1 A4 Page
+    // CSS ensures Pure White Background and EXACT layout
     contentHtml += `
     <style>
         @media print {
@@ -511,7 +541,7 @@ const printRecord = (data, type) => {
             
             .print-copy { 
                 width: 100%; 
-                height: 138mm; /* Guarantees 2 copies fit on a 297mm A4 Page */
+                height: 138mm; 
                 box-sizing: border-box; 
                 border: 2px solid #000; 
                 border-radius: 8px; 
@@ -544,7 +574,7 @@ const printRecord = (data, type) => {
 
             .spacer { flex-grow: 1; }
             
-            .signature-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 10px; }
+            .signature-row { display: flex; justify-content: space-between; align-items: flex-end; padding-top: 10px; }
             .sign-box { border-top: 1.5px solid #000; width: 180px; text-align: center; padding-top: 5px; font-weight: bold; font-size: 11.5px; color: #000; }
             
             .cut-wrapper { width: 100%; text-align: center; margin: 4mm 0; border-bottom: 1px dashed #000; line-height: 0.1em; }
@@ -557,7 +587,6 @@ const printRecord = (data, type) => {
         let detailsHtml = "";
         let footerNoteHtml = "";
 
-        // ---- TAX INVOICE HTML (100% SAME TO SCREENSHOT) ----
         if(type === 'invoice') {
             let isRefund = data.settlementType === 'Refund';
             detailsHtml = `
@@ -618,8 +647,6 @@ const printRecord = (data, type) => {
                 `}
             </div>`;
         } 
-        
-        // ---- DONATION SLIP HTML ----
         else if (type === 'donation') {
             detailsHtml = `
             <div class="print-grid">
@@ -647,16 +674,14 @@ const printRecord = (data, type) => {
                 <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.words || '-'}</div>
             </div>`;
 
-            // MODIFIED FOOTER BOX: Added margin-top: 15px to push it down. Kept text EXACTLY as requested.
+            // DONATION SLIP FOOTER (Niche shift kiya gaya hai)
             footerNoteHtml = `
-                <div style="margin-top: 15px; border: 1px solid #000; padding: 6px; text-align: center; font-size: 9px; line-height: 1.3; background: #ffffff !important;">
+                <div style="border: 1px solid #000; padding: 6px; text-align: center; font-size: 9px; line-height: 1.3; background: #ffffff !important;">
                     <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
                     DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOME TAX ACT 1961<br>
                     <strong style="display:block; margin-top: 4px;">Thank you for your generous donation. Your support is sincerely appreciated.</strong>
                 </div>`;
         } 
-        
-        // ---- DEPOSIT SLIP HTML ----
         else {
             detailsHtml = `
             <div class="print-grid">
@@ -686,9 +711,9 @@ const printRecord = (data, type) => {
                 <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.words || '-'}</div>
             </div>`;
 
-            // DEPOSIT SLIP SE RECEIVED/REFUND WALI BOX KO PURI TARAH HATA DIYA GAYA HAI
+            // DEPOSIT SLIP FOOTER (Niche shift kiya gaya hai)
             footerNoteHtml = `
-            <div style="margin-top:4px; width:100%; background: #ffffff !important;">
+            <div style="width:100%; background: #ffffff !important;">
                 <table style="width:100%; border-collapse: collapse; font-size: 9px; text-align: left; background: #ffffff !important;">
                     <tbody>
                         <tr><td colspan="2" style="border: 1px solid #000; padding: 2px; text-align: center; font-weight: bold; font-size: 9px; text-transform: uppercase; background: #ffffff !important;">Instructions</td></tr>
@@ -700,6 +725,7 @@ const printRecord = (data, type) => {
             </div>`;
         }
 
+        // HTML STRUCTURE: Spacer -> Signatures -> Footer Box (Bottom placement successful)
         contentHtml += `
             <div class="print-copy">
                 <!-- HEADER SECTION -->
@@ -718,19 +744,21 @@ const printRecord = (data, type) => {
 
                 <!-- MIDDLE CONTENT SECTION -->
                 ${detailsHtml}
-                ${footerNoteHtml}
 
-                <!-- MAGIC SPACER TO PUSH SIGNATURES DOWN -->
+                <!-- MAGIC SPACER TO PUSH EVERYTHING BELOW TO BOTTOM -->
                 <div class="spacer"></div>
 
-                <!-- SIGNATURE SECTION -->
-                <div class="signature-row">
+                <!-- SIGNATURE SECTION (UPAR) -->
+                <div class="signature-row" style="margin-bottom: ${type === 'invoice' ? '0' : '10px'};">
                     <div class="sign-box">Payer Signature</div>
                     <div class="sign-box">Receiver Signature</div>
                 </div>
+
+                <!-- FOOTER INSTRUCTION / PAN BOX (SABSE NICHE) -->
+                ${footerNoteHtml}
             </div>`;
 
-        // Cut Here Line (Original and Duplicate ke bich me aayega)
+        // Cut Here Line 
         if (index === 0) {
             contentHtml += `
             <div class="cut-wrapper">
