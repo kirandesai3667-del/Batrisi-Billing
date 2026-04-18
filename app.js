@@ -482,17 +482,18 @@ const printRecord = (data, type) => {
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
-    // CSS ensures Pure White Background and EXACT layout from screenshot
+    // CSS ensures Pure White Background and EXACT layout from your screenshot
+    // Height set precisely to fit 2 slips vertically on 1 A4 Page
     contentHtml += `
     <style>
         @media print {
-            @page { size: A4 portrait; margin: 8mm; } 
-            body, html { margin: 0; padding: 0; width: 100%; background: #ffffff !important; -webkit-print-color-adjust: exact; color: #000; font-family: sans-serif; }
-            #print-container { width: 100%; display: flex; flex-direction: column; align-items: center; background: #ffffff !important; }
+            @page { size: A4 portrait; margin: 6mm; } 
+            body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #ffffff !important; -webkit-print-color-adjust: exact; color: #000; font-family: Arial, sans-serif; }
+            #print-container { width: 100%; display: block; background: #ffffff !important; }
             
             .print-copy { 
                 width: 100%; 
-                height: 138mm; 
+                height: 138mm; /* Guarantees 2 copies fit on a 297mm A4 Page */
                 box-sizing: border-box; 
                 border: 2px solid #000; 
                 border-radius: 8px; 
@@ -501,19 +502,20 @@ const printRecord = (data, type) => {
                 flex-direction: column; 
                 page-break-inside: avoid; 
                 background: #ffffff !important;
+                overflow: hidden;
             }
             
-            .header-section { position: relative; border-bottom: 2px solid #000; padding-bottom: 6px; margin-bottom: 6px; display: flex; justify-content: center; align-items: center; }
-            .header-logo { position: absolute; left: 0; top: 0; width: 50px; background: #ffffff !important; }
+            .header-section { position: relative; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 5px; text-align: center; }
+            .header-logo { position: absolute; left: 0; top: 0; height: 50px; background: #ffffff !important; }
             .header-copy-type { position: absolute; right: 0; top: 0; border: 2px solid #000; padding: 2px 8px; font-weight: bold; font-size: 11px; background: #ffffff !important; }
-            .header-text { text-align: center; width: 80%; }
+            .header-text { padding: 0 60px; }
             .header-text h2 { margin: 0; font-size: 17px; line-height: 1.1; color: #000; }
             .header-text p { margin: 2px 0; font-size: 9.5px; font-weight: bold; color: #000; }
             .header-text p.sub-text { font-size: 8.5px; font-weight: normal; margin: 0; }
 
-            .print-title { text-align: center; text-decoration: underline; margin: 0 0 8px 0; font-size: 14px; font-weight: bold; color: #000; text-transform: uppercase;}
+            .print-title { text-align: center; text-decoration: underline; margin: 0 0 6px 0; font-size: 14px; font-weight: bold; color: #000; text-transform: uppercase;}
 
-            .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 15px; margin-bottom: 4px; }
+            .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 15px; margin-bottom: 2px; }
             .print-row { display: flex; align-items: flex-start; padding-bottom: 3px; border-bottom: 1px dashed #ccc; font-size: 10.5px; background: #ffffff !important; }
             .print-row.no-border { border-bottom: none; padding-bottom: 0; }
             .print-label { font-weight: bold; width: 130px; flex-shrink: 0; color: #000; }
@@ -524,12 +526,11 @@ const printRecord = (data, type) => {
 
             .spacer { flex-grow: 1; }
             
-            .signature-row { display: flex; justify-content: space-between; align-items: flex-end; padding-top: 15px; margin-top: auto; }
+            .signature-row { display: flex; justify-content: space-between; align-items: flex-end; margin-top: auto; padding-top: 10px; }
             .sign-box { border-top: 1.5px solid #000; width: 180px; text-align: center; padding-top: 5px; font-weight: bold; font-size: 11.5px; color: #000; }
             
-            .cut-wrapper { width: 100%; text-align: center; margin: 4mm 0; position: relative; height: 10px; }
-            .cut-line { border-top: 1px dashed #666; position: absolute; top: 50%; width: 100%; z-index: 1; }
-            .cut-text { background: #ffffff !important; padding: 0 10px; font-size: 10px; color: #555; position: relative; z-index: 2; font-weight: bold; letter-spacing: 1px;}
+            .cut-wrapper { width: 100%; text-align: center; margin: 4mm 0; border-bottom: 1px dashed #000; line-height: 0.1em; }
+            .cut-text { background: #ffffff !important; padding: 0 10px; font-size: 10px; color: #000; font-weight: bold; letter-spacing: 1px;}
         }
     </style>
     `;
@@ -556,7 +557,7 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Deposit Date:</span> <span class="print-val">${window.formatDateIndian(data.depDate) || '-'}</span></div>
                 
                 <div class="print-row"><span class="print-label">Deposit Amount:</span> <span class="print-val"><strong>₹ ${parseFloat(data.depAmount || 0).toFixed(2)}</strong></span></div>
-                <div class="print-row no-border"></div>
+                <div></div> <!-- Empty space for grid -->
                 
                 <div class="print-row"><span class="print-label">Basic Amount:</span> <span class="print-val">₹ ${parseFloat(data.basic || 0).toFixed(2)}</span></div>
                 <div class="print-row"><span class="print-label">CGST (9.0%):</span> <span class="print-val">₹ ${parseFloat(data.cgst || 0).toFixed(2)}</span></div>
@@ -565,7 +566,7 @@ const printRecord = (data, type) => {
                 <div class="print-row"><span class="print-label">Round Off:</span> <span class="print-val">₹ ${parseFloat(data.round || 0).toFixed(2)}</span></div>
                 
                 <div class="print-row"><span class="print-label">Total Amount:</span> <span class="print-val"><strong>₹ ${parseFloat(data.total || 0).toFixed(2)}</strong></span></div>
-                <div class="print-row no-border"></div>
+                <div></div> <!-- Empty space for grid -->
                 
                 <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.words || '-'}</div>
             </div>
@@ -581,7 +582,7 @@ const printRecord = (data, type) => {
                     <div class="print-row"><span class="print-label">Bank Name:</span> <span class="print-val">${data.bank || '-'}</span></div>
                     
                     <div class="print-row"><span class="print-label">Refund Amount:</span> <span class="print-val"><strong>₹ ${parseFloat(data.refundAmount || 0).toFixed(2)}</strong></span></div>
-                    <div class="print-row no-border"></div>
+                    <div></div> <!-- Empty space for grid -->
                     <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.refundWords || '-'}</div>
                 ` : `
                     <div class="print-row"><span class="print-label">Deposit Slip Number:</span> <span class="print-val">${data.recDepNo || '-'}</span></div>
@@ -594,7 +595,7 @@ const printRecord = (data, type) => {
                     <div class="print-row"><span class="print-label">Bank Name:</span> <span class="print-val">${data.bank || '-'}</span></div>
                     
                     <div class="print-row"><span class="print-label">Received Amount:</span> <span class="print-val"><strong>₹ ${parseFloat(data.recAmount || 0).toFixed(2)}</strong></span></div>
-                    <div class="print-row no-border"></div>
+                    <div></div> <!-- Empty space for grid -->
                     <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.recWords || '-'}</div>
                 `}
             </div>`;
@@ -606,25 +607,32 @@ const printRecord = (data, type) => {
             <div class="print-grid">
                 <div class="print-row"><span class="print-label">Slip No:</span> <span class="print-val">${data.slipNo}</span></div>
                 <div class="print-row"><span class="print-label">Date:</span> <span class="print-val">${window.formatDateIndian(data.date)}</span></div>
+                
                 <div class="print-row"><span class="print-label">Name:</span> <span class="print-val">${data.name}</span></div>
                 <div class="print-row"><span class="print-label">Address:</span> <span class="print-val" style="word-break: break-word;">${data.address || '-'}</span></div>
+                
                 <div class="print-row"><span class="print-label">Member No:</span> <span class="print-val">${data.member || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Native:</span> <span class="print-val">${data.native || '-'}</span></div>
+                
                 <div class="print-row"><span class="print-label">PAN No:</span> <span class="print-val">${data.pan || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Description:</span> <span class="print-val">${data.desc || '-'}</span></div>
+                
                 <div class="print-row"><span class="print-label">Pay Type:</span> <span class="print-val">${data.payType}</span></div>
                 <div class="print-row"><span class="print-label">Pay Date:</span> <span class="print-val">${window.formatDateIndian(data.payDate) || '-'}</span></div>
+                
                 <div class="print-row"><span class="print-label">Cheque/Ref No.:</span> <span class="print-val">${data.ref || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Bank Name:</span> <span class="print-val">${data.bank || '-'}</span></div>
+                
                 <div class="print-row"><span class="print-label">Amount:</span> <span class="print-val"><strong>₹ ${parseFloat(data.amount || 0).toFixed(2)}</strong></span></div>
-                <div class="print-row no-border"></div>
+                <div></div>
+                
                 <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.words || '-'}</div>
             </div>`;
 
             footerNoteHtml = `
                 <div style="margin-top: 4px; border: 1px solid #000; padding: 4px; text-align: center; font-size: 9px; line-height: 1.3; background: #ffffff !important;">
                     <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
-                    DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOME TAX ACT 1961 (RENEWAL)<br>
+                    DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOME TAX ACT 1961 (REমান্ত)<br>
                     <strong style="display:block; margin-top: 2px;">Thank you for your generous donation. Your support is sincerely appreciated.</strong>
                 </div>`;
         } 
@@ -635,20 +643,27 @@ const printRecord = (data, type) => {
             <div class="print-grid">
                 <div class="print-row"><span class="print-label">Slip No:</span> <span class="print-val">${data.slipNo}</span></div>
                 <div class="print-row"><span class="print-label">Date:</span> <span class="print-val">${window.formatDateIndian(data.date)}</span></div>
+                
                 <div class="print-row"><span class="print-label">Name:</span> <span class="print-val">${data.name}</span></div>
                 <div class="print-row"><span class="print-label">Mobile No:</span> <span class="print-val">${data.mobile || '-'}</span></div>
+                
                 <div class="print-row full-span"><span class="print-label">Address:</span> <span class="print-val" style="word-break: break-word;">${data.address || '-'}</span></div>
+                
                 <div class="print-row"><span class="print-label">Member No:</span> <span class="print-val">${data.member || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Native:</span> <span class="print-val">${data.native || '-'}</span></div>
+                
                 <div class="print-row"><span class="print-label">Function Type:</span> <span class="print-val">${data.funcName || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Function Date:</span> <span class="print-val">${window.formatDateIndian(data.funcDate) || '-'}</span></div>
+                
                 <div class="print-row"><span class="print-label">Function Shift:</span> <span class="print-val">${data.funcShift || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Pay Type:</span> <span class="print-val">${data.payType}</span></div>
+                
                 <div class="print-row"><span class="print-label">Pay Date:</span> <span class="print-val">${window.formatDateIndian(data.payDate) || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Cheque/Ref No.:</span> <span class="print-val">${data.ref || '-'}</span></div>
+                
                 <div class="print-row"><span class="print-label">Bank Name:</span> <span class="print-val">${data.bank || '-'}</span></div>
                 <div class="print-row"><span class="print-label">Amount:</span> <span class="print-val"><strong>₹ ${parseFloat(data.amount || 0).toFixed(2)}</strong></span></div>
-                <div class="print-row no-border"></div>
+                
                 <div class="print-row full-span no-border" style="font-style:italic; font-weight: bold;">In Words: ${data.words || '-'}</div>
             </div>`;
 
@@ -700,7 +715,6 @@ const printRecord = (data, type) => {
         if (index === 0) {
             contentHtml += `
             <div class="cut-wrapper">
-                <div class="cut-line"></div>
                 <span class="cut-text">✂ - - - Cut Here - - - ✂</span>
             </div>`;
         }
