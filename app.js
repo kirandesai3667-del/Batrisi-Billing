@@ -82,9 +82,11 @@ window.fetchDepositForInvoice = async (nameVal) => {
             const d = docsList[0];
             if(document.getElementById('inv-dep-ref')) document.getElementById('inv-dep-ref').value = d.slipNo || '';
             if(document.getElementById('inv-dep-date')) document.getElementById('inv-dep-date').value = d.date || '';
+            if(document.getElementById('inv-dep-amount')) document.getElementById('inv-dep-amount').value = d.amount || '';
         } else {
             if(document.getElementById('inv-dep-ref')) document.getElementById('inv-dep-ref').value = '';
             if(document.getElementById('inv-dep-date')) document.getElementById('inv-dep-date').value = '';
+            if(document.getElementById('inv-dep-amount')) document.getElementById('inv-dep-amount').value = '';
         }
     } catch(err) { console.error("Error fetching deposit", err); }
 };
@@ -523,7 +525,7 @@ window.rePrint = (idOrData, type) => {
     printRecord(data, type); 
 };
 
-// --- FINAL PROFESSIONAL PRINT LOGIC (A4 - 2 SLIPS) ---
+// --- START OF PROFESSIONAL PRINT LOGIC (FIXED FOR A4 - 2 COPIES) ---
 const printRecord = (data, type) => {
     const container = document.getElementById('print-container');
     let title = type === 'invoice' ? 'TAX INVOICE' : type.toUpperCase() + ' SLIP';
@@ -539,107 +541,122 @@ const printRecord = (data, type) => {
             
             .print-copy { 
                 width: 100%; 
-                height: 138mm; 
+                height: 138mm; /* Fixed height to fit 2 slips perfectly on one A4 */
                 box-sizing: border-box; 
                 border: 2px solid #000; 
                 padding: 10px 15px; 
                 display: flex; 
                 flex-direction: column; 
                 page-break-inside: avoid; 
-                background: #ffffff !important;
+                background: #fff !important;
                 position: relative;
                 overflow: hidden;
             }
             
-            .header-section { position: relative; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 8px; text-align: center; }
+            .header-section { position: relative; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 5px; text-align: center; }
             .header-logo { position: absolute; left: 0; top: 0; height: 50px; }
             .header-copy-type { position: absolute; right: 0; top: 0; border: 1.5px solid #000; padding: 2px 8px; font-weight: bold; font-size: 11px; }
-            .header-text h2 { margin: 0; font-size: 18px; color: #000; font-weight: bold; }
-            .header-text p { margin: 1px 0; font-size: 9px; font-weight: bold; line-height: 1.2;}
+            .header-text h2 { margin: 0; font-size: 17px; color: #000; font-weight: bold; line-height: 1.2; }
+            .header-text p { margin: 1px 0; font-size: 9px; font-weight: bold; line-height: 1.1;}
 
-            .print-title { text-align: center; text-decoration: underline; margin-bottom: 10px; font-size: 14px; font-weight: bold; text-transform: uppercase;}
+            .print-title { text-align: center; text-decoration: underline; margin-bottom: 8px; font-size: 14px; font-weight: bold; text-transform: uppercase;}
 
-            /* Table style for clean rows */
-            .print-data-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
-            .print-data-table td { padding: 4px 5px; border-bottom: 1px dashed #ddd; vertical-align: top;}
-            .label-cell { font-weight: bold; width: 120px; }
+            .print-table { width: 100%; border-collapse: collapse; font-size: 10.5px; margin-bottom: 5px;}
+            .print-table td { padding: 3px 5px; vertical-align: top; border-bottom: 1px dashed #ddd; }
+            .label-cell { font-weight: bold; width: 135px; }
             .val-cell { width: auto; }
-            .sub-heading { font-weight: bold; font-size: 11px; margin: 10px 0 5px; text-transform: uppercase; border-bottom: 1.5px solid #000; width: fit-content; }
+            
+            /* Box for settlement details (Screenshot style) */
+            .details-box { border: 1.5px solid #000; width: 100%; margin-top: 5px; box-sizing: border-box; }
+            .box-heading { font-weight: bold; font-size: 11px; padding: 3px 8px; border-bottom: 1.5px solid #000; text-transform: uppercase; background: #eee !important; }
+            .box-content { padding: 4px 8px; }
 
             .spacer { flex-grow: 1; }
             
-            .signature-row { display: flex; justify-content: space-between; align-items: flex-end; padding: 15px 10px 10px; }
-            .sign-box { border-top: 1.5px solid #000; width: 180px; text-align: center; padding-top: 5px; font-weight: bold; font-size: 11px; }
+            .signature-row { display: flex; justify-content: space-between; align-items: flex-end; padding: 10px 10px 5px; margin-top: auto;}
+            .sign-box { border-top: 1.5px solid #000; width: 180px; text-align: center; padding-top: 4px; font-weight: bold; font-size: 11px; }
             
-            .footer-box { border: 1.5px solid #000; padding: 6px; font-size: 8.5px; line-height: 1.3; background: #fff !important; margin-top: auto; text-align: justify;}
+            .footer-instruction { border-top: 1.5px solid #000; padding-top: 5px; font-size: 8.5px; line-height: 1.2; text-align: justify; }
 
             .cut-line { width: 100%; text-align: center; height: 10mm; display: flex; align-items: center; justify-content: center; border-bottom: 1px dashed #000; margin: 2mm 0; }
-            .cut-text { font-size: 10px; font-weight: bold; color: #333; }
+            .cut-text { font-size: 10px; font-weight: bold; }
         }
     </style>
     `;
 
     copiesArray.forEach((copy, index) => {
-        let detailsHtml = "";
-        let footerNoteHtml = "";
+        let mainDetails = "";
+        let extraBox = "";
 
         if(type === 'invoice') {
             let isRefund = data.settlementType === 'Refund';
-            detailsHtml = `
-            <table class="print-data-table">
+            mainDetails = `
+            <table class="print-table">
                 <tr><td class="label-cell">Invoice No:</td><td class="val-cell">${data.slipNo}</td><td class="label-cell">Date:</td><td class="val-cell">${window.formatDateIndian(data.date)}</td></tr>
                 <tr><td class="label-cell">Name:</td><td class="val-cell" colspan="3">${data.name}</td></tr>
                 <tr><td class="label-cell">Address:</td><td class="val-cell" colspan="3">${data.address || '-'}</td></tr>
                 <tr><td class="label-cell">GSTIN:</td><td class="val-cell">${data.gst || '-'}</td><td class="label-cell">Description:</td><td class="val-cell">${data.desc || '-'}</td></tr>
-                <tr><td class="label-cell">Deposit Ref:</td><td class="val-cell">${data.depRef || '-'}</td><td class="label-cell">Deposit Date:</td><td class="val-cell">${window.formatDateIndian(data.depDate) || '-'}</td></tr>
-                <tr><td class="label-cell">Basic Amount:</td><td class="val-cell">₹${parseFloat(data.basic || 0).toFixed(2)}</td><td class="label-cell">CGST (9%):</td><td class="val-cell">₹${parseFloat(data.cgst || 0).toFixed(2)}</td></tr>
-                <tr><td class="label-cell">SGST (9%):</td><td class="val-cell">₹${parseFloat(data.sgst || 0).toFixed(2)}</td><td class="label-cell">Round Off:</td><td class="val-cell">₹${parseFloat(data.round || 0).toFixed(2)}</td></tr>
-                <tr><td class="label-cell">Total Amount:</td><td class="val-cell" colspan="3"><strong>₹${parseFloat(data.total || 0).toFixed(2)}</strong></td></tr>
-                <tr><td class="label-cell">In Words:</td><td class="val-cell" colspan="3"><i>${data.words || '-'}</i></td></tr>
-            </table>
-            <div class="sub-heading">${isRefund ? 'REFUND DETAILS' : 'RECEIVED DETAILS'}</div>
-            <table class="print-data-table">
-                ${isRefund ? `
-                    <tr><td class="label-cell">Payment Mode:</td><td class="val-cell">${data.payType || '-'}</td><td class="label-cell">Refund Amt:</td><td class="val-cell"><strong>₹${parseFloat(data.refundAmount || 0).toFixed(2)}</strong></td></tr>
-                    <tr><td class="label-cell">Chq/Ref No:</td><td class="val-cell" colspan="3">${data.ref || '-'}</td></tr>
-                ` : `
-                    <tr><td class="label-cell">Dep Slip No:</td><td class="val-cell">${data.recDepNo || '-'}</td><td class="label-cell">Received Amt:</td><td class="val-cell"><strong>₹${parseFloat(data.recAmount || 0).toFixed(2)}</strong></td></tr>
-                    <tr><td class="label-cell">Words:</td><td class="val-cell" colspan="3"><i>${data.recWords || '-'}</i></td></tr>
-                `}
+                <tr><td class="label-cell">Deposit Ref No:</td><td class="val-cell">${data.depRef || '-'}</td><td class="label-cell">Deposit Date:</td><td class="val-cell">${window.formatDateIndian(data.depDate) || '-'}</td></tr>
+                <tr><td class="label-cell">Deposit Amount:</td><td class="val-cell"><strong>₹ ${parseFloat(data.depAmount || 0).toFixed(2)}</strong></td><td class="label-cell">Basic Amount:</td><td class="val-cell">₹ ${parseFloat(data.basic || 0).toFixed(2)}</td></tr>
+                <tr><td class="label-cell">CGST (9.0%):</td><td class="val-cell">₹ ${parseFloat(data.cgst || 0).toFixed(2)}</td><td class="label-cell">SGST (9.0%):</td><td class="val-cell">₹ ${parseFloat(data.sgst || 0).toFixed(2)}</td></tr>
+                <tr><td class="label-cell">Round Off:</td><td class="val-cell">₹ ${data.round || '0.00'}</td><td class="label-cell">Total Amount:</td><td class="val-cell"><strong>₹ ${parseFloat(data.total || 0).toFixed(2)}</strong></td></tr>
+                <tr><td class="label-cell" colspan="4" style="border-bottom:none;">In Words: <i>${data.words || '-'}</i></td></tr>
             </table>`;
+            
+            extraBox = `
+            <div class="details-box">
+                <div class="box-heading">${isRefund ? 'REFUND DETAILS' : 'RECEIVED DETAILS'}</div>
+                <div class="box-content">
+                    <table class="print-table" style="margin:0; border:none;">
+                        ${isRefund ? `
+                            <tr><td class="label-cell" style="border:none;">Payment Type:</td><td class="val-cell" style="border:none;">${data.payType}</td><td class="label-cell" style="border:none;">Payment Date:</td><td class="val-cell" style="border:none;">${window.formatDateIndian(data.payDate)}</td></tr>
+                            <tr><td class="label-cell" style="border:none;">Cheque/Ref No.:</td><td class="val-cell" style="border:none;">${data.ref || '-'}</td><td class="label-cell" style="border:none;">Bank Name:</td><td class="val-cell" style="border:none;">${data.bank || '-'}</td></tr>
+                            <tr><td class="label-cell" style="border:none;">Refund Amount:</td><td class="val-cell" colspan="3" style="border:none;"><strong>₹ ${parseFloat(data.refundAmount || 0).toFixed(2)}</strong></td></tr>
+                            <tr><td class="label-cell" colspan="4" style="border:none;"><i>${data.refundWords || '-'}</i></td></tr>
+                        ` : `
+                            <tr><td class="label-cell" style="border:none;">Deposit Slip No:</td><td class="val-cell" style="border:none;">${data.recDepNo || '-'}</td><td class="label-cell" style="border:none;">Deposit Date:</td><td class="val-cell" style="border:none;">${window.formatDateIndian(data.recDepDate)}</td></tr>
+                            <tr><td class="label-cell" style="border:none;">Payment Type:</td><td class="val-cell" style="border:none;">${data.payType}</td><td class="label-cell" style="border:none;">Payment Date:</td><td class="val-cell" style="border:none;">${window.formatDateIndian(data.payDate)}</td></tr>
+                            <tr><td class="label-cell" style="border:none;">Cheque/Ref No.:</td><td class="val-cell" style="border:none;">${data.ref || '-'}</td><td class="label-cell" style="border:none;">Received Amount:</td><td class="val-cell" style="border:none;"><strong>₹ ${parseFloat(data.recAmount || 0).toFixed(2)}</strong></td></tr>
+                            <tr><td class="label-cell" colspan="4" style="border:none;"><i>${data.recWords || '-'}</i></td></tr>
+                        `}
+                    </table>
+                </div>
+            </div>`;
         } 
         else if (type === 'donation') {
-            detailsHtml = `
-            <table class="print-data-table">
+            mainDetails = `
+            <table class="print-table">
                 <tr><td class="label-cell">Slip No:</td><td class="val-cell">${data.slipNo}</td><td class="label-cell">Date:</td><td class="val-cell">${window.formatDateIndian(data.date)}</td></tr>
                 <tr><td class="label-cell">Name:</td><td class="val-cell" colspan="3">${data.name}</td></tr>
                 <tr><td class="label-cell">Member No:</td><td class="val-cell">${data.member || '-'}</td><td class="label-cell">Native:</td><td class="val-cell">${data.native || '-'}</td></tr>
                 <tr><td class="label-cell">Address:</td><td class="val-cell" colspan="3">${data.address || '-'}</td></tr>
                 <tr><td class="label-cell">PAN No:</td><td class="val-cell">${data.pan || '-'}</td><td class="label-cell">Description:</td><td class="val-cell">${data.desc || '-'}</td></tr>
-                <tr><td class="label-cell">Pay Mode:</td><td class="val-cell">${data.payType}</td><td class="label-cell">Amount:</td><td class="val-cell"><strong>₹${parseFloat(data.amount || 0).toFixed(2)}</strong></td></tr>
-                <tr><td class="label-cell">In Words:</td><td class="val-cell" colspan="3"><i>${data.words || '-'}</i></td></tr>
+                <tr><td class="label-cell">Pay Mode:</td><td class="val-cell">${data.payType}</td><td class="label-cell">Amount:</td><td class="val-cell"><strong>₹ ${parseFloat(data.amount || 0).toFixed(2)}</strong></td></tr>
+                <tr><td class="label-cell" colspan="4" style="border-bottom:none;">In Words: <i>${data.words || '-'}</i></td></tr>
             </table>`;
-            footerNoteHtml = `
-                <div class="footer-box">
-                    <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
-                    DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOMETAX ACT 1961 (RENEWAL)<br>
-                    <strong>Thank you for your generous donation. Your support is sincerely appreciated.</strong>
-                </div>`;
+            
+            extraBox = `
+            <div class="footer-instruction" style="border:1.5px solid #000; padding:8px; margin-top:10px;">
+                <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
+                DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOMETAX ACT 1961 (RENEWAL)<br><br>
+                <strong>Thank you for your generous donation. Your support is sincerely appreciated.</strong>
+            </div>`;
         } 
         else {
-            detailsHtml = `
-            <table class="print-data-table">
+            mainDetails = `
+            <table class="print-table">
                 <tr><td class="label-cell">Slip No:</td><td class="val-cell">${data.slipNo}</td><td class="label-cell">Date:</td><td class="val-cell">${window.formatDateIndian(data.date)}</td></tr>
                 <tr><td class="label-cell">Name:</td><td class="val-cell" colspan="3">${data.name}</td></tr>
                 <tr><td class="label-cell">Mobile:</td><td class="val-cell">${data.mobile || '-'}</td><td class="label-cell">Member No:</td><td class="val-cell">${data.member || '-'}</td></tr>
                 <tr><td class="label-cell">Address:</td><td class="val-cell" colspan="3">${data.address || '-'}</td></tr>
                 <tr><td class="label-cell">Function:</td><td class="val-cell">${data.funcName || '-'}</td><td class="label-cell">Func. Date:</td><td class="val-cell">${window.formatDateIndian(data.funcDate) || '-'}</td></tr>
-                <tr><td class="label-cell">Shift:</td><td class="val-cell">${data.funcShift || '-'}</td><td class="label-cell">Amount:</td><td class="val-cell"><strong>₹${parseFloat(data.amount || 0).toFixed(2)}</strong></td></tr>
+                <tr><td class="label-cell">Shift:</td><td class="val-cell">${data.funcShift || '-'}</td><td class="label-cell">Amount:</td><td class="val-cell"><strong>₹ ${parseFloat(data.amount || 0).toFixed(2)}</strong></td></tr>
                 <tr><td class="label-cell">Pay Mode:</td><td class="val-cell">${data.payType}</td><td class="label-cell">Chq/Ref No:</td><td class="val-cell">${data.ref || '-'}</td></tr>
-                <tr><td class="label-cell">In Words:</td><td class="val-cell" colspan="3"><i>${data.words || '-'}</i></td></tr>
+                <tr><td class="label-cell" colspan="4" style="border-bottom:none;">In Words: <i>${data.words || '-'}</i></td></tr>
             </table>`;
-            footerNoteHtml = `
-            <div class="footer-box">
+            
+            extraBox = `
+            <div class="footer-instruction">
                 <strong>1.</strong> The entire responsibility for vehicle management and parking shall lie solely with the host/booking organization. The Sanstha assumes no liability for parking-related issues.<br>
                 <strong>2.</strong> For the final settlement and processing of refunds, it is mandatory to produce and submit the Original Deposit Receipt. No settlement will be processed without this document.<br>
                 <strong>3.</strong> As a mandatory requirement, the venue must be identified on all invitations (Physical or Digital) exactly as: <strong>“Sheth Shri Hiralal Hargovandas Batrisi Hall.”</strong> Please note that the Sanstha reserves the right to levy a penalty for any non-compliance or abbreviation of this name.
@@ -659,13 +676,13 @@ const printRecord = (data, type) => {
                     <div class="header-copy-type">${copy}</div>
                 </div>
                 <div class="print-title">${title}</div>
-                ${detailsHtml}
+                ${mainDetails}
+                ${extraBox}
                 <div class="spacer"></div>
                 <div class="signature-row">
                     <div class="sign-box">Payer Signature</div>
                     <div class="sign-box">Receiver Signature</div>
                 </div>
-                ${footerNoteHtml}
             </div>`;
 
         if (index === 0) {
@@ -676,6 +693,7 @@ const printRecord = (data, type) => {
     container.innerHTML = contentHtml;
     setTimeout(() => { window.print(); }, 500);
 };
+// --- END OF PROFESSIONAL PRINT LOGIC ---
 
 window.addEventListener('load', async () => {
     setToday(); updateDashboardCounts();
