@@ -217,7 +217,7 @@ window.handleFormSubmit = async (e, type) => {
     if(e) e.preventDefault();
     const prefix = type.substring(0, 3);
     const btn = document.getElementById(`btn-submit-${prefix}`);
-    if(btn) { btn.innerHTML = "Saving..."; btn.disabled = true; }
+    if(btn) { btn.innerHTML = "Saving to Cloud..."; btn.disabled = true; }
 
     try {
         let data = { timestamp: new Date().toISOString() };
@@ -303,7 +303,7 @@ window.loadRecords = async () => {
     
     if(qs.empty) { tbody.innerHTML = `<tr><td colspan='${type==='deposit'? 7 : 5}' style='text-align:center;'>No Data</td></tr>`; return; }
     
-    window.allRecords = {};
+    window.allRecords[type] = {};
     let recordsArray = [];
     
     qs.forEach((docSnap) => {
@@ -551,10 +551,10 @@ const printRecord = (data, type) => {
 
             .print-copy { 
                 width: 100%; 
-                height: 138mm; 
+                height: 135mm; 
                 box-sizing: border-box; 
                 border: 2px solid #000; 
-                padding: 10px 15px; 
+                padding: 8px 12px; 
                 display: flex; 
                 flex-direction: column; 
                 background: #fff !important;
@@ -575,18 +575,17 @@ const printRecord = (data, type) => {
             .label-cell { font-weight: bold; width: 130px; }
             
             .details-box { border: 1.5px solid #000; width: 100%; margin-top: 3px; box-sizing: border-box; }
-            .box-heading { font-weight: bold; font-size: 10px; padding: 2px 8px; border-bottom: 1.5px solid #000; text-transform: uppercase; text-align: center; background: #eee !important; -webkit-print-color-adjust: exact; }
-            .box-content { padding: 2px 4px; }
+            .box-heading { font-weight: bold; font-size: 10px; padding: 3px 8px; border-bottom: 1.5px solid #000; text-transform: uppercase; text-align: center; background: #eee !important; -webkit-print-color-adjust: exact; }
+            .box-content { padding: 4px 6px; }
 
             .spacer { flex-grow: 1; }
             
             .signature-row { display: flex; justify-content: space-between; align-items: flex-end; padding: 5px 10px 5px; }
             .sign-box { border-top: 1.5px solid #000; width: 170px; text-align: center; padding-top: 3px; font-weight: bold; font-size: 11px; }
             
-            /* Instruction Table with numbering box */
-            .instr-table { width: 100%; border-collapse: collapse; margin-top: 8px; }
-            .instr-table td { border: 1px solid #000; font-size: 8.2px; padding: 3px 5px; line-height: 1.2; }
-            .instr-num { width: 20px; text-align: center; font-weight: bold; }
+            .instr-table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+            .instr-table td { border: 1px solid #000; font-size: 8.2px; padding: 4px 6px; line-height: 1.2; vertical-align: middle;}
+            .instr-num { width: 25px; text-align: center; font-weight: bold; background: #f9f9f9; }
 
             .cut-line-wrapper { width: 100%; text-align: center; height: 10mm; display: flex; align-items: center; justify-content: center; border-bottom: 1px dashed #000; margin: 2mm 0; }
             .cut-text { font-size: 10px; font-weight: bold; }
@@ -620,16 +619,16 @@ const printRecord = (data, type) => {
                 <div class="box-content">
                     <table class="print-table" style="margin:0; border:none;">
                         ${isRefund ? `
-                            <tr><td class="label-cell" style="border:none;">Payment Mode:</td><td>${data.payType}</td><td class="label-cell" style="border:none;">Payment Date:</td><td>${window.formatDateIndian(data.payDate)}</td></tr>
-                            <tr><td class="label-cell" style="border:none;">Chq/Ref No.:</td><td>${data.ref || '-'}</td><td class="label-cell" style="border:none;">Bank Name:</td><td>${data.bank || '-'}</td></tr>
-                            <tr><td class="label-cell" style="border:none;">Refund Amount:</td><td><strong>₹ ${parseFloat(data.refundAmount || 0).toFixed(2)}</strong></td></tr>
-                            <tr><td class="label-cell" colspan="4" style="border:none;"><i>${data.refundWords || '-'}</i></td></tr>
+                            <tr><td class="label-cell" style="border:none;">Payment Type:</td><td>${data.payType}</td><td class="label-cell" style="border:none;">Payment Date:</td><td>${window.formatDateIndian(data.payDate)}</td></tr>
+                            <tr><td class="label-cell" style="border:none;">Cheque/Ref No.:</td><td>${data.ref || '-'}</td><td class="label-cell" style="border:none;">Bank Name:</td><td>${data.bank || '-'}</td></tr>
+                            <tr><td class="label-cell" style="border:none;">Refund Amount:</td><td colspan="3"><strong>₹ ${parseFloat(data.refundAmount || 0).toFixed(2)}</strong></td></tr>
+                            <tr><td class="label-cell" colspan="4" style="border:none;">In Words: <i>${data.refundWords || '-'}</i></td></tr>
                         ` : `
                             <tr><td class="label-cell" style="border:none;">Deposit Slip No:</td><td>${data.recDepNo || '-'}</td><td class="label-cell" style="border:none;">Deposit Date:</td><td>${window.formatDateIndian(data.recDepDate)}</td></tr>
-                            <tr><td class="label-cell" style="border:none;">Payment Mode:</td><td>${data.payType}</td><td class="label-cell" style="border:none;">Payment Date:</td><td>${window.formatDateIndian(data.payDate)}</td></tr>
-                            <tr><td class="label-cell" style="border:none;">Chq/Ref No.:</td><td>${data.ref || '-'}</td><td class="label-cell" style="border:none;">Bank Name:</td><td>${data.bank || '-'}</td></tr>
-                            <tr><td class="label-cell" style="border:none;">Received Amt:</td><td><strong>₹ ${parseFloat(data.recAmount || 0).toFixed(2)}</strong></td></tr>
-                            <tr><td class="label-cell" colspan="4" style="border:none;"><i>${data.recWords || '-'}</i></td></tr>
+                            <tr><td class="label-cell" style="border:none;">Payment Type:</td><td>${data.payType}</td><td class="label-cell" style="border:none;">Payment Date:</td><td>${window.formatDateIndian(data.payDate)}</td></tr>
+                            <tr><td class="label-cell" style="border:none;">Cheque/Ref No.:</td><td>${data.ref || '-'}</td><td class="label-cell" style="border:none;">Bank Name:</td><td>${data.bank || '-'}</td></tr>
+                            <tr><td class="label-cell" style="border:none;">Received Amt:</td><td colspan="3"><strong>₹ ${parseFloat(data.recAmount || 0).toFixed(2)}</strong></td></tr>
+                            <tr><td class="label-cell" colspan="4" style="border:none;">In Words: <i>${data.recWords || '-'}</i></td></tr>
                         `}
                     </table>
                 </div>
@@ -648,7 +647,7 @@ const printRecord = (data, type) => {
             </table>`;
             
             extraBox = `
-            <div style="border:1.5px solid #000; padding:8px; margin-top:20px; font-size:8.5px; line-height:1.3; text-align:center;">
+            <div style="border:1.5px solid #000; padding:10px; margin-top:15px; font-size:8.8px; line-height:1.4; text-align:center;">
                 <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
                 DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOMETAX ACT 1961 (RENEWAL)<br>
                 <strong>Thank you for your generous donation. Your support is sincerely appreciated.</strong>
