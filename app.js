@@ -217,7 +217,7 @@ window.handleFormSubmit = async (e, type) => {
     if(e) e.preventDefault();
     const prefix = type.substring(0, 3);
     const btn = document.getElementById(`btn-submit-${prefix}`);
-    if(btn) { btn.innerHTML = "Saving..."; btn.disabled = true; }
+    if(btn) { btn.innerHTML = "Saving to Cloud..."; btn.disabled = true; }
 
     try {
         let data = { timestamp: new Date().toISOString() };
@@ -525,20 +525,19 @@ window.rePrint = (idOrData, type) => {
     printRecord(data, type); 
 };
 
-// --- START OF STRICT SINGLE PAGE PRINT LOGIC ---
+// --- START OF ENHANCED PRINT LOGIC (STRICT A4 - SINGLE PAGE) ---
 const printRecord = (data, type) => {
     const container = document.getElementById('print-container');
     let title = type === 'invoice' ? 'TAX INVOICE' : type.toUpperCase() + ' SLIP';
     let contentHtml = '';
     let copiesArray = ['ORIGINAL', 'DUPLICATE'];
     
-    // CSS that strictly controls the height to fit on one A4
     contentHtml += `
     <style>
         @media print {
             @page { size: A4 portrait; margin: 0; } 
-            body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #ffffff !important; overflow: hidden !important; }
-            #print-container { width: 100%; height: 100%; background: #fff !important; }
+            body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #fff !important; color: #000; font-family: Arial, sans-serif; overflow: visible !important;}
+            #print-container { width: 100%; height: 100%; background: #fff !important;}
             
             .print-page {
                 width: 210mm;
@@ -552,10 +551,10 @@ const printRecord = (data, type) => {
 
             .print-copy { 
                 width: 100%; 
-                height: 135mm; /* Reduced slightly to ensure 2 fit + gap */
+                height: 138mm; 
                 box-sizing: border-box; 
                 border: 2px solid #000; 
-                padding: 8px 15px; 
+                padding: 8px 12px; 
                 display: flex; 
                 flex-direction: column; 
                 background: #fff !important;
@@ -571,21 +570,22 @@ const printRecord = (data, type) => {
 
             .print-title { text-align: center; text-decoration: underline; margin-bottom: 5px; font-size: 13px; font-weight: bold; text-transform: uppercase;}
 
-            .print-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 4px;}
-            .print-table td { padding: 3px 5px; vertical-align: top; border-bottom: 1px dashed #ddd; }
+            .print-table { width: 100%; border-collapse: collapse; font-size: 9.8px; margin-bottom: 3px;}
+            .print-table td { padding: 2px 4px; vertical-align: top; border-bottom: 1px dashed #ddd; }
             .label-cell { font-weight: bold; width: 130px; }
             
-            .details-box { border: 1.5px solid #000; width: 100%; margin-top: 4px; box-sizing: border-box; }
+            .details-box { border: 1.5px solid #000; width: 100%; margin-top: 3px; box-sizing: border-box; }
             .box-heading { font-weight: bold; font-size: 10px; padding: 2px 8px; border-bottom: 1.5px solid #000; text-transform: uppercase; background: #eee !important; -webkit-print-color-adjust: exact; }
-            .box-content { padding: 2px 8px; }
+            .box-content { padding: 2px 4px; }
 
             .spacer { flex-grow: 1; }
             
             .signature-row { display: flex; justify-content: space-between; align-items: flex-end; padding: 5px 10px 5px; }
             .sign-box { border-top: 1.5px solid #000; width: 170px; text-align: center; padding-top: 3px; font-weight: bold; font-size: 11px; }
             
-            /* Border for Instructions Box */
-            .footer-instruction { border: 1.5px solid #000; padding: 6px; font-size: 8.2px; line-height: 1.25; text-align: justify; background: #fff !important; }
+            /* Enhanced Table Border for Instructions */
+            .instr-table { width: 100%; border-collapse: collapse; margin-top: 5px; border: 1.5px solid #000; }
+            .instr-table td { padding: 4px 8px; border: 1px solid #000; font-size: 8px; line-height: 1.2; text-align: justify; }
 
             .cut-line-wrapper { width: 100%; text-align: center; height: 10mm; display: flex; align-items: center; justify-content: center; border-bottom: 1px dashed #000; margin: 2mm 0; }
             .cut-text { font-size: 10px; font-weight: bold; }
@@ -619,12 +619,15 @@ const printRecord = (data, type) => {
                 <div class="box-content">
                     <table class="print-table" style="margin:0; border:none;">
                         ${isRefund ? `
-                            <tr><td class="label-cell" style="border:none;">Payment Mode:</td><td>${data.payType}</td><td class="label-cell" style="border:none;">Payment Date:</td><td>${window.formatDateIndian(data.payDate)}</td></tr>
-                            <tr><td class="label-cell" style="border:none;">Chq/Ref No.:</td><td>${data.ref || '-'}</td><td class="label-cell" style="border:none;">Refund Amount:</td><td><strong>₹ ${parseFloat(data.refundAmount || 0).toFixed(2)}</strong></td></tr>
+                            <tr><td class="label-cell" style="border:none;">Payment Type:</td><td>${data.payType}</td><td class="label-cell" style="border:none;">Payment Date:</td><td>${window.formatDateIndian(data.payDate)}</td></tr>
+                            <tr><td class="label-cell" style="border:none;">Chq/Ref No.:</td><td>${data.ref || '-'}</td><td class="label-cell" style="border:none;">Bank Name:</td><td>${data.bank || '-'}</td></tr>
+                            <tr><td class="label-cell" style="border:none;">Refund Amount:</td><td><strong>₹ ${parseFloat(data.refundAmount || 0).toFixed(2)}</strong></td></tr>
                             <tr><td class="label-cell" colspan="4" style="border:none;"><i>${data.refundWords || '-'}</i></td></tr>
                         ` : `
                             <tr><td class="label-cell" style="border:none;">Deposit Slip No:</td><td>${data.recDepNo || '-'}</td><td class="label-cell" style="border:none;">Deposit Date:</td><td>${window.formatDateIndian(data.recDepDate)}</td></tr>
-                            <tr><td class="label-cell" style="border:none;">Payment Mode:</td><td>${data.payType}</td><td class="label-cell" style="border:none;">Received Amt:</td><td><strong>₹ ${parseFloat(data.recAmount || 0).toFixed(2)}</strong></td></tr>
+                            <tr><td class="label-cell" style="border:none;">Payment Type:</td><td>${data.payType}</td><td class="label-cell" style="border:none;">Payment Date:</td><td>${window.formatDateIndian(data.payDate)}</td></tr>
+                            <tr><td class="label-cell" style="border:none;">Chq/Ref No.:</td><td>${data.ref || '-'}</td><td class="label-cell" style="border:none;">Bank Name:</td><td>${data.bank || '-'}</td></tr>
+                            <tr><td class="label-cell" style="border:none;">Received Amount:</td><td><strong>₹ ${parseFloat(data.recAmount || 0).toFixed(2)}</strong></td></tr>
                             <tr><td class="label-cell" colspan="4" style="border:none;"><i>${data.recWords || '-'}</i></td></tr>
                         `}
                     </table>
@@ -644,7 +647,7 @@ const printRecord = (data, type) => {
             </table>`;
             
             extraBox = `
-            <div class="footer-instruction">
+            <div style="border:1.5px solid #000; padding:8px; margin-top:10px; font-size:8.5px; line-height:1.2;">
                 <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
                 DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOMETAX ACT 1961 (RENEWAL)<br>
                 <strong>Thank you for your generous donation. Your support is sincerely appreciated.</strong>
@@ -657,18 +660,18 @@ const printRecord = (data, type) => {
                 <tr><td class="label-cell">Name:</td><td colspan="3">${data.name}</td></tr>
                 <tr><td class="label-cell">Mobile:</td><td>${data.mobile || '-'}</td><td class="label-cell">Member No:</td><td>${data.member || '-'}</td></tr>
                 <tr><td class="label-cell">Address:</td><td colspan="3">${data.address || '-'}</td></tr>
-                <tr><td class="label-cell">Function:</td><td>${data.funcName || '-'}</td><td class="label-cell">Func. Date:</td><td>${window.formatDateIndian(data.funcDate) || '-'}</td></tr>
+                <tr><td class="label-cell">Description:</td><td>${data.funcName || '-'}</td><td class="label-cell">Func. Date:</td><td>${window.formatDateIndian(data.funcDate) || '-'}</td></tr>
                 <tr><td class="label-cell">Shift:</td><td>${data.funcShift || '-'}</td><td class="label-cell">Amount:</td><td><strong>₹ ${parseFloat(data.amount || 0).toFixed(2)}</strong></td></tr>
                 <tr><td class="label-cell">Pay Mode:</td><td>${data.payType}</td><td class="label-cell">Chq/Ref No:</td><td>${data.ref || '-'}</td></tr>
                 <tr><td class="label-cell" colspan="4" style="border-bottom:none;">In Words: <i>${data.words || '-'}</i></td></tr>
             </table>`;
             
             extraBox = `
-            <div class="footer-instruction">
-                <strong>1.</strong> The entire responsibility for vehicle management and parking shall lie solely with the host/booking organization. The Sanstha assumes no liability for parking-related issues.<br>
-                <strong>2.</strong> For the final settlement and processing of refunds, it is mandatory to produce and submit the Original Deposit Receipt. No settlement will be processed without this document.<br>
-                <strong>3.</strong> As a mandatory requirement, the venue must be identified on all invitations exactly as: <strong>“Sheth Shri Hiralal Hargovandas Batrisi Hall.”</strong> Please note that the Sanstha reserves the right to levy a penalty for any non-compliance or abbreviation of this name.
-            </div>`;
+            <table class="instr-table">
+                <tr><td>1. The entire responsibility for vehicle management and parking shall lie solely with the host/booking organization. The Sanstha assumes no liability for parking-related issues.</td></tr>
+                <tr><td>2. For the final settlement and processing of refunds, it is mandatory to produce and submit the Original Deposit Receipt. No settlement will be processed without this document.</td></tr>
+                <tr><td>3. As a mandatory requirement, the venue must be identified on all invitations exactly as: <strong>“Sheth Shri Hiralal Hargovandas Batrisi Hall.”</strong> Please note that the Sanstha reserves the right to levy a penalty for any non-compliance or abbreviation of this name.</td></tr>
+            </table>`;
         }
 
         contentHtml += `
@@ -698,7 +701,7 @@ const printRecord = (data, type) => {
         }
     });
     
-    contentHtml += `</div>`; // Close print-page
+    contentHtml += `</div>`;
     container.innerHTML = contentHtml;
     setTimeout(() => { window.print(); }, 500);
 };
