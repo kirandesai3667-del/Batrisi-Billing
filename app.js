@@ -525,7 +525,7 @@ window.rePrint = (idOrData, type) => {
     printRecord(data, type); 
 };
 
-// --- START OF PROFESSIONAL PRINT LOGIC (FIXED FOR A4 - 2 COPIES) ---
+// --- START OF FIXED PRINT LOGIC (STRICT A4 - ONE PAGE) ---
 const printRecord = (data, type) => {
     const container = document.getElementById('print-container');
     let title = type === 'invoice' ? 'TAX INVOICE' : type.toUpperCase() + ' SLIP';
@@ -536,12 +536,12 @@ const printRecord = (data, type) => {
     <style>
         @media print {
             @page { size: A4 portrait; margin: 0; } 
-            body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #ffffff !important; color: #000; font-family: Arial, sans-serif; }
-            #print-container { width: 100%; display: block; padding: 5mm; box-sizing: border-box; }
+            body, html { margin: 0; padding: 0; width: 100%; height: 100%; background: #fff !important; color: #000; font-family: Arial, sans-serif; overflow: visible !important;}
+            #print-container { width: 100%; display: block; padding: 4mm; box-sizing: border-box; background: #fff !important;}
             
             .print-copy { 
                 width: 100%; 
-                height: 138mm; /* Fixed height to fit 2 slips perfectly on one A4 */
+                height: 138mm; /* FIXED HEIGHT TO ENSURE 2 COPIES FIT A4 (297mm total) */
                 box-sizing: border-box; 
                 border: 2px solid #000; 
                 padding: 10px 15px; 
@@ -561,14 +561,13 @@ const printRecord = (data, type) => {
 
             .print-title { text-align: center; text-decoration: underline; margin-bottom: 8px; font-size: 14px; font-weight: bold; text-transform: uppercase;}
 
-            .print-table { width: 100%; border-collapse: collapse; font-size: 10.5px; margin-bottom: 5px;}
+            .print-table { width: 100%; border-collapse: collapse; font-size: 10px; margin-bottom: 5px;}
             .print-table td { padding: 3px 5px; vertical-align: top; border-bottom: 1px dashed #ddd; }
-            .label-cell { font-weight: bold; width: 135px; }
+            .label-cell { font-weight: bold; width: 125px; }
             .val-cell { width: auto; }
             
-            /* Box for settlement details (Screenshot style) */
             .details-box { border: 1.5px solid #000; width: 100%; margin-top: 5px; box-sizing: border-box; }
-            .box-heading { font-weight: bold; font-size: 11px; padding: 3px 8px; border-bottom: 1.5px solid #000; text-transform: uppercase; background: #eee !important; }
+            .box-heading { font-weight: bold; font-size: 11px; padding: 3px 8px; border-bottom: 1.5px solid #000; text-transform: uppercase; background: #eee !important; -webkit-print-color-adjust: exact;}
             .box-content { padding: 4px 8px; }
 
             .spacer { flex-grow: 1; }
@@ -693,7 +692,6 @@ const printRecord = (data, type) => {
     container.innerHTML = contentHtml;
     setTimeout(() => { window.print(); }, 500);
 };
-// --- END OF PROFESSIONAL PRINT LOGIC ---
 
 window.addEventListener('load', async () => {
     setToday(); updateDashboardCounts();
