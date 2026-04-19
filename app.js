@@ -523,7 +523,7 @@ window.rePrint = (idOrData, type) => {
     printRecord(data, type); 
 };
 
-// --- PRINT LOGIC START (FIXED FOR 2 PER A4 PAGE) ---
+// --- FINAL PROFESSIONAL PRINT LOGIC (A4 - 2 SLIPS) ---
 const printRecord = (data, type) => {
     const container = document.getElementById('print-container');
     let title = type === 'invoice' ? 'TAX INVOICE' : type.toUpperCase() + ' SLIP';
@@ -539,10 +539,9 @@ const printRecord = (data, type) => {
             
             .print-copy { 
                 width: 100%; 
-                height: 138mm; /* FIXED HEIGHT SO 2 FIT ON ONE PAGE */
+                height: 138mm; 
                 box-sizing: border-box; 
                 border: 2px solid #000; 
-                border-radius: 6px; 
                 padding: 10px 15px; 
                 display: flex; 
                 flex-direction: column; 
@@ -554,29 +553,28 @@ const printRecord = (data, type) => {
             
             .header-section { position: relative; border-bottom: 2px solid #000; padding-bottom: 5px; margin-bottom: 8px; text-align: center; }
             .header-logo { position: absolute; left: 0; top: 0; height: 50px; }
-            .header-copy-type { position: absolute; right: 0; top: 0; border: 1px solid #000; padding: 2px 8px; font-weight: bold; font-size: 11px; }
-            .header-text h2 { margin: 0; font-size: 17px; color: #000; line-height: 1.2; }
-            .header-text p { margin: 2px 0; font-size: 9px; font-weight: bold; }
+            .header-copy-type { position: absolute; right: 0; top: 0; border: 1.5px solid #000; padding: 2px 8px; font-weight: bold; font-size: 11px; }
+            .header-text h2 { margin: 0; font-size: 18px; color: #000; font-weight: bold; }
+            .header-text p { margin: 1px 0; font-size: 9px; font-weight: bold; line-height: 1.2;}
 
-            .print-title { text-align: center; text-decoration: underline; margin: 5px 0 10px 0; font-size: 14px; font-weight: bold; text-transform: uppercase;}
+            .print-title { text-align: center; text-decoration: underline; margin-bottom: 10px; font-size: 14px; font-weight: bold; text-transform: uppercase;}
 
-            .print-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 4px 20px; }
-            .print-row { display: flex; align-items: flex-start; padding: 2px 0; border-bottom: 1px dashed #ddd; font-size: 10.5px; line-height: 1.3; }
-            .print-label { font-weight: bold; width: 125px; flex-shrink: 0; }
-            .print-val { flex-grow: 1; word-break: break-all; }
-            .full-span { grid-column: span 2; }
-            
-            .section-heading { font-weight: bold; font-size: 11px; margin: 8px 0 5px 0; text-transform: uppercase; border-bottom: 1.5px solid #000; width: fit-content;} 
+            /* Table style for clean rows */
+            .print-data-table { width: 100%; border-collapse: collapse; font-size: 10.5px; }
+            .print-data-table td { padding: 4px 5px; border-bottom: 1px dashed #ddd; vertical-align: top;}
+            .label-cell { font-weight: bold; width: 120px; }
+            .val-cell { width: auto; }
+            .sub-heading { font-weight: bold; font-size: 11px; margin: 10px 0 5px; text-transform: uppercase; border-bottom: 1.5px solid #000; width: fit-content; }
 
             .spacer { flex-grow: 1; }
             
-            .signature-row { display: flex; justify-content: space-between; align-items: flex-end; padding-top: 15px; margin-bottom: 10px; }
-            .sign-box { border-top: 1.5px solid #000; width: 160px; text-align: center; padding-top: 5px; font-weight: bold; font-size: 11px; }
+            .signature-row { display: flex; justify-content: space-between; align-items: flex-end; padding: 15px 10px 10px; }
+            .sign-box { border-top: 1.5px solid #000; width: 180px; text-align: center; padding-top: 5px; font-weight: bold; font-size: 11px; }
             
-            .footer-box { border: 1px solid #000; padding: 5px; text-align: center; font-size: 8.5px; line-height: 1.2; background: #fff !important; margin-top: auto; }
+            .footer-box { border: 1.5px solid #000; padding: 6px; font-size: 8.5px; line-height: 1.3; background: #fff !important; margin-top: auto; text-align: justify;}
 
-            .cut-wrapper { width: 100%; text-align: center; height: 8mm; display: flex; align-items: center; justify-content: center; border-bottom: 1px dashed #000; margin: 2mm 0; }
-            .cut-text { font-size: 10px; font-weight: bold; }
+            .cut-line { width: 100%; text-align: center; height: 10mm; display: flex; align-items: center; justify-content: center; border-bottom: 1px dashed #000; margin: 2mm 0; }
+            .cut-text { font-size: 10px; font-weight: bold; color: #333; }
         }
     </style>
     `;
@@ -588,71 +586,63 @@ const printRecord = (data, type) => {
         if(type === 'invoice') {
             let isRefund = data.settlementType === 'Refund';
             detailsHtml = `
-            <div class="print-grid">
-                <div class="print-row"><span class="print-label">Invoice No:</span> <span class="print-val">${data.slipNo}</span></div>
-                <div class="print-row"><span class="print-label">Date:</span> <span class="print-val">${window.formatDateIndian(data.date)}</span></div>
-                <div class="print-row"><span class="print-label">Name:</span> <span class="print-val">${data.name}</span></div>
-                <div class="print-row"><span class="print-label">GSTIN:</span> <span class="print-val">${data.gst || '-'}</span></div>
-                <div class="print-row full-span"><span class="print-label">Address:</span> <span class="print-val">${data.address || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Deposit Ref:</span> <span class="print-val">${data.depRef || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Deposit Amount:</span> <span class="print-val">₹${parseFloat(data.depAmount || 0).toFixed(2)}</span></div>
-                <div class="print-row"><span class="print-label">Basic Amount:</span> <span class="print-val">₹${parseFloat(data.basic || 0).toFixed(2)}</span></div>
-                <div class="print-row"><span class="print-label">Total (Inc GST):</span> <span class="print-val"><strong>₹${parseFloat(data.total || 0).toFixed(2)}</strong></span></div>
-                <div class="print-row full-span"><span class="print-label">In Words:</span> <span class="print-val"><i>${data.words || '-'}</i></span></div>
-            </div>
-            <div class="section-heading">${isRefund ? 'REFUND DETAILS' : 'RECEIVED DETAILS'}</div>
-            <div class="print-grid">
+            <table class="print-data-table">
+                <tr><td class="label-cell">Invoice No:</td><td class="val-cell">${data.slipNo}</td><td class="label-cell">Date:</td><td class="val-cell">${window.formatDateIndian(data.date)}</td></tr>
+                <tr><td class="label-cell">Name:</td><td class="val-cell" colspan="3">${data.name}</td></tr>
+                <tr><td class="label-cell">Address:</td><td class="val-cell" colspan="3">${data.address || '-'}</td></tr>
+                <tr><td class="label-cell">GSTIN:</td><td class="val-cell">${data.gst || '-'}</td><td class="label-cell">Description:</td><td class="val-cell">${data.desc || '-'}</td></tr>
+                <tr><td class="label-cell">Deposit Ref:</td><td class="val-cell">${data.depRef || '-'}</td><td class="label-cell">Deposit Date:</td><td class="val-cell">${window.formatDateIndian(data.depDate) || '-'}</td></tr>
+                <tr><td class="label-cell">Basic Amount:</td><td class="val-cell">₹${parseFloat(data.basic || 0).toFixed(2)}</td><td class="label-cell">CGST (9%):</td><td class="val-cell">₹${parseFloat(data.cgst || 0).toFixed(2)}</td></tr>
+                <tr><td class="label-cell">SGST (9%):</td><td class="val-cell">₹${parseFloat(data.sgst || 0).toFixed(2)}</td><td class="label-cell">Round Off:</td><td class="val-cell">₹${parseFloat(data.round || 0).toFixed(2)}</td></tr>
+                <tr><td class="label-cell">Total Amount:</td><td class="val-cell" colspan="3"><strong>₹${parseFloat(data.total || 0).toFixed(2)}</strong></td></tr>
+                <tr><td class="label-cell">In Words:</td><td class="val-cell" colspan="3"><i>${data.words || '-'}</i></td></tr>
+            </table>
+            <div class="sub-heading">${isRefund ? 'REFUND DETAILS' : 'RECEIVED DETAILS'}</div>
+            <table class="print-data-table">
                 ${isRefund ? `
-                    <div class="print-row"><span class="print-label">Payment Mode:</span> <span class="print-val">${data.payType || '-'}</span></div>
-                    <div class="print-row"><span class="print-label">Refund Amount:</span> <span class="print-val"><strong>₹${parseFloat(data.refundAmount || 0).toFixed(2)}</strong></span></div>
-                    <div class="print-row full-span"><span class="print-label">Chq/Ref No:</span> <span class="print-val">${data.ref || '-'}</span></div>
-                    <div class="print-row full-span"><span class="print-label">Words:</span> <span class="print-val"><i>${data.refundWords || '-'}</i></span></div>
+                    <tr><td class="label-cell">Payment Mode:</td><td class="val-cell">${data.payType || '-'}</td><td class="label-cell">Refund Amt:</td><td class="val-cell"><strong>₹${parseFloat(data.refundAmount || 0).toFixed(2)}</strong></td></tr>
+                    <tr><td class="label-cell">Chq/Ref No:</td><td class="val-cell" colspan="3">${data.ref || '-'}</td></tr>
                 ` : `
-                    <div class="print-row"><span class="print-label">Dep Slip No:</span> <span class="print-val">${data.recDepNo || '-'}</span></div>
-                    <div class="print-row"><span class="print-label">Received Amt:</span> <span class="print-val"><strong>₹${parseFloat(data.recAmount || 0).toFixed(2)}</strong></span></div>
-                    <div class="print-row full-span"><span class="print-label">Words:</span> <span class="print-val"><i>${data.recWords || '-'}</i></span></div>
+                    <tr><td class="label-cell">Dep Slip No:</td><td class="val-cell">${data.recDepNo || '-'}</td><td class="label-cell">Received Amt:</td><td class="val-cell"><strong>₹${parseFloat(data.recAmount || 0).toFixed(2)}</strong></td></tr>
+                    <tr><td class="label-cell">Words:</td><td class="val-cell" colspan="3"><i>${data.recWords || '-'}</i></td></tr>
                 `}
-            </div>`;
+            </table>`;
         } 
         else if (type === 'donation') {
             detailsHtml = `
-            <div class="print-grid">
-                <div class="print-row"><span class="print-label">Slip No:</span> <span class="print-val">${data.slipNo}</span></div>
-                <div class="print-row"><span class="print-label">Date:</span> <span class="print-val">${window.formatDateIndian(data.date)}</span></div>
-                <div class="print-row"><span class="print-label">Name:</span> <span class="print-val">${data.name}</span></div>
-                <div class="print-row"><span class="print-label">Member No:</span> <span class="print-val">${data.member || '-'}</span></div>
-                <div class="print-row full-span"><span class="print-label">Address:</span> <span class="print-val">${data.address || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Native:</span> <span class="print-val">${data.native || '-'}</span></div>
-                <div class="print-row"><span class="print-label">PAN No:</span> <span class="print-val">${data.pan || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Description:</span> <span class="print-val">${data.desc || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Amount:</span> <span class="print-val"><strong>₹${parseFloat(data.amount || 0).toFixed(2)}</strong></span></div>
-                <div class="print-row"><span class="print-label">Pay Mode:</span> <span class="print-val">${data.payType}</span></div>
-                <div class="print-row full-span"><span class="print-label">In Words:</span> <span class="print-val"><i>${data.words || '-'}</i></span></div>
-            </div>`;
+            <table class="print-data-table">
+                <tr><td class="label-cell">Slip No:</td><td class="val-cell">${data.slipNo}</td><td class="label-cell">Date:</td><td class="val-cell">${window.formatDateIndian(data.date)}</td></tr>
+                <tr><td class="label-cell">Name:</td><td class="val-cell" colspan="3">${data.name}</td></tr>
+                <tr><td class="label-cell">Member No:</td><td class="val-cell">${data.member || '-'}</td><td class="label-cell">Native:</td><td class="val-cell">${data.native || '-'}</td></tr>
+                <tr><td class="label-cell">Address:</td><td class="val-cell" colspan="3">${data.address || '-'}</td></tr>
+                <tr><td class="label-cell">PAN No:</td><td class="val-cell">${data.pan || '-'}</td><td class="label-cell">Description:</td><td class="val-cell">${data.desc || '-'}</td></tr>
+                <tr><td class="label-cell">Pay Mode:</td><td class="val-cell">${data.payType}</td><td class="label-cell">Amount:</td><td class="val-cell"><strong>₹${parseFloat(data.amount || 0).toFixed(2)}</strong></td></tr>
+                <tr><td class="label-cell">In Words:</td><td class="val-cell" colspan="3"><i>${data.words || '-'}</i></td></tr>
+            </table>`;
             footerNoteHtml = `
                 <div class="footer-box">
                     <strong>PAN NO. AAATS6070J | URN NO. AAATS6070JF20217 | DATE 24-09-2021</strong><br>
-                    DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOME TAX ACT 1961
+                    DONATION TO SHREE BATRISI JAIN CO-OP EDUCATION SOCIETY LTD. IS EXEMPTED UNDER SECTION 80G(5) 180/09-10 DATED: 20/11/2009 OF INCOMETAX ACT 1961 (RENEWAL)<br>
+                    <strong>Thank you for your generous donation. Your support is sincerely appreciated.</strong>
                 </div>`;
         } 
         else {
             detailsHtml = `
-            <div class="print-grid">
-                <div class="print-row"><span class="print-label">Slip No:</span> <span class="print-val">${data.slipNo}</span></div>
-                <div class="print-row"><span class="print-label">Date:</span> <span class="print-val">${window.formatDateIndian(data.date)}</span></div>
-                <div class="print-row"><span class="print-label">Name:</span> <span class="print-val">${data.name}</span></div>
-                <div class="print-row"><span class="print-label">Mobile:</span> <span class="print-val">${data.mobile || '-'}</span></div>
-                <div class="print-row full-span"><span class="print-label">Address:</span> <span class="print-val">${data.address || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Function Type:</span> <span class="print-val">${data.funcName || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Func. Date:</span> <span class="print-val">${window.formatDateIndian(data.funcDate) || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Shift:</span> <span class="print-val">${data.funcShift || '-'}</span></div>
-                <div class="print-row"><span class="print-label">Amount:</span> <span class="print-val"><strong>₹${parseFloat(data.amount || 0).toFixed(2)}</strong></span></div>
-                <div class="print-row full-span"><span class="print-label">In Words:</span> <span class="print-val"><i>${data.words || '-'}</i></span></div>
-            </div>`;
+            <table class="print-data-table">
+                <tr><td class="label-cell">Slip No:</td><td class="val-cell">${data.slipNo}</td><td class="label-cell">Date:</td><td class="val-cell">${window.formatDateIndian(data.date)}</td></tr>
+                <tr><td class="label-cell">Name:</td><td class="val-cell" colspan="3">${data.name}</td></tr>
+                <tr><td class="label-cell">Mobile:</td><td class="val-cell">${data.mobile || '-'}</td><td class="label-cell">Member No:</td><td class="val-cell">${data.member || '-'}</td></tr>
+                <tr><td class="label-cell">Address:</td><td class="val-cell" colspan="3">${data.address || '-'}</td></tr>
+                <tr><td class="label-cell">Function:</td><td class="val-cell">${data.funcName || '-'}</td><td class="label-cell">Func. Date:</td><td class="val-cell">${window.formatDateIndian(data.funcDate) || '-'}</td></tr>
+                <tr><td class="label-cell">Shift:</td><td class="val-cell">${data.funcShift || '-'}</td><td class="label-cell">Amount:</td><td class="val-cell"><strong>₹${parseFloat(data.amount || 0).toFixed(2)}</strong></td></tr>
+                <tr><td class="label-cell">Pay Mode:</td><td class="val-cell">${data.payType}</td><td class="label-cell">Chq/Ref No:</td><td class="val-cell">${data.ref || '-'}</td></tr>
+                <tr><td class="label-cell">In Words:</td><td class="val-cell" colspan="3"><i>${data.words || '-'}</i></td></tr>
+            </table>`;
             footerNoteHtml = `
             <div class="footer-box">
-                <b>Instructions:</b> 1. Parking responsibility lies with the host. 2. Produce Original Receipt for settlement. 
-                3. Venue name must be printed as "Sheth Shri Hiralal Hargovandas Batrisi Hall" on invitations.
+                <strong>1.</strong> The entire responsibility for vehicle management and parking shall lie solely with the host/booking organization. The Sanstha assumes no liability for parking-related issues.<br>
+                <strong>2.</strong> For the final settlement and processing of refunds, it is mandatory to produce and submit the Original Deposit Receipt. No settlement will be processed without this document.<br>
+                <strong>3.</strong> As a mandatory requirement, the venue must be identified on all invitations (Physical or Digital) exactly as: <strong>“Sheth Shri Hiralal Hargovandas Batrisi Hall.”</strong> Please note that the Sanstha reserves the right to levy a penalty for any non-compliance or abbreviation of this name.
             </div>`;
         }
 
@@ -664,6 +654,7 @@ const printRecord = (data, type) => {
                         <h2>${orgName}</h2>
                         <p>${orgAddress}</p>
                         <p>${orgDetailsLine1}</p>
+                        <p>${orgDetailsLine2}</p>
                     </div>
                     <div class="header-copy-type">${copy}</div>
                 </div>
@@ -678,14 +669,13 @@ const printRecord = (data, type) => {
             </div>`;
 
         if (index === 0) {
-            contentHtml += `<div class="cut-wrapper"><span class="cut-text">✂ - - - Cut Here - - - ✂</span></div>`;
+            contentHtml += `<div class="cut-line"><span class="cut-text">✂ - - - Cut Here - - - ✂</span></div>`;
         }
     });
     
     container.innerHTML = contentHtml;
     setTimeout(() => { window.print(); }, 500);
 };
-// --- PRINT LOGIC END ---
 
 window.addEventListener('load', async () => {
     setToday(); updateDashboardCounts();
