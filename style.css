@@ -110,8 +110,8 @@ header { background: rgba(255, 255, 255, 0.9); height: 80px; padding: 0 40px; di
 .btn-print { background: var(--primary); } .btn-print:hover { background: var(--primary-hover); transform: translateY(-2px);}
 .btn-del { background: #EF4444; margin-right: 0;} .btn-del:hover { background: #DC2626; transform: translateY(-2px);}
 
-@media print { .print-only { display: block !important; } .no-print { display: none !important; } }
 @media (max-width: 1024px) { .grid-2 { grid-template-columns: 1fr; } .sidebar { position: fixed; transform: translateX(-100%); height: 100%; box-shadow: 10px 0 25px rgba(0,0,0,0.1);} .sidebar.active { transform: translateX(0); } .menu-toggle { display: block; } .content-wrapper { padding: 20px;} }
 
 /* Basic Print Setup */
 .print-only { display: none; }
+@media print { .print-only { display: block !important; } .no-print { display: none !important; } }
