@@ -116,7 +116,7 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
 }
 
 
-/* --- STRICT PRINT LOGIC (FORCES SINGLE PAGE, ALIGNS HEADER EXACTLY AT TOP, EXPANDS SIGNATURE SPACE) --- */
+/* --- EXACT 50/50 PRINT LOGIC (FORCES TWO IDENTICAL INVOICES ON 1 PAGE) --- */
 .print-only { display: none; }
 
 @media print {
@@ -158,34 +158,43 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
     .print-page {
         width: 210mm !important;
         height: 297mm !important;
-        max-height: 297mm !important;
-        padding: 4mm !important;
+        padding: 5mm !important; /* Outer bounds protection */
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
-        justify-content: flex-start !important; /* Top Alignment Fixed */
+        justify-content: center !important;
+        align-items: center !important;
         overflow: hidden !important;
         page-break-after: avoid !important;
         page-break-before: avoid !important;
         page-break-inside: avoid !important;
     }
 
+    /* 
+       EXACT 50% HEIGHT ENFORCEMENT
+       Height 138mm x 2 Copies = 276mm. 
+       Cut-line = 10mm.
+       Total = 286mm. 
+       Fits perfectly inside 297mm A4 page with margins to spare. 
+    */
     .print-copy {
-        flex: 1 1 0 !important; 
-        max-height: calc(50% - 5mm) !important;
+        flex: none !important; 
+        height: 138mm !important; 
+        width: 100% !important;
         box-sizing: border-box !important;
         overflow: hidden !important;
         page-break-inside: avoid !important;
         margin: 0 !important;
-        padding: 6px 15px !important; /* Reduced padding slightly to save space */
+        border: 2px solid #000 !important;
+        padding: 8px 15px !important; 
         display: flex !important;
         flex-direction: column !important;
-        justify-content: flex-start !important; /* Forces Header to Absolute Top Edge */
     }
 
     .cut-line-wrapper {
-        flex: 0 0 auto !important;
+        flex: none !important;
         height: 10mm !important;
+        width: 100% !important;
         margin: 0 !important;
         display: flex !important;
         align-items: center !important;
@@ -194,18 +203,20 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
         overflow: hidden !important;
     }
 
-    /* Tighter Margins for Content Alignment to Make Room for Signatures */
-    .header-section { margin-bottom: 4px !important; padding-bottom: 4px !important; }
-    .print-title { margin: 2px 0 4px 0 !important; }
+    /* Compressed Content Margins for Tax Invoice Tolerance */
+    .header-section { margin-bottom: 4px !important; padding-bottom: 4px !important; border-bottom: 2px solid #000 !important; }
+    .print-title { margin: 2px 0 6px 0 !important; }
     
-    /* Reduced Table Padding to Save Vertical Space */
-    .print-table { margin-bottom: 4px !important; }
-    .print-table td { padding: 1.5px 4px !important; } 
-    .box-content { padding: 2px 6px !important; }
+    .print-table { margin-bottom: 4px !important; font-size: 8.8px !important; }
+    .print-table td { padding: 1.5px 3px !important; border-bottom: 1px dashed #ddd !important; } 
+    
+    .details-box { margin-top: 2px !important; border: 1.5px solid #000 !important; }
+    .box-heading { font-size: 9px !important; padding: 2px !important; }
+    .box-content { padding: 2px 4px !important; }
     
     .instr-title { 
         font-weight: bold; 
-        font-size: 11px; 
+        font-size: 10px; 
         text-transform: uppercase; 
         text-decoration: underline; 
         margin-bottom: 2px !important; 
@@ -213,16 +224,18 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
     }
     
     .instr-table { margin-top: 2px !important; }
-    .instr-table td { padding: 2px 5px !important; } /* Tighter instruction cells */
+    .instr-table td { padding: 2px 4px !important; font-size: 7.5px !important; line-height: 1.1 !important; }
 
-    /* EXPANDED SIGNATURE SPACE (Increased significantly for stamps & writing) */
+    /* FLEXIBLE SIGNATURE PUSH */
     .spacer { 
-        height: 50px !important; /* Massive 50px space directly above signature lines */
-        flex-grow: 0 !important; 
+        min-height: 25px !important; /* Guaranteed gap above signature */
+        flex-grow: 1 !important; /* Actively pushes signature strictly to the bottom of the 138mm box */
     }
 
     .signature-row { 
-        margin-top: 0 !important; 
+        margin-top: auto !important; 
         margin-bottom: 2px !important; 
+        display: flex !important;
+        justify-content: space-between !important;
     }
 }
