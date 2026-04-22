@@ -667,11 +667,14 @@ const printRecord = (data, type) => {
             </table>`;
             
             extraBox = `
-            <table class="instr-table">
-                <tr><td class="instr-num">1.</td><td>The entire responsibility for vehicle management and parking shall lie solely with the host/booking organization. The Sanstha assumes no liability for parking-related issues.</td></tr>
-                <tr><td class="instr-num">2.</td><td>For the final settlement and processing of refunds, it is mandatory to produce and submit the Original Deposit Receipt. No settlement will be processed without this document.</td></tr>
-                <tr><td class="instr-num">3.</td><td>As a mandatory requirement, the venue must be identified on all invitations exactly as: <strong>“Sheth Shri Hiralal Hargovandas Batrisi Hall.”</strong> Please note that the Sanstha reserves the right to levy a penalty for any non-compliance or abbreviation of this name.</td></tr>
-            </table>`;
+            <div class="instructions-section" style="margin-top: 8px;">
+                <div class="instr-title">Instructions</div>
+                <table class="instr-table" style="margin-top: 0;">
+                    <tr><td class="instr-num">1.</td><td>The Entire Responsibility For Vehicle Management And Parking Shall Lie Solely With The Host/Booking Organization. The Sanstha Assumes No Liability For Parking-Related Issues.</td></tr>
+                    <tr><td class="instr-num">2.</td><td>For The Final Settlement And Processing Of Refunds, It Is Mandatory To Produce And Submit The Original Deposit Receipt. No Settlement Will Be Processed Without This Document.</td></tr>
+                    <tr><td class="instr-num">3.</td><td>As A Mandatory Requirement, The Venue Must Be Identified On All Invitations Exactly As: <strong>“Sheth Shri Hiralal Hargovandas Batrisi Hall.”</strong> Please Note That The Sanstha Reserves The Right To Levy A Penalty For Any Non-Compliance Or Abbreviation Of This Name.</td></tr>
+                </table>
+            </div>`;
         }
 
         contentHtml += `
