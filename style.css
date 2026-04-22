@@ -116,7 +116,7 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
 }
 
 
-/* --- STRICT PRINT LOGIC (FORCES SINGLE PAGE, ALIGNS HEADER EXACTLY AT TOP) --- */
+/* --- STRICT PRINT LOGIC (FORCES SINGLE PAGE, ALIGNS HEADER EXACTLY AT TOP, EXPANDS SIGNATURE SPACE) --- */
 .print-only { display: none; }
 
 @media print {
@@ -177,7 +177,7 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
         overflow: hidden !important;
         page-break-inside: avoid !important;
         margin: 0 !important;
-        padding: 10px 15px !important; 
+        padding: 6px 15px !important; /* Reduced padding slightly to save space */
         display: flex !important;
         flex-direction: column !important;
         justify-content: flex-start !important; /* Forces Header to Absolute Top Edge */
@@ -194,33 +194,35 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
         overflow: hidden !important;
     }
 
-    /* Tighter Margins for Content Alignment */
-    .header-section { margin-bottom: 6px !important; padding-bottom: 6px !important; }
+    /* Tighter Margins for Content Alignment to Make Room for Signatures */
+    .header-section { margin-bottom: 4px !important; padding-bottom: 4px !important; }
+    .print-title { margin: 2px 0 4px 0 !important; }
     
-    .print-title { 
-        margin: 2px 0 8px 0 !important; /* Reduces gap under Title */
-    }
-    
-    .print-table { 
-        margin-bottom: 8px !important; /* Pulls instructions up closely */
-    }
+    /* Reduced Table Padding to Save Vertical Space */
+    .print-table { margin-bottom: 4px !important; }
+    .print-table td { padding: 1.5px 4px !important; } 
+    .box-content { padding: 2px 6px !important; }
     
     .instr-title { 
         font-weight: bold; 
         font-size: 11px; 
         text-transform: uppercase; 
         text-decoration: underline; 
-        margin-bottom: 3px !important; 
+        margin-bottom: 2px !important; 
         text-align: center; 
     }
+    
+    .instr-table { margin-top: 2px !important; }
+    .instr-table td { padding: 2px 5px !important; } /* Tighter instruction cells */
 
+    /* EXPANDED SIGNATURE SPACE (Increased significantly for stamps & writing) */
     .spacer { 
-        height: 20px !important; /* Exact small gap above signature */
-        flex-grow: 0 !important; /* Prevents signature from pushing to absolute bottom */
+        height: 50px !important; /* Massive 50px space directly above signature lines */
+        flex-grow: 0 !important; 
     }
 
     .signature-row { 
         margin-top: 0 !important; 
-        margin-bottom: 5px !important; /* Soft bottom boundary */
+        margin-bottom: 2px !important; 
     }
 }
