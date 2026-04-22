@@ -116,7 +116,7 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
 }
 
 
-/* --- EXACT 50/50 PRINT LOGIC (FORCES TWO IDENTICAL INVOICES ON 1 PAGE) --- */
+/* --- EXACT 50/50 PRINT LOGIC (FORCES TWO IDENTICAL INVOICES ON 1 PAGE WITH FONT SIZE 10) --- */
 .print-only { display: none; }
 
 @media print {
@@ -170,13 +170,7 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
         page-break-inside: avoid !important;
     }
 
-    /* 
-       EXACT 50% HEIGHT ENFORCEMENT
-       Height 138mm x 2 Copies = 276mm. 
-       Cut-line = 10mm.
-       Total = 286mm. 
-       Fits perfectly inside 297mm A4 page with margins to spare. 
-    */
+    /* EXACT 50% HEIGHT ENFORCEMENT */
     .print-copy {
         flex: none !important; 
         height: 138mm !important; 
@@ -203,20 +197,22 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
         overflow: hidden !important;
     }
 
-    /* Compressed Content Margins for Tax Invoice Tolerance */
+    /* --- ALL FONT SIZES FORCED TO 10PX VIA !IMPORTANT --- */
     .header-section { margin-bottom: 4px !important; padding-bottom: 4px !important; border-bottom: 2px solid #000 !important; }
-    .print-title { margin: 2px 0 6px 0 !important; }
+    .header-text p { font-size: 10px !important; } 
     
-    .print-table { margin-bottom: 4px !important; font-size: 8.8px !important; }
-    .print-table td { padding: 1.5px 3px !important; border-bottom: 1px dashed #ddd !important; } 
+    .print-title { margin: 2px 0 6px 0 !important; font-size: 14px !important; }
+    
+    .print-table { margin-bottom: 4px !important; font-size: 10px !important; }
+    .print-table td { padding: 2px 4px !important; border-bottom: 1px dashed #ddd !important; } 
     
     .details-box { margin-top: 2px !important; border: 1.5px solid #000 !important; }
-    .box-heading { font-size: 9px !important; padding: 2px !important; }
+    .box-heading { font-size: 10px !important; padding: 3px !important; }
     .box-content { padding: 2px 4px !important; }
     
     .instr-title { 
         font-weight: bold; 
-        font-size: 10px; 
+        font-size: 11px !important; 
         text-transform: uppercase; 
         text-decoration: underline; 
         margin-bottom: 2px !important; 
@@ -224,7 +220,7 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
     }
     
     .instr-table { margin-top: 2px !important; }
-    .instr-table td { padding: 2px 4px !important; font-size: 7.5px !important; line-height: 1.1 !important; }
+    .instr-table td { padding: 3px 5px !important; font-size: 10px !important; line-height: 1.2 !important; }
 
     /* FLEXIBLE SIGNATURE PUSH */
     .spacer { 
@@ -237,5 +233,14 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
         margin-bottom: 2px !important; 
         display: flex !important;
         justify-content: space-between !important;
+    }
+    
+    .sign-box { 
+        font-size: 10px !important; 
+        padding-top: 4px !important; 
+    }
+    
+    .cut-text { 
+        font-size: 10px !important; 
     }
 }
