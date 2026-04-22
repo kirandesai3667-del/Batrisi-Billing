@@ -116,13 +116,13 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
 }
 
 
-/* --- STRICT PRINT LOGIC (FORCES SINGLE PAGE ALWAYS) --- */
+/* --- STRICT PRINT LOGIC (FORCES SINGLE PAGE ALWAYS & BALANCES SPACING) --- */
 .print-only { display: none; }
 
 @media print {
     @page { 
         size: A4 portrait !important; 
-        margin: 0 !important; /* Zero margin to control space manually */
+        margin: 0 !important;
     }
 
     html, body {
@@ -130,7 +130,7 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
         height: 297mm !important;
         margin: 0 !important;
         padding: 0 !important;
-        overflow: hidden !important; /* Completely blocks Page 2 bleed */
+        overflow: hidden !important; 
         background: #ffffff !important;
         -webkit-print-color-adjust: exact !important;
         print-color-adjust: exact !important;
@@ -170,7 +170,6 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
         page-break-inside: avoid !important;
     }
 
-    /* Force each copy to perfectly share half the remaining page bounds dynamically */
     .print-copy {
         flex: 1 1 0 !important; 
         max-height: calc(50% - 5mm) !important;
@@ -178,6 +177,8 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
         overflow: hidden !important;
         page-break-inside: avoid !important;
         margin: 0 !important;
+        padding: 15px 25px; /* Added internal padding to breathe nicely */
+        justify-content: center !important; /* Forces the content cluster to gracefully center in the half page */
     }
 
     .cut-line-wrapper {
@@ -189,5 +190,29 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
         justify-content: center !important;
         page-break-inside: avoid !important;
         overflow: hidden !important;
+    }
+
+    /* Content Margin Refinements */
+    .header-section { margin-bottom: 12px; padding-bottom: 6px; }
+    .print-title { margin: 6px 0 12px 0; }
+    .print-table { margin-bottom: 10px; }
+    
+    .instr-title { 
+        font-weight: bold; 
+        font-size: 11px; 
+        text-transform: uppercase; 
+        text-decoration: underline; 
+        margin-bottom: 5px; 
+        text-align: center; 
+    }
+
+    .spacer { 
+        height: 25px !important; /* Exact fixed gap below instructions, so signature doesn't stretch to the bottom edge */
+        flex-grow: 0 !important; 
+    }
+
+    .signature-row { 
+        margin-top: 10px; 
+        margin-bottom: 5px; /* Freezes the bottom bound gently */
     }
 }
