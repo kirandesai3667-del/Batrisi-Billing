@@ -116,7 +116,7 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
 }
 
 
-/* --- STRICT PRINT LOGIC (FORCES SINGLE PAGE ALWAYS & BALANCES SPACING) --- */
+/* --- STRICT PRINT LOGIC (FORCES SINGLE PAGE, ALIGNS HEADER EXACTLY AT TOP) --- */
 .print-only { display: none; }
 
 @media print {
@@ -163,7 +163,7 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
         box-sizing: border-box !important;
         display: flex !important;
         flex-direction: column !important;
-        justify-content: center !important;
+        justify-content: flex-start !important; /* Top Alignment Fixed */
         overflow: hidden !important;
         page-break-after: avoid !important;
         page-break-before: avoid !important;
@@ -177,8 +177,10 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
         overflow: hidden !important;
         page-break-inside: avoid !important;
         margin: 0 !important;
-        padding: 15px 25px; /* Added internal padding to breathe nicely */
-        justify-content: center !important; /* Forces the content cluster to gracefully center in the half page */
+        padding: 10px 15px !important; 
+        display: flex !important;
+        flex-direction: column !important;
+        justify-content: flex-start !important; /* Forces Header to Absolute Top Edge */
     }
 
     .cut-line-wrapper {
@@ -192,27 +194,33 @@ header { background: var(--surface); height: 85px; padding: 0 40px; display: fle
         overflow: hidden !important;
     }
 
-    /* Content Margin Refinements */
-    .header-section { margin-bottom: 12px; padding-bottom: 6px; }
-    .print-title { margin: 6px 0 12px 0; }
-    .print-table { margin-bottom: 10px; }
+    /* Tighter Margins for Content Alignment */
+    .header-section { margin-bottom: 6px !important; padding-bottom: 6px !important; }
+    
+    .print-title { 
+        margin: 2px 0 8px 0 !important; /* Reduces gap under Title */
+    }
+    
+    .print-table { 
+        margin-bottom: 8px !important; /* Pulls instructions up closely */
+    }
     
     .instr-title { 
         font-weight: bold; 
         font-size: 11px; 
         text-transform: uppercase; 
         text-decoration: underline; 
-        margin-bottom: 5px; 
+        margin-bottom: 3px !important; 
         text-align: center; 
     }
 
     .spacer { 
-        height: 25px !important; /* Exact fixed gap below instructions, so signature doesn't stretch to the bottom edge */
-        flex-grow: 0 !important; 
+        height: 20px !important; /* Exact small gap above signature */
+        flex-grow: 0 !important; /* Prevents signature from pushing to absolute bottom */
     }
 
     .signature-row { 
-        margin-top: 10px; 
-        margin-bottom: 5px; /* Freezes the bottom bound gently */
+        margin-top: 0 !important; 
+        margin-bottom: 5px !important; /* Soft bottom boundary */
     }
 }
