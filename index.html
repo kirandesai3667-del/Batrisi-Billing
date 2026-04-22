@@ -85,7 +85,6 @@
                 </div>
             </section>
 
-            <!-- All forms structurally same as before, no IDs changed -->
             <!-- Deposit Form -->
             <section id="sec-deposit" class="page-section">
                 <div class="card form-card">
@@ -262,7 +261,15 @@
         function checkCustomInvoiceDesc() { document.getElementById('inv-desc-custom').style.display = document.getElementById('inv-desc-select').value === 'Other' ? 'block' : 'none'; }
         function toggleInvMember() { const isMember = document.getElementById('inv-is-member').value; const group = document.getElementById('inv-member-group'); if (isMember === 'Yes') { group.style.display = 'flex'; } else { group.style.display = 'none'; document.getElementById('inv-member').value = ''; } }
         function toggleInvSettlement() { let type = document.getElementById('inv-settlement-type').value; let isRefund = (type === 'Refund'); document.querySelectorAll('.refund-field').forEach(el => el.style.display = isRefund ? 'flex' : 'none'); document.querySelectorAll('.received-field').forEach(el => el.style.display = !isRefund ? 'flex' : 'none'); document.getElementById('inv-refund-amount').required = isRefund; document.getElementById('inv-received-amount').required = !isRefund; }
-        async function fetchMemberForInvoice() { if(window.fetchMember) { await window.fetchMember('inv-member', 'inv-name', 'inv-address'); let nameVal = document.getElementById('inv-name').value; if(nameVal && window.fetchDepositForInvoice) { window.fetchDepositForInvoice(nameVal); } } }
+        
+        async function fetchMemberForInvoice() { 
+            if(window.fetchMember) { 
+                await window.fetchMember('inv-member', 'inv-name', 'inv-address'); 
+                let nameVal = document.getElementById('inv-name').value; 
+                if(nameVal && window.fetchDepositForInvoice) { window.fetchDepositForInvoice(nameVal); } 
+            } 
+        }
+
         function numToWords(num, targetId) {
             if(!num || num == 0) { document.getElementById(targetId).value = ""; return; }
             let a =['','One ','Two ','Three ','Four ', 'Five ','Six ','Seven ','Eight ','Nine ','Ten ','Eleven ','Twelve ','Thirteen ','Fourteen ','Fifteen ','Sixteen ','Seventeen ','Eighteen ','Nineteen '];
@@ -276,6 +283,7 @@
             words += (str[5] != 0) ? ((words != '') ? 'and ' : '') + (a[Number(str[5])] || b[str[5][0]] + ' ' + a[str[5][1]]) : '';
             document.getElementById(targetId).value = words.trim() + " Rupees Only";
         }
+
         function calcInvoice() {
             let basic = parseFloat(document.getElementById('inv-basic').value) || 0;
             let cgst = parseFloat((basic * 0.09).toFixed(2)); let sgst = parseFloat((basic * 0.09).toFixed(2)); 
@@ -284,7 +292,14 @@
             document.getElementById('inv-total').value = roundedTotal.toFixed(2); document.getElementById('inv-round').value = (roundedTotal - exactTotal).toFixed(2);
             numToWords(roundedTotal, 'inv-words');
         }
-        document.addEventListener('input', function(e) { if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'text') { if (e.target.id === 'login-user' || e.target.id === 'login-pass') return; let start = e.target.selectionStart; let end = e.target.selectionEnd; e.target.value = e.target.value.toUpperCase(); e.target.setSelectionRange(start, end); } });
+
+        document.addEventListener('input', function(e) { 
+            if (e.target.tagName.toLowerCase() === 'input' && e.target.type === 'text') { 
+                if (e.target.id === 'login-user' || e.target.id === 'login-pass') return; 
+                let start = e.target.selectionStart; let end = e.target.selectionEnd; 
+                e.target.value = e.target.value.toUpperCase(); e.target.setSelectionRange(start, end); 
+            } 
+        });
     </script>
     <script type="module" src="app.js"></script>
 </body>
